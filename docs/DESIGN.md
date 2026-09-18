@@ -169,8 +169,21 @@ runs/<mode>/<name>/
 ### 2.4 划分
 
 - **官方划分优先**（RoNIN seen/unseen、TLIO lists、RIDI publish lists、IMUNet lists、RNIN 目录、IDOL known/unknown、OxIOD 场景 Train/Test、PedLocData train/valid/test）。
-- 官方没有 val 时，从 train 中按 `group_id`（受试者/会话/楼栋）分组抽取约 10%，固定种子 `0`，方法写入 `dataset.json`。
-- `ipb check` 必须报告 train/val/test 之间的 `group_id` 与 `sequence_id` 重叠。
+- **val 必须是分布内开发集**：数据卡用 `strata:` 声明对该数据集有意义的条件维度（属性、从序列名提取的
+  正则标签，或连续量的分位箱）。官方没有 val 时，从 train 池中按 `group_id`（受试者/会话/楼栋）做分层分组
+  抽样：固定种子 `0`、按时长加权、目标约 10%，并保证 val 出现的每个离散条件在剩余 train 中至少还由一个组
+  提供。某个组独占条件时，该组没有资格进入 val；组粒度太粗时允许超过目标比例，但必须把实际比例和原因写入
+  `dataset.json.split_method.val`。连续量分位箱只用于提高覆盖，不作为“能否进入 val”的硬门槛。
+- **条件覆盖可审计**：流水线把各划分相对 train 的缺失条件与新条件写入
+  `dataset.json.split_policy.condition_coverage`。已有的官方 val 不重划，只做同一套审计；若它包含 train 未见条件，
+  必须在数据发布说明中披露，不能把该条件上的外推误差用于选模。与 `group_id` 等价、无法在分组划分下同时覆盖
+  train/val 的维度自动丢弃并记录理由（例如 TLIO 的 `device_id`）。
+- **测试集的未见条件单列**：主 `test` 中每一种 train 未见条件自动派生
+  `test_ood_<dimension>.txt`；原始 `test` 保持不变，派生子集只用于分别报告分布内与分布外性能，不能反过来参与
+  选模。转换器已声明的 `test_unseen_*` 等附加测试集同样接受条件审计，但不重复派生。
+- `ipb splits data=<name> dry_run=true` 只读现有序列属性并重算划分/条件审计；不带 `dry_run` 时原子更新划分文件、
+  统计与数据集指纹，不重新解析原始数据。`ipb check` 必须报告 train/val/test 之间的 `group_id` 与
+  `sequence_id` 重叠。
 - **泄漏优先于“官方”**：若审计表明官方划分存在录制/会话级泄漏（同一段录音的相邻切片跨划分，
   例如 PedLocData），转换器声明 `OFFICIAL_SPLITS_LEAK = True` 并提供 `grouped_splits(source)`；
   统一流水线把分组划分写为默认的 `train/val/test.txt`，官方划分以 `official_{train,val,test}.txt`

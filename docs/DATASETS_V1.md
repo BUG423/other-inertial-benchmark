@@ -15,8 +15,8 @@
 | 数据集 | 序列（接收/发布） | 时长 (h) | 距离 (km) | 平台 / 携带方式 | 真值来源 | 默认划分 train/val/test | 官方划分是否泄漏 | 许可 | 转换器 | 已知限制（详见数据卡片） |
 |---|---:|---:|---:|---|---|---|---|---|---|---|
 | [ronin](datasets/ronin.md) | 151 / 152 | 23.11 | 61.94 | 安卓手机，自然携带（handheld/pocket/bag，`mixed`） | 胸前 Tango 手机的 VIO（**另一刚体**）；参考姿态为起点对齐后的手机姿态 | 71 / 16 / 64（= `test_seen` 32 + `test_unseen` 32） | 否（`test_seen` 与 train 共享受试者属官方 seen-subject 设定） | RoNIN Data License（非商业科研，禁止再分发） | `ronin@1.0` | 只公开约 50%；位置是胸前设备的位置；参考姿态有偏航漂移（官方末端误差最大 19.6°） |
-| [ridi](datasets/ridi.md) | 94 / 94 | 2.71 | 10.30 | 单台 Tango 手机；handheld / pocket(leg) / bag / body | 同设备 Tango VIO | 43 / 6 / 23 | 否（train/test 按序列划分，受试者跨划分） | 未声明（学术使用，引用论文） | `ridi@1.1` | 加速度计 1–3% 比例误差；IMU 已被官方插值到位姿时间；22 条未列出序列作为附加测试子集 |
-| [oxiod](datasets/oxiod.md) | 126 / 128 | 13.60 | 36.90 | iPhone 7 Plus / iPhone 5 / iPhone 6 / Nexus 5；handheld/pocket/bag/trolley + 慢走/跑 | Vicon 动捕（外参与时钟逐序列估计） | 54 / 7 / 9 | 否（官方 test 与 train 同属一个会话，组重叠） | 牛津大学学术/非商业使用 | `oxiod@1.1` | 外参/时钟为估计值；杆臂未知；`syn/`、`large scale/`、`test/` 未转换；57 条无官方划分的序列作为附加测试子集 |
+| [ridi](datasets/ridi.md) | 94 / 94 | 2.71 | 10.30 | 单台 Tango 手机；handheld / pocket(leg) / bag / body | 同设备 Tango VIO | 45 / 4 / 23 | 否（train/test 按序列划分，受试者跨划分） | 未声明（学术使用，引用论文） | `ridi@1.1` | 加速度计 1–3% 比例误差；IMU 已被官方插值到位姿时间；22 条未列出序列作为附加测试子集 |
+| [oxiod](datasets/oxiod.md) | 126 / 128 | 13.60 | 36.90 | iPhone 7 Plus / iPhone 5 / iPhone 6 / Nexus 5；handheld/pocket/bag/trolley + 慢走/跑 | Vicon 动捕（外参与时钟逐序列估计） | 48 / 13 / 9 | 否（官方 test 与 train 同属一个会话，组重叠） | 牛津大学学术/非商业使用 | `oxiod@1.1` | 外参/时钟为估计值；杆臂未知；`syn/`、`large scale/`、`test/` 未转换；57 条无官方划分的序列作为附加测试子集 |
 | [tlio](datasets/tlio.md) | 354 / 354 | 31.60 | 37.63 | VR 头显（Bosch BMI055），`head` | 头显上的视觉惯性滤波（MSCKF），非独立真值 | 283 / 35 / 36 | 否（随机划分，9 台设备跨划分） | CC BY-NC 4.0 | `tlio@1.0.0` | IMU 已被参考滤波器补偿（“纯惯性”结果偏乐观）；无受试者标签；大量低速/原地序列 |
 | [idol](datasets/idol.md) | 130 / 130 | 19.89 | 64.94 | iPhone 8 固定在 Kaarta Stencil 上，`handheld` | Stencil 的 LiDAR-视觉-惯性 SLAM（位置已被作者平滑） | 38 / 5 / 87（= `test_known` 51 + `test_unknown` 36） | 否（known 与 train 共享受试者是 known 的定义） | CC BY 4.0 | `idol@1.0.0` | 世界系倾斜（已调平）与时变残余倾斜；5 条序列开头 3–6 s 世界系未收敛；位置被平滑；需 `pyarrow` |
 | [rnin](datasets/rnin.md) | 300 / 301 | 8.49 | 25.56 | 多款安卓手机，5 名采集者 | 逐序列不同：外部 gt（75 条，“VICON 或其他设备”）或 BVIO（226 条） | 240 / 51 / 9 | 否（官方目录划分，启发式会话跨划分） | 未单独声明（仓库 Apache-2.0，数据知识产权归商汤） | `rnin@1.1.0` | 采样率与时钟不统一（200/250/400 Hz）；`train_179` 与 `train_178` 逐字节重复（已拒收）；许可不明确 |
@@ -38,6 +38,8 @@
 | oxiod | `test_unseen_device.txt` | 26 | 2.04 | multi devices（iPhone 5 / iPhone 6 / Nexus 5） |
 | idol | `test_known.txt` / `test_unknown.txt` | 51 / 36 | 8.16 / 5.93 | 受试者是否出现在 train 中（`test` 为二者并集） |
 | idol | `test_known_building1.txt` / `test_unknown_building1.txt` | 15 / 14 | 2.36 / 2.15 | 论文 Table 2 的 building1 设定 |
+| idol | `test_ood_building.txt` | 58 | 9.58 | train 未见的 building2/3；由条件审计自动派生，仍保留在主 `test` 中 |
+| ronin | `test_ood_device_id.txt` | 1 | 0.08 | train 未见的设备 asus6；由条件审计自动派生，仍保留在主 `test` 中 |
 | pedlocdata | `test_yt.txt` / `test_demo.txt` | 204 / 6 | 7.87 / 0.41 | 默认 `test` 按来源文件拆分 |
 | pedlocdata | `official_{train,val,test,test_yt,test_demo}.txt` | 1340 / 390 / 194 / 188 / 6 | 61.39 / 18.16 / 9.59 / 9.09 / 0.50 | **泄漏的**官方划分，只用于与文献对照 |
 
@@ -50,22 +52,21 @@
 
 | 数据集 | 转换器 | `dataset.json` 的 `fingerprint`（前 16 位） |
 |---|---|---|
-| ronin | `ronin@1.0` | `f29e5c58e71935cc` |
-| ridi | `ridi@1.1` | `6e47893cb3b6dbf0` |
-| oxiod | `oxiod@1.1` | `559c7c3de007887e` |
+| ronin | `ronin@1.0` | `8cbb25ce5ce74237` |
+| ridi | `ridi@1.1` | `0f436fe433c25130` |
+| oxiod | `oxiod@1.1` | `77713e0df4cefa96` |
 | tlio | `tlio@1.0.0` | `c2d0ddbe9d6ea11f` |
-| idol | `idol@1.0.0` | `dadeed68bbc3f119` |
+| idol | `idol@1.0.0` | `0dc064cb0f7d61de` |
 | rnin | `rnin@1.1.0` | `6d7f93e5734c88b5` |
 | imunet | `imunet@1.0` | `3fe0f633264ab36a` |
 | pedlocdata | `pedlocdata@1.1.0` | `79b8e288ac4be804` |
 
 ## 2. 划分策略（DESIGN 2.4 的落地）
 
-1. **官方划分优先**：7 个数据集直接使用官方列表/目录；官方没有 val 时，由统一流水线从 train 中按
-   `group_id` 分组抽取约 10%（固定种子 0，按时长加权），方法与实际比例记在 `dataset.json` 的 `split_method`。
-   本批生成 val 的是 ridi（受试者 `ma`，占 train 时长 11.5%）、oxiod（会话 `slow_walking_data1`，14.5%）、
-   imunet（受试者 `subject2`，17.2%）、idol（受试者 `subject03`/`subject05`，13.3%）；组的粒度较粗时实际比例
-   会高于 10%（分组不可拆分）。
+1. **官方划分优先，缺失的 val 做条件分层**：7 个数据集直接使用官方列表/目录；官方没有 val 时，由统一流水线
+   从 train 池中按 `group_id` 分组抽取约 10%（固定种子 0，按时长加权），同时保证 val 的离散条件都在 train
+   出现。条件维度由各数据卡的 `strata:` 声明；方法、入选组、实际比例与未覆盖条件写入
+   `dataset.json.split_method.val`。组粒度较粗时实际比例可以高于 10%，但不得拆组或让 val 引入 train 未见条件。
 2. **泄漏优先于“官方”**：PedLocData 的官方划分把同一次录制的相邻切片分散到 train/valid/test
    （329/474 个 YT 录制、10/13 个 Demo 录制跨划分，26/27 名受试者出现在全部三个划分）。转换器声明
    `OFFICIAL_SPLITS_LEAK = True` 并提供 `grouped_splits()`，流水线把分组划分写为默认 `train/val/test`，
@@ -76,6 +77,27 @@
    RNIN 的会话重叠都会让 `group_id` 跨划分出现。这是官方设定，`ipb check` 报告为**警告**而不是错误；
    名字含 `unseen`/`unknown`/`novel` 的子集与 train/val 共享组才会被判为错误。评测报告中应注明所用划分是
    seen 还是 unseen 设定。
+
+### 2.1 条件覆盖审计（2026-09-18 重跑）
+
+执行 `ipb splits data=<name> dry_run=true`，8 个数据集均返回退出码 0，且相对已落盘划分均为
+`train→val 0 / val→train 0`。`val 新条件` 是 val 中出现但 train 中从未出现的离散条件数；本批 **8/8 均为 0**。
+
+| 数据集 | 审计条件维度 | val 来源 / 入选组 | val 占 train 池时长 | val 新条件 | 派生 OOD 子集 |
+|---|---|---|---:|---:|---|
+| ronin | placement, device | 官方 | 17.3% | 0 | `test_ood_device_id`：1 |
+| ridi | placement, motion variant | 分层：`hao` | 9.1% | 0 | — |
+| oxiod | placement, scene, device | 分层：`handheld_data2`, `pocket_data1`, `trolley_data2` | 14.6% | 0 | —（已有两个 `test_unseen_*`） |
+| tlio | placement（device 与 group 等价，已丢弃） | 官方 | 11.0% | 0 | — |
+| idol | placement, building, speed bin¹ | 分层：`subject01`, `subject11` | 12.2% | 0 | `test_ood_building`：58 |
+| rnin | placement, reference, position source | 官方 | 20.4% | 0 | — |
+| imunet | device, environment, position source | 分层：`subject2` | 17.2% | 0 | — |
+| pedlocdata | placement, device | 防泄漏分组划分自带 val | 25.5% | 0 | — |
+
+¹ speed bin 是按平均速度三分位生成的覆盖目标，只用于让 val 尽量覆盖速度分布，不作为硬条件。
+
+测试集的 train 未见条件不混入 train 或 val。主 `test` 中的此类条件自动另存为 `test_ood_<dimension>`，
+同时保留在原主测试集；转换器已显式声明的 `test_unseen_subject` / `test_unseen_device` 直接按原名分别报告。
 
 ## 3. 校验结果
 
