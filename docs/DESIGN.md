@@ -423,14 +423,14 @@ class SequenceModel(BaseModel):   # 序列级 / 有状态模型（PDR、递推�
 尤其慢，两个开关叠加互相抵消。完整四组数字与取舍见 `docs/CLI.md` §4.1。模型配方里显式写
 `amp: false` 的算法（官方不用 AMP）不受此缺省变化影响。
 
-**train/eval 失配诊断**：训练结束时在若干条 val 序列上用 `train()` 与 `eval()` 两种模式各算一次
-窗口损失，两个损失与其差值写入 `metrics.json` 的 `train_eval_gap`，
-`delta = loss_eval − loss_train > |loss_train|` 时告警——eval 明显更差说明报出的指标不是这组
-权重真实的能力（dropout/BN 失配）。判据用差值而不是比值：`loss_train > 0` 时两者等价，但
-RIO 的负余弦自监督项与高斯 NLL 会让窗口损失取负，比值会变成负数或 `inf`（假告警），因此
-`ratio` 只在 `loss_train > 0` 时写出。诊断在模型副本上做，不改权重、BN 统计与随机数状态；
-batch 的键与训练完全一致（走 `SequenceView.windows`，含逐帧/多步目标的 `mask` 与 `extra`）；
-序列级模型没有 `train()/eval()` 语义差异，跳过并记下原因。
+**train/eval 失配守卫**：训练结束时在 val 窗口上正交切换 dropout 与 BatchNorm，记录 `eval`、
+`dropout_only`、`bn_only`、`train` 四种模式的损失与 `speed_ratio`。含 dropout 的模式对 8 次预测向量
+先取均值再算幅值；主判据是 `speed_ratio(dropout_only) − speed_ratio(eval)`，超过 0.02 告警、0.05
+记为错误，eval 幅值低于 0.78/0.65 或高于 1.15 作为结果级辅判据。val 损失的原始比、双侧比与有符号
+安全差值只报告而不门禁：实测健康权重的双侧比可比塌陷权重更大，原因是 val 上的 BN batch 统计。
+诊断在模型副本上用 fp32 完成，冻结并复原 BN running 统计与 CPU/CUDA 随机状态；batch 与训练接口
+一致（含逐帧/多步 `mask` 和 `extra`）。逐 dropout 风险表只豁免 p=0 或后续全为仿射运算的路径；
+序列级模型没有逐窗口模式差异，跳过并记下原因。完整输出契约与阈值证据见 `docs/CLI.md` §4.2。
 
 ## 7. 开发纪律
 

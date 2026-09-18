@@ -138,7 +138,7 @@ def plan_item(item: BenchmarkItem) -> dict:
 
 
 def train_summary(train_dir: Path) -> dict:
-    """从已完成的训练目录读出审计用摘要：epoch 数、等窗口预算、选模标量与 train/eval 比值。"""
+    """从训练目录读出 epoch、预算、选模标量与 train/eval 守卫摘要。"""
     args_file, metrics_file = train_dir / "args.yaml", train_dir / "metrics.json"
     out: dict = {}
     if not metrics_file.exists():
@@ -154,7 +154,12 @@ def train_summary(train_dir: Path) -> dict:
     out["val_fitness"] = values.get(key)
     out["train_budget"] = meta.get("train_budget") or {}
     gap = meta.get("train_eval_gap") or {}
-    if gap.get("ratio") is not None:
+    verdict = gap.get("verdict") or {}
+    if verdict:
+        out["train_eval_gap"] = verdict.get("dropout_probe_delta")
+        out["train_eval_gap_level"] = verdict.get("level")
+        out["train_eval_speed_ratio"] = verdict.get("speed_ratio_eval")
+    elif gap.get("ratio") is not None:  # 兼容旧 run
         out["train_eval_gap"] = gap["ratio"]
     return out
 

@@ -38,6 +38,15 @@ from ..utils.torch_utils import (
     select_device,
 )
 from .budget import log_budget, resolve_budget
+from .mode_guard import (
+    GUARD_MODES,
+    MC_SAMPLES,
+    GuardMode,
+    attribute_channels,
+    gap_verdict,
+    mean_shift_risk,
+    mode_context,
+)
 from .predictor import load_model
 from .validator import Validator
 
@@ -415,31 +424,28 @@ class Trainer:
         rows.append(row)
         self._write_rows(rows)
 
-    def train_eval_gap(self, windows: int = 1024, repeats: int = 4) -> dict:
-        """val 窗口上 ``eval()`` 与 ``train()`` 两种模式的窗口损失差，用于发现 train/eval 失配。
+    def train_eval_gap(self, windows: int = 1024, repeats: int = MC_SAMPLES) -> dict:
+        """用四种模块模式诊断 train/eval 失配，并以 MC-dropout 幅值恢复量守卫结果。
 
-        dropout 与 BatchNorm 让同一权重在两种模式下行为不同。理想情况下两个损失相当；
-        eval 明显更差说明**报出的指标不是这组权重真实的能力**，而是 train/eval 失配的产物。
-        真实案例：``ronin_resnet18`` 的 ``Dropout(0.5) → Linear → ReLU`` 头在统一配方下训练
-        若干轮后，eval 模式的速度幅值只有训练模式的三分之一（损失 0.155 对 0.020），
-        轨迹指标因此严重虚高。
+        ``eval`` / ``dropout_only`` / ``bn_only`` / ``train`` 把 dropout 与 BatchNorm 两条通道
+        正交拆开；含 dropout 的模式对输出做 ``repeats`` 次 MC 平均（正式诊断固定为 8），避免
+        单次随机预测因范数凸性系统性抬高幅值。每种模式记录窗口损失与 ``speed_ratio``。
 
-        返回 ``loss_eval`` / ``loss_train`` / ``delta``（= eval − train），以及仅在
-        ``loss_train > 0`` 时有意义的 ``ratio``（否则为 ``None``）：RIO 的负余弦自监督项与
-        高斯 NLL 都能让窗口损失取负值，比值会变成负数或 inf，是假信号。告警判据统一为
-        ``delta > |loss_train|``，在 ``loss_train > 0`` 时与 ``ratio > 2`` 等价。
+        val 损失同时报告原始比值、双侧比 ``max(r, 1/r)`` 和对有符号损失安全的归一化差值，
+        但它们不参与门禁：实测中健康 RoNIN 的双侧损失比可达 6.6，塌陷权重反而只有 1.10。
+        主判据是 ``speed_ratio(dropout_only) - speed_ratio(eval)``，辅以 eval 幅值范围。
 
-        逐帧/多步目标与额外输入一并走 :meth:`SequenceView.windows`，因此 batch 的键与
-        Trainer 完全一致（``target``/``imu``/``mask``/``extra``）。序列级模型
-        （:class:`~inertial_benchmark.nn.base.SequenceModel`）没有逐窗口前向、也没有
-        ``train()``/``eval()`` 的语义差异，直接跳过（记下原因，不报错）。
-
-        在模型副本上计算，不改动权重、BN 统计与随机数状态。
+        逐帧/多步目标、mask 与额外输入走与 Trainer 相同的窗口接口。诊断在模型副本上以 fp32
+        运行，完整复原随机数状态；BatchNorm 的 running 统计也被冻结。序列级模型没有逐窗口
+        前向，直接跳过并记录原因。
         """
         import copy
 
         if self.sequence_model:
             return {"skipped": "sequence model has no train()/eval() distinction"}
+        repeats = int(repeats)
+        if repeats < 1:
+            raise ValueError(f"train_eval_gap repeats must be >= 1, got {repeats}")
         n_seq = len(self.val_set.sequence_ids)
         if n_seq == 0:
             return {}
@@ -468,34 +474,99 @@ class Trainer:
         extra = {name: torch.from_numpy(
             np.concatenate([p["extra"][name] for p in parts])).to(self.device) for name in names}
         batch = {"target": y, "imu": x, "mask": mask, "extra": extra}
-        losses = {}
-        with torch.no_grad():
-            for mode in ("eval", "train"):
-                work.train(mode == "train")
-                values = []
-                for _ in range(int(repeats) if mode == "train" else 1):
-                    with torch.autocast(self.device.type, enabled=self.amp):
-                        out = work(x, extra) if extra else work(x)
-                    out = {k: v.float() for k, v in out.items() if torch.is_tensor(v)}
-                    values.append(float(work.loss(out, batch, self.epoch)[0]))
-                losses[mode] = sum(values) / len(values)
-        # 判据对**有符号**损失也必须成立：RIO 的负余弦自监督项、高斯 NLL 都能让窗口损失取负，
-        # 那时 `eval/train` 比值没有意义（负数或 inf 都不是“差 N 倍”），只有差值有意义。
-        # 判据取 `loss_eval − loss_train > |loss_train|`：`loss_train > 0` 时它与旧判据
-        # `ratio > 2` 逐点等价，`loss_train <= 0` 时退化为“eval 比 train 差出一个损失量级”。
-        delta = losses["eval"] - losses["train"]
-        gap = {"loss_eval": losses["eval"], "loss_train": losses["train"], "delta": delta,
-               "ratio": losses["eval"] / losses["train"] if losses["train"] > 0 else None,
-               "num_windows": int(len(x)),
-               "sequences": [v.sequence_id for v in views]}
-        if delta > max(abs(losses["train"]), 1e-12):
-            scale = (f"{gap['ratio']:.1f}x higher" if gap["ratio"] is not None
-                     else f"{delta:.4f} higher")
-            LOGGER.warning(
-                f"train/eval mismatch: val window loss is {scale} in eval() "
-                f"than in train() mode ({gap['loss_eval']:.4f} vs {gap['loss_train']:.4f}). "
-                "Reported metrics understate these weights; check the model's dropout/BatchNorm "
-                "and the speed_ratio / plr metrics.")
+        modes = tuple(
+            GuardMode(mode.name, mode.dropout, mode.batchnorm,
+                      repeats if mode.dropout else 1)
+            for mode in GUARD_MODES
+        )
+
+        def average_forward(mode: GuardMode) -> dict:
+            accumulated: dict = {}
+            with mode_context(work, mode):
+                for _ in range(mode.mc_samples):
+                    raw = work(x, extra) if extra else work(x)
+                    for key, value in raw.items():
+                        if not torch.is_tensor(value):
+                            continue
+                        value = value.float() if value.is_floating_point() else value
+                        if value.is_floating_point():
+                            accumulated[key] = (value if key not in accumulated
+                                                else accumulated[key] + value)
+                        elif key not in accumulated:
+                            accumulated[key] = value
+            return {key: (value / mode.mc_samples if value.is_floating_point() else value)
+                    for key, value in accumulated.items()}
+
+        def speed_sums(velocity: torch.Tensor) -> tuple:
+            pred = velocity if velocity.ndim > 2 else velocity[:, None, :]
+            target = y if y.ndim > 2 else y[:, None, :]
+            rows = pred.shape[1]
+            scales = torch.as_tensor(work.input_spec.output_scales[:rows], device=self.device,
+                                     dtype=pred.dtype).reshape(1, rows, 1)
+            pred, target = pred * scales, target * scales
+            valid = mask.bool().reshape(len(pred), -1)[:, :rows]
+            return (float(torch.linalg.vector_norm(pred, dim=-1)[valid].sum()),
+                    float(torch.linalg.vector_norm(target, dim=-1)[valid].sum()))
+
+        cpu_rng = torch.get_rng_state()
+        cuda_rng = torch.cuda.get_rng_state_all() if self.device.type == "cuda" else None
+        per_mode = {}
+        try:
+            with torch.no_grad():
+                for mode in modes:
+                    # 各模式从相同随机状态开始；归因不会受调用顺序影响。
+                    torch.manual_seed(int(self.args.seed))
+                    if self.device.type == "cuda":
+                        torch.cuda.manual_seed_all(int(self.args.seed))
+                    out = average_forward(mode)
+                    loss = float(work.loss(out, batch, self.epoch)[0])
+                    pred_sum, target_sum = speed_sums(out["vel"])
+                    per_mode[mode.name] = {
+                        "loss": loss,
+                        "speed_ratio": pred_sum / target_sum if target_sum > 0.0 else math.nan,
+                        "mc_samples": mode.mc_samples,
+                    }
+        finally:
+            torch.set_rng_state(cpu_rng)
+            if cuda_rng is not None:
+                torch.cuda.set_rng_state_all(cuda_rng)
+
+        eval_mode, train_mode = per_mode["eval"], per_mode["train"]
+        verdict = gap_verdict(
+            eval_mode["speed_ratio"], per_mode["dropout_only"]["speed_ratio"],
+            eval_mode["loss"], train_mode["loss"])
+        loss_report = verdict["loss_report"]
+        risk = mean_shift_risk(work)
+        gap = {
+            # 兼容既有 metrics.json 消费者；新代码优先读取 modes/verdict。
+            "loss_eval": eval_mode["loss"],
+            "loss_train": train_mode["loss"],
+            "delta": loss_report["delta"],
+            "ratio": loss_report["ratio"],
+            "two_sided_ratio": loss_report["two_sided_ratio"],
+            "symmetric_gap": loss_report["symmetric_gap"],
+            "speed_ratio_eval": eval_mode["speed_ratio"],
+            "speed_ratio_train": train_mode["speed_ratio"],
+            "num_windows": int(len(x)),
+            "sequences": [v.sequence_id for v in views],
+            "modes": per_mode,
+            "verdict": verdict,
+            "attribution": attribute_channels(
+                eval_mode["loss"], train_mode["loss"],
+                per_mode["dropout_only"]["loss"], per_mode["bn_only"]["loss"]),
+            "dropout_risk": risk,
+            "dropout_probe_applicable": any(
+                item["mean_shift_risk"] for item in risk.values()),
+            "config": {"mc_samples": repeats, "precision": "fp32"},
+        }
+        if verdict["level"] != "ok":
+            message = (f"train/eval mismatch guard {verdict['level']}: "
+                       + "; ".join(verdict["reasons"])
+                       + f" (eval/dropout/train speed ratios "
+                         f"{eval_mode['speed_ratio']:.3f}/"
+                         f"{per_mode['dropout_only']['speed_ratio']:.3f}/"
+                         f"{train_mode['speed_ratio']:.3f})")
+            (LOGGER.error if verdict["level"] == "error" else LOGGER.warning)(message)
         return gap
 
     def final_eval(self, epoch: int) -> None:

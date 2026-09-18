@@ -90,8 +90,8 @@ ipb train resume=true name=exp                                          # 断点
 ```
 
 训练只使用 `train` 与 `val` 划分；每 `val_interval` 轮在 val 上计算全部指标，按 `fitness` + `fitness_stat`（缺省 `ate` 的逐序列均值，越小越好）保存 `best.pt`。
-结束后用 best 权重在 val 上评测一次并写出 `metrics.json`，其中 `train_eval_gap` 记录同一权重在
-`train()` 与 `eval()` 两种模式下的 val 窗口损失比（见第 4.2 节）。
+结束后用 best 权重在 val 上评测一次并写出 `metrics.json`，其中 `train_eval_gap` 用四种模块模式与
+MC-dropout 幅值探针检查推理期塌陷（见第 4.2 节）。
 
 ### `ipb val` — 评测
 
@@ -226,7 +226,7 @@ runs/<mode>/<name>/            # mode = train / val / predict；name 缺省 exp�
 ├── weights/{best,last}.pt     # 训练：模型配置、输入规格、完整 cfg、epoch、优化器/调度器状态（best 去掉优化器）、git 提交
 ├── results.csv                # 训练：每轮 train/loss、val/*、lr、fitness、耗时
 ├── metrics.json               # 聚合指标（mean/median/std/count）、protocol、privileged_inputs、calibration、
-│                              # 效率指标、train_eval_gap（train/eval 模式的窗口损失比，见第 4.2 节）
+│                              # 效率指标、train_eval_gap（四模式失配守卫，见第 4.2 节）
 ├── sequences.csv              # 逐序列指标
 ├── predictions/<seq>.npz      # 逐帧预测/参考/oracle 轨迹，窗口级 vel_pred/vel_target/(logstd)，其他模型输出 out_<键>
 └── plots/*.png                # 轨迹叠加、误差 CDF、误差随时间、箱线图、长度比、训练曲线
@@ -355,22 +355,34 @@ ipb train data=ridi fitness=ate fitness_stat=median   # 逐序列 ATE 的中位�
 
 ### 4.2 `train_eval_gap`：train/eval 失配诊断
 
-dropout 与 BatchNorm 让同一组权重在 `train()` 与 `eval()` 下行为不同。训练结束时框架在若干条 val
-序列上用两种模式各算一次窗口损失，把 `{loss_eval, loss_train, delta, ratio, num_windows,
-sequences}` 写进 `metrics.json` 的 `train_eval_gap`。诊断在模型副本上进行，不改动权重、BN 统计
-与随机数状态。
+dropout 与 BatchNorm 让同一组权重在训练和推理时走不同的统计路径。训练结束后，框架从最多 4 条 val
+序列均匀抽取至多 1024 个窗口，在模型副本上以 fp32 跑四种模式：
 
-告警判据是 **`delta = loss_eval − loss_train > |loss_train|`**：`loss_train > 0` 时它与
-“`ratio > 2`”逐点等价，而**有符号损失**（RIO 的负余弦自监督项、高斯 NLL/`nll_detach_then_nll`
-都能让窗口损失取负）下比值会变成负数或 `inf`，是假信号——因此 `ratio` 只在 `loss_train > 0`
-时写出，否则为 `null`，判据一律看 `delta`。
+| 模式 | dropout | BatchNorm | MC 次数 | 用途 |
+|---|---:|---:|---:|---|
+| `eval` | 关 | running 统计 | 1 | 正式推理口径 |
+| `dropout_only` | 开 | running 统计 | 8 | dropout 均值位移探针 |
+| `bn_only` | 关 | batch 统计 | 1 | BN 通道归因 |
+| `train` | 开 | batch 统计 | 8 | 两条通道同时开启 |
 
-`ratio` 明显大于 1 意味着**报出的指标不是这组权重真实的能力**。实测例子：`ronin_resnet18` 在
-`recipe=unified` 下训练 4 轮后，RoNIN val 窗口损失 eval 模式 0.155、train 模式 0.020（比值 7.7），
-速度幅值只有训练模式的 1/3（`speed_ratio` 0.35 对 0.94），于是 `plr` 掉到 0.32–0.35、ATE 虚高到 15 m。
-根因是 RoNIN 头部的 `Dropout(0.5) → Linear → ReLU`：训练时 dropout 噪声让 ReLU 更容易激活，
-关掉 dropout 后同一层的输出被系统性压低（逐项排除：把 BN 单独切回 train 模式、或重估 BN running
-统计都不改善，只有 dropout 开着才恢复）。`plr` / `speed_ratio` 远离 1 是同一问题的下游表现。
+每种模式都记录窗口损失和 `speed_ratio`。含 dropout 的模式必须先对 **8 次预测向量取均值**再算范数；
+单次随机前向会因范数的凸性系统性抬高幅值，不能代替 MC 均值。BatchNorm 的 running 均值、方差和
+计数器在诊断期间冻结，结束后逐项复原；全局 CPU/CUDA 随机状态同样复原。
+
+守卫的主判据是 `Δsr_drop = speed_ratio(dropout_only) − speed_ratio(eval)`：超过 `0.02` 告警、超过
+`0.05` 记为错误。结果级辅判据是 eval `speed_ratio`：低于 `0.78` 告警、低于 `0.65` 记为错误，
+高于 `1.15` 告警。`metrics.json.train_eval_gap.verdict` 保存级别、原因与阈值；矩阵摘要保存该级别和
+`Δsr_drop`，不会只留下一个难以解释的损失比。
+
+损失仍完整记录：`ratio`（仅正的 train 损失）、`two_sided_ratio=max(r,1/r)`，以及对负值/跨零安全的
+`symmetric_gap=|a−b|/(|a|+|b|)`。但三者都**只报告、不门禁**。逐轮复现实测否定了损失比判据：健康
+RoNIN 的 val 双侧损失比可达 6.6（BatchNorm 在 val 上用 batch 统计很差），AMP 塌陷最深时反而只有
+1.10；任何能抓到后者的损失比阈值都会误杀前者。相比之下，两条健康运行的 `Δsr_drop ≤ 0.010`，
+塌陷运行从第 6 轮的 `+0.024` 单调增至 `+0.140`。
+
+`dropout_risk` 逐层列出均值位移风险。概率为 0，或 dropout 后到输出只经过仿射运算的层可证明均值
+不变（如 `imunet_mnasnet` / `imunet_efficientnetb0` 的输出头 dropout）；其余含后续非线性的路径必须
+保留探针。序列级模型没有逐窗口模式差异，诊断会显式写入 `skipped`。
 
 ### 4.4 `train_windows_budget`：等窗口预算
 

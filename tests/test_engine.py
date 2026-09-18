@@ -712,10 +712,7 @@ def test_view_config_from_model_spec(zero_model):
 
 
 def test_train_eval_gap_is_recorded_and_warns(dataset, tmp_path, caplog):
-    """train/eval 失配诊断：正常模型比值≈1，故意在 eval 模式缩小输出的模型必须触发告警。
-
-    真实案例是 ronin_resnet18 在统一配方下 eval 模式速度只有训练模式的三分之一。
-    """
+    """四模式诊断落盘；dropout 的 MC 期望显著抬高幅值时必须触发守卫。"""
     over = {**TINY, "data": str(dataset), "epochs": 1, "project": str(tmp_path),
             "save_predictions": False}
     trainer = Trainer(overrides={**over, "name": "gap_ok"})
@@ -723,18 +720,28 @@ def test_train_eval_gap_is_recorded_and_warns(dataset, tmp_path, caplog):
     gap = json.loads((tmp_path / "train" / "gap_ok" / "metrics.json").read_text())
     assert 0.2 < gap["train_eval_gap"]["ratio"] < 5.0
     assert gap["train_eval_gap"]["num_windows"] > 0
+    assert set(gap["train_eval_gap"]["modes"]) == {
+        "eval", "dropout_only", "bn_only", "train"}
+    assert gap["train_eval_gap"]["modes"]["dropout_only"]["mc_samples"] == 8
 
     @register_model("test_shrinking_model")
     class Shrinking(BaseModel):
-        """eval 模式输出被平移（模拟 dropout/BN 在两种模式下行为不同的头）。"""
+        """eval 幅值 0.25；dropout→仿射→ReLU 的 MC 期望约 0.625。"""
 
         def __init__(self, input_spec):
             super().__init__(input_spec)
-            self.scale = torch.nn.Parameter(torch.ones(input_spec.dims))
+            self.anchor = torch.nn.Parameter(torch.zeros(()))
+            self.dropout = torch.nn.Dropout(0.5)
+            self.linear = torch.nn.Linear(input_spec.dims, input_spec.dims)
+            self.relu = torch.nn.ReLU()
+            with torch.no_grad():
+                self.linear.weight.copy_(torch.eye(input_spec.dims))
+                self.linear.bias.fill_(-0.75)
+            self.linear.requires_grad_(False)
 
         def forward(self, imu):
-            vel = self.scale.expand(imu.shape[0], -1)
-            return {"vel": vel if self.training else vel + 3.0}
+            base = torch.ones((imu.shape[0], self.input_spec.dims), device=imu.device)
+            return {"vel": self.relu(self.linear(self.dropout(base))) + 0.0 * self.anchor}
 
     try:
         bad = Trainer(overrides={**over, "name": "gap_bad", "model_args": {},
@@ -742,7 +749,10 @@ def test_train_eval_gap_is_recorded_and_warns(dataset, tmp_path, caplog):
         bad.train()
         with caplog.at_level("WARNING"):
             g = bad.train_eval_gap()
-        assert g["ratio"] > 2.0
+        assert g["verdict"]["level"] == "error"
+        assert g["verdict"]["dropout_probe_delta"] > 0.05
+        assert g["dropout_probe_applicable"] is True
+        assert g["dropout_risk"]["dropout"]["mean_shift_risk"] is True
         assert any("train/eval mismatch" in r.getMessage() for r in caplog.records)
     finally:
         MODELS.pop("test_shrinking_model")
@@ -1001,6 +1011,8 @@ def test_benchmark_can_continue_after_a_failed_run(dataset, tmp_path):
     assert [s["train"] for s in statuses] == ["trained", "failed"]
     assert statuses[0]["epochs"] == 1 and statuses[0]["fitness"] == "mean ate"
     assert statuses[0]["val_fitness"] > 0 and statuses[0]["test"] is False
+    assert statuses[0]["train_eval_gap_level"] in ("ok", "warning", "error")
+    assert math.isfinite(statuses[0]["train_eval_gap"])
     assert statuses[0]["splits"] == {"val": "evaluated"}
     assert "error" in statuses[1]
     saved = json.loads((tmp_path / "c" / "benchmark.json").read_text())["runs"]
@@ -1009,19 +1021,11 @@ def test_benchmark_can_continue_after_a_failed_run(dataset, tmp_path):
         run_benchmark({**plan, "name": "d", "continue_on_error": False})
 
 
-def test_train_eval_gap_handles_signed_losses(dataset, tmp_path, caplog):
-    """有符号损失（可为负）下不得给出假告警：判据看差值，``ratio`` 只在损失为正时写出。
-
-    真实案例：``rio`` 的联合损失含负余弦自监督项、``tlio``/``llio`` 用高斯 NLL，窗口损失都
-    可以是负数。旧判据 ``loss_eval / loss_train if loss_train > 0 else inf`` 会把
-    ``loss_train < 0`` 的 run 一律判成 ``ratio=inf`` 并告警一次（precheck 里 rio × imunet
-    就是这样：0.2051 对 −0.7107 被报成 "infx higher"）。
-    """
+def test_train_eval_gap_handles_signed_losses(dataset, tmp_path):
+    """有符号损失写安全差值；损失报告不参与 dropout 幅值守卫。"""
     @register_model("test_signed_loss_model")
     class Signed(BaseModel):
-        """损失 = 平均预测值（可正可负）；``shift`` 决定 eval 模式的偏移。"""
-
-        shift = 0.0
+        """损失 = 平均预测值，可稳定取负。"""
 
         def __init__(self, input_spec):
             super().__init__(input_spec)
@@ -1029,7 +1033,7 @@ def test_train_eval_gap_handles_signed_losses(dataset, tmp_path, caplog):
 
         def forward(self, imu):
             vel = self.bias.expand(imu.shape[0], -1)
-            return {"vel": vel if self.training else vel + type(self).shift}
+            return {"vel": vel}
 
         def loss(self, out, batch, epoch):
             value = out["vel"].mean()
@@ -1043,24 +1047,12 @@ def test_train_eval_gap_handles_signed_losses(dataset, tmp_path, caplog):
         trainer.train()
         gap = json.loads((tmp_path / "train" / "signed_ok" / "metrics.json").read_text())
         gap = gap["train_eval_gap"]
-        # 损失为负：比值没有意义，写 null；差值为 0，不告警
+        # 损失为负：旧的单侧比写 null；安全差值与双侧报告仍可用。
         assert gap["loss_train"] < 0 and gap["ratio"] is None
         assert gap["delta"] == pytest.approx(0.0, abs=1e-6)
-
-        Signed.shift = 1.0   # eval 模式差出 1.0 > |loss_train| = 0.5 → 必须告警
-        caplog.clear()
-        with caplog.at_level("WARNING", logger=LOGGER.name):
-            bad = trainer.train_eval_gap(windows=64, repeats=1)
-        assert bad["ratio"] is None and bad["delta"] == pytest.approx(1.0, abs=1e-6)
-        # 消息不能说“x 倍”，只能说差了多少（比值不存在）
-        assert any("1.0000 higher in eval()" in r.getMessage() for r in caplog.records)
-
-        Signed.shift = 0.2   # 差出 0.2 < 0.5 → 不告警
-        caplog.clear()
-        with caplog.at_level("WARNING", logger=LOGGER.name):
-            ok = trainer.train_eval_gap(windows=64, repeats=1)
-        assert ok["delta"] == pytest.approx(0.2, abs=1e-6)
-        assert not any("train/eval mismatch" in r.getMessage() for r in caplog.records)
+        assert gap["symmetric_gap"] == pytest.approx(0.0, abs=1e-6)
+        assert gap["verdict"]["loss_report"]["gates_verdict"] is False
+        assert all(math.isfinite(mode["speed_ratio"])
+                   for mode in gap["modes"].values())
     finally:
-        Signed.shift = 0.0
         MODELS.pop("test_signed_loss_model")
