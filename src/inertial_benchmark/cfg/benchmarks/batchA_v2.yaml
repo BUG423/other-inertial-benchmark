@@ -1,0 +1,51 @@
+# IPB v1 batch A v2：12 个代表性学习方法 + 2 个经典基线 × 3 个低成本数据集 × seed 0。
+#
+# v2 必须从零运行，不能复用旧 batchA：数据划分与数据集指纹已在 ffb4d63 改变，训练诊断也已
+# 在 8afafd7 升级。固定代码版本请用独立 detached worktree；矩阵只评 val，绝不触碰 test。
+#
+# 模型清单取舍：
+# * 保留 batchA 的各类核心方法，但去掉与 imunet 同家族的 mobilenetv2 架构变体；
+# * 加入 RNIN（完整算法代表）以及研究判别最需要的 GNIO 门控头、VeloBins 分箱头；
+# * 其余 RoNIN/IMUNet 骨干变体与 CTIN/iMoT/IONext/DIVE/AirIO/NIO-LieEvents 放 batch B，
+#   避免首批从 42 个 run 膨胀到 60–90 个 run 后迟迟没有可用的完整横向表。
+#
+# 数据集：RIDI / IMUNet / RNIN 分别覆盖自然携带、ARCore/Tango 参考、混合参考与非均匀源频率。
+# 等窗口预算 3.2e7，框架按每个模型/数据集的有效窗口数换算 epoch；上限 400 足以覆盖 RIDI。
+# val 条件覆盖审计见 docs/DATASETS_V1.md §2.1：8/8 数据集 val 新条件为 0。
+name: batchA_v2
+project: /workspace/webCodex/ipb-runs/benchmark
+datasets: [ridi, imunet, rnin]
+seeds: [0]
+splits: [val]            # 诚实协议：开发矩阵只看 val
+report: false            # 部分完成时手动运行 ipb report
+continue_on_error: true
+models:
+  # 经典基线先跑，几分钟内即可验证固定检出、数据与输出目录是否正常。
+  - {label: pdr, model: pdr, overrides: {orientation: reference}}
+  - {label: mean_speed_heading, model: mean_speed_heading,
+     overrides: {orientation: reference}}
+  # 代表性学习方法；一个条目对应一个算法家族/研究问题，不铺骨干变体。
+  - ronin_resnet18
+  - gnio
+  - velobins
+  - tlio
+  - rnin
+  - imunet
+  - deepils
+  - eqnio_ronin
+  - llio
+  - tinyodom
+  - rio
+  - ionet
+overrides:
+  recipe: unified
+  train_windows_budget: 32000000
+  budget_max_epochs: 400
+  fitness: ate
+  fitness_stat: median   # val 组数少且逐序列误差偏斜；全表固定同一选模统计量
+  amp: false             # AMP 可触发 RoNIN 式头的静默幅值塌陷
+  deterministic: true
+  device: 0              # 配合 CUDA_VISIBLE_DEVICES=2，只暴露物理 GPU2
+  workers: 8
+  save_predictions: false
+  plots: false

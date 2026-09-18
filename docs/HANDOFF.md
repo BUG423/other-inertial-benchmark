@@ -153,10 +153,10 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
 
 ### 5.1 立刻要做的
 
-1. **重启基准矩阵**：`cfg/benchmarks/batchA.yaml` 已存在（12 模型 × 3 数据集 × seed 0，只评 val）。
-   现在模型已扩到 31 个注册名，建议重新拟定模型清单。**重要教训：矩阵必须跑在固定代码版本的独立检出上**
-   （例如 `git worktree add /workspace/webCodex/ipb-bench <commit>`），否则开发中的改动会让前后 run 不可比。
-   上一批只完成 1 个 run 就因划分修正而作废。
+1. **基准矩阵**：旧 `batchA` 只完成 1 个 run 就因划分修正而作废；不要复用其输出目录。
+   新 `cfg/benchmarks/batchA_v2.yaml` 是 12 个代表性学习方法 + 2 个经典基线 × 3 数据集 × seed 0
+   （42 个 run，只评 val），去掉冗余 IMUNet 骨干变体，加入 RNIN、GNIO、VeloBins。矩阵必须跑在
+   固定提交的独立 detached worktree 上，否则开发中的改动会让前后 run 不可比。
 
 已在本轮完成：分层划分真实数据 dry-run 审计（8/8 的 val 新条件为 0）、两处数据文档与四个新指纹更新
 （`34ee383`）；四模式 MC-dropout 守卫及矩阵摘要接入（`8afafd7`）。
