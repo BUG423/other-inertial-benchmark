@@ -1,6 +1,6 @@
 # IPB v1 开发交接文档 / Handoff
 
-> 状态快照：2026-09-18。分支 `dev/v1`，提交 `ffb4d63`，700 个测试通过，`ruff check src tests` 0 错误。
+> 状态快照：2026-09-18。分支 `dev/v1`，提交 `8afafd7`，705 个测试通过，`ruff check src tests` 0 错误。
 > 本文件面向**接手开发的人或 Agent**，回答四个问题：为什么做、要求是什么、做到哪了、接下来怎么做。
 > 设计决策的权威来源是 [`DESIGN.md`](DESIGN.md)（设计宪法），本文件不重复其内容，只做导航与状态记录。
 
@@ -117,8 +117,9 @@ ipb report  runs=<运行目录> out=<报表目录>                      # 部分
 - **评测协议锁定**：模型 YAML 不得改写评测协议键；生效协议写入 `args.yaml` 与 `metrics.json`，
   `ipb report` 会比对不同 run 的协议是否一致。
 - **等窗口预算**：`train_windows_budget`（默认 3.2e7）按每轮窗口数换算 epoch，使大小数据集获得同等优化预算。
-- **训练诊断**：`train_eval_gap` 守卫在训练结束比较 `train()`/`eval()` 两模式的窗口损失并写入 `metrics.json`
-  （当前为单侧判据，待改双侧，见 §6.1）。
+- **训练诊断**：`train_eval_gap` 在训练结束正交比较 `eval` / `dropout_only` / `bn_only` / `train`
+  四种模式，含 dropout 的模式做 K=8 MC 均值；窗口损失、`speed_ratio`、dropout/BN 归因、逐层风险与
+  verdict 都写入 `metrics.json`。主判据是 dropout 幅值恢复量，val 损失的双侧比只报告、不门禁（见 §6.1）。
 
 ### 4.3 算法
 
@@ -152,29 +153,27 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
 
 ### 5.1 立刻要做的
 
-1. **分层划分的收尾**（提交 `ffb4d63` 标注为 partially complete）：
-   - 重跑一次划分审计表，证明"val 条件被 train 覆盖"的问题确实消失；
-   - 更新 `docs/DESIGN.md` §2.4（分层规则与理由）与 `docs/DATASETS_V1.md`（新划分规模、`test_ood_*` 子集说明）；
-   - 数据集指纹已随重算更新（`tests/data/test_converted_datasets.py`），如再次重算需同步更新。
-2. **`train_eval_gap` 守卫改双侧**（规格已定，见 §6.1）。
-3. **重启基准矩阵**：`cfg/benchmarks/batchA.yaml` 已存在（12 模型 × 3 数据集 × seed 0，只评 val）。
+1. **重启基准矩阵**：`cfg/benchmarks/batchA.yaml` 已存在（12 模型 × 3 数据集 × seed 0，只评 val）。
    现在模型已扩到 31 个注册名，建议重新拟定模型清单。**重要教训：矩阵必须跑在固定代码版本的独立检出上**
    （例如 `git worktree add /workspace/webCodex/ipb-bench <commit>`），否则开发中的改动会让前后 run 不可比。
    上一批只完成 1 个 run 就因划分修正而作废。
 
+已在本轮完成：分层划分真实数据 dry-run 审计（8/8 的 val 新条件为 0）、两处数据文档与四个新指纹更新
+（`34ee383`）；四模式 MC-dropout 守卫及矩阵摘要接入（`8afafd7`）。
+
 ### 5.2 中期
 
-4. **第三批算法**：PedestrianDiffusion（AGPL，37M 参数，频域扩散）等尚未移植；
+2. **第三批算法**：PedestrianDiffusion（AGPL，37M 参数，频域扩散）等尚未移植；
    `docs/ALGORITHMS.md` §3 列出仍未落地的协议扩展（有状态递推逐帧输出、TTT、EKF 融合、
    `orientation_fallback`、窗口速度上限过滤）。
-5. **框架缺口**：`frame=body` 下的 `random_yaw` 会同时旋转输入与目标（自相抵消），
+3. **框架缺口**：`frame=body` 下的 `random_yaw` 会同时旋转输入与目标（自相抵消），
    真正需要的是"只旋转姿态支路"的算子；`CHOICES["loss"]` 仍是白名单，命令行无法覆盖模型专用损失。
-6. **多种子与 test 评测**：矩阵目前设计为单种子、只评 val；最终主表需要 3 个种子，test 一次性评测。
+4. **多种子与 test 评测**：矩阵目前设计为单种子、只评 val；最终主表需要 3 个种子，test 一次性评测。
 
 ### 5.3 长期
 
-7. 其余数据集接入（Mobile-GVIO 原始包已在本地未转换；Aria/Nymeria/TartanIMU Challenge 需授权）。
-8. 排行榜与版本化结果发布；README 与 `docs/` 的英文版本。
+5. 其余数据集接入（Mobile-GVIO 原始包已在本地未转换；Aria/Nymeria/TartanIMU Challenge 需授权）。
+6. 排行榜与版本化结果发布；README 与 `docs/` 的英文版本。
 
 ## 6. 接手者必须知道的坑
 
@@ -188,12 +187,14 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
 后果与要求：
 - **主表所有 run 必须 `amp=false`**（现已是默认值）；
 - 任何 `amp=true` 的历史结果都应视为可疑；
-- `train_eval_gap` 守卫要改成**双侧**：`gap = max(r, 1/r) > 1.5` 告警、`> 3` 报错，
-  对有符号损失用差值判据；同时记录两种模式的 `speed_ratio`/`plr`，并做 dropout/BN 通道归因
-  （`dropout_only` 用 K=8 的 MC 平均，单次采样会系统性抬高幅值比）；
+- `train_eval_gap` 已改成四模式守卫：`dropout_only` / `train` 用 K=8 的 MC 预测均值，单次采样因范数
+  凸性会系统性抬高幅值比；主判据 `Δsr_drop > 0.02` 告警、`> 0.05` 记错误，eval `speed_ratio`
+  低于 0.78/0.65 或高于 1.15 为辅判据，并做 dropout/BN 通道归因；
+- **不要恢复损失比门禁**：逐轮实测已经否定它。健康 RoNIN 的 val 双侧损失比可达 6.6，而塌陷最深
+  时只有 1.10；原始比、双侧比和有符号安全差值现在只作为 `loss_report` 留档；
 - 可豁免的模型：dropout 紧接仿射输出层者（`imunet_mnasnet`、`imunet_efficientnetb0`）、
   无 dropout 者（`imunet`、`imunet_mobilenet`、`imunet_mobilenetv2`）、`tinyodom`（p=0）。
-  其余 17/20 个配置的 dropout 上游含非线性，守卫必须开启。
+  其余含后续非线性的 dropout（包括注意力/多层 RNN 内部函数式 dropout）守卫必须开启。
 
 ### 6.2 其他
 
