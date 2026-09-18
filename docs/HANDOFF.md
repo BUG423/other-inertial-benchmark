@@ -1,6 +1,6 @@
 # IPB v1 开发交接文档 / Handoff
 
-> 状态快照：2026-09-18。分支 `dev/v1`，提交 `8afafd7`，705 个测试通过，`ruff check src tests` 0 错误。
+> 状态快照：2026-09-18。分支 `dev/v1`，基准冻结提交 `90d698c`，705 个测试通过，`ruff check src tests` 0 错误。
 > 本文件面向**接手开发的人或 Agent**，回答四个问题：为什么做、要求是什么、做到哪了、接下来怎么做。
 > 设计决策的权威来源是 [`DESIGN.md`](DESIGN.md)（设计宪法），本文件不重复其内容，只做导航与状态记录。
 
@@ -60,7 +60,7 @@
 cd /workspace/webCodex/inertial-positioning-benchmark
 python -m venv --system-site-packages .venv && .venv/bin/pip install -e . --no-deps   # 或直接 PYTHONPATH=src
 export IPB_DATASETS=/workspace/webCodex/datasets/ipb
-PYTHONPATH=src python -m pytest -q          # 期望：700 passed
+PYTHONPATH=src python -m pytest -q          # 期望：705 passed
 ruff check src tests                        # 期望：0 错误
 PYTHONPATH=src python -m inertial_benchmark info
 ```
