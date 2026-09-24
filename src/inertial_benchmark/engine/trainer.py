@@ -223,7 +223,7 @@ class Trainer:
         self.train_set.set_epoch(epoch)
         total, count, items_sum = 0.0, 0, {}
         grad_clip = float(a.grad_clip)
-        for batch in self.train_loader:
+        for batch_idx, batch in enumerate(self.train_loader):
             self.batch = batch
             run_callbacks(self.callbacks, "on_train_batch_start", self)
             x = batch["imu"].to(self.device, non_blocking=True)
@@ -237,12 +237,25 @@ class Trainer:
             loss, items = de_parallel(model).loss(
                 out, {"target": y, "imu": x, "mask": mask, "extra": extra}, epoch)
             if not torch.isfinite(loss):
-                raise FloatingPointError(f"non-finite loss at epoch {epoch}: {loss.item()}")
+                raise FloatingPointError(
+                    f"non-finite loss at epoch {epoch} batch {batch_idx}: {loss.item()}"
+                )
             self.optimizer.zero_grad(set_to_none=True)
             self.scaler.scale(loss).backward()
-            if grad_clip > 0:
-                self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+            # A finite scalar loss does not imply finite gradients.  In particular, a very large
+            # heteroscedastic-NLL gradient can overflow the global norm; silently clipping that
+            # norm may multiply ``inf`` entries by zero and poison otherwise finite parameters.
+            # Always unscale and validate before the optimizer is allowed to mutate the model.
+            self.scaler.unscale_(self.optimizer)
+            max_norm = grad_clip if grad_clip > 0 else math.inf
+            try:
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), max_norm, error_if_nonfinite=True
+                )
+            except RuntimeError as exc:
+                raise FloatingPointError(
+                    f"non-finite gradient norm at epoch {epoch} batch {batch_idx}: {exc}"
+                ) from exc
             self.scaler.step(self.optimizer)
             self.scaler.update()
             n = x.shape[0]

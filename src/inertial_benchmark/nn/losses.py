@@ -70,7 +70,11 @@ def gaussian_nll(pred: torch.Tensor, logstd: torch.Tensor, target: torch.Tensor,
     """
     if min_logstd is not None or max_logstd is not None:
         logstd = torch.clamp(logstd, min=min_logstd, max=max_logstd)
-    terms = (pred - target) ** 2 / (2.0 * torch.exp(2.0 * logstd)) + logstd
+    # ``error / exp(2u)`` is algebraically equivalent but not backward-stable: for a large
+    # positive finite ``u``, ``exp(2u)`` becomes ``inf`` and autograd differentiates the finite
+    # quotient through an indeterminate ``0 * inf`` chain.  The precision form keeps both the
+    # forward value and its gradient finite on that side without changing the objective.
+    terms = 0.5 * (pred - target) ** 2 * torch.exp(-2.0 * logstd) + logstd
     return masked_mean(terms, expand_mask(mask, pred))
 
 

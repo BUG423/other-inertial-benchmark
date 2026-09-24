@@ -703,6 +703,24 @@ def test_sgd_without_momentum_disables_nesterov():
     assert build_optimizer(model, "sgd", 0.1, momentum=0.9).param_groups[0]["nesterov"]
 
 
+def test_nonfinite_gradient_is_rejected_before_optimizer_step(dataset, tmp_path, monkeypatch):
+    """Even runs without clipping must validate the unscaled gradient norm before stepping."""
+    seen = []
+
+    def fail_on_nonfinite(parameters, max_norm, **kwargs):
+        list(parameters)  # consume the generator just like torch's implementation
+        seen.append((max_norm, kwargs.get("error_if_nonfinite")))
+        raise RuntimeError("The total norm of gradients is non-finite")
+
+    monkeypatch.setattr(torch.nn.utils, "clip_grad_norm_", fail_on_nonfinite)
+    trainer = Trainer(overrides={**TINY, "data": str(dataset), "epochs": 1,
+                                 "project": str(tmp_path), "name": "grad-guard",
+                                 "grad_clip": 0.0, "save_predictions": False, "plots": False})
+    with pytest.raises(FloatingPointError, match=r"epoch 0 batch 0.*non-finite"):
+        trainer.train()
+    assert seen == [(math.inf, True)]
+
+
 def test_view_config_from_model_spec(zero_model):
     cfg = get_cfg({"model": zero_model, "frame": "gravity_yaw_local", "dims": 3})
     predictor = Predictor(cfg, device=torch.device("cpu"))

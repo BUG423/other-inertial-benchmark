@@ -94,6 +94,7 @@
 | 保留 3 维输出（`dims=3`），评测只用水平分量 | 不改变结构 | TLIO 的贡献就是 3D 位移+不确定度，z 轴监督是官方损失的一部分；改成 2 维会改变 `fc3` 形状（参数量 5,423,620）和 NLL 的轴数。IPB 在重力系下允许 `dims=3` |
 | 增强 `[bias_shift(gyro=0.05, acc=0.2), gravity_perturb(max_deg=5), random_yaw(±π), time_shift(0..9)]`，顺序同官方 | 不改变结构 | 与官方训练数据管线一致 |
 | 损失阶段切换保留：epoch（1 起）< 10 时 `logstd.detach()`，之后完整 NLL，`logstd` 下限 `log(1e-3)` | 不改变结构 | DESIGN §4 要求专用损失与阶段切换与官方一致 |
+| NLL 在代码中用精度形式 `0.5·(d̂−d)²·exp(−2u') + u'` 计算 | 不改变数学目标 | 与官方的除法形式代数等价；避免大正 `u` 使方差溢出后出现“前向有限、反向 NaN” |
 | 梯度裁剪 0.1；学习率恒定 1e-4（official 配方复现“调度器未生效”）；unified 配方按 IPB 统一预算设 epoch，但 epoch 数必须 ≥ 10 才会进入 NLL 阶段 | 不改变结构 | 忠实复现官方真实行为；unified 下若使用调度器需在配置中显式声明 |
 | 选模依据：official 配方用 val 平均 NLL；unified 配方用 IPB 默认 val ATE | 不改变结构 | DESIGN §6 诚实协议 |
 | 不实现 EKF（v1 只评网络 + IPB 积分，等价于论文的 “3D-RONIN”/他文的 “TLIO (wo EKF)”） | 不改变网络结构，但**不是论文主结果的完整系统** | IPB v1 的推理协议是“窗口速度 → 梯形积分”；EKF 需要原始 IMU、偏置状态与滤波器姿态，可作为后续 `tlio_ekf` 单独登记 |

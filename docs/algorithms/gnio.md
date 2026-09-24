@@ -113,6 +113,7 @@ d̂  = s̃ ⊙ g              ∈ R³            # 逐元素乘（Hadamard）
 | 视图：`window=200, stride=20, eval_stride=20, frame=gravity_yaw_local, orientation=reference, remove_gravity=false, dims=3, target=displacement` | 不改变结构 | 与论文的 1.0 s 窗口、0.1 s 步长一致；与 `tlio` 卡使用同一视图，GNIO 与 TLIO 的差异才只在网络 |
 | 输出保留 3 维，水平指标只取 xy；`vel = d̂/0.995 s`，`logstd_vel = u − log(0.995)` | 不改变结构 | 与 `tlio`、`llio` 卡一致；改成 2 维会改变三个输出头（4,932,614） |
 | 损失按式 13 原样实现（静态加权，λ_MSE=1e2、λ_NLL=1e-4），不擅自改成真正的两阶段切换 | 不改变结构 | 忠实于论文公式；如需比较，另注册 `gnio@2stage`（前 10 epoch 只用 MSE）并在结果中标注为偏离 |
+| NLL 用精度形式 `0.5·(d̂−d)²·exp(−2u) + u` 计算 | 不改变数学目标 | 与式 14 的方差除法形式代数等价；避免大正 `u` 使前向有限但反向梯度 NaN |
 | `u` 加下限 `max(u, log 1e-3)`（可配置，默认关闭） | 不改变结构 | TLIO 有此下限，GNIO 未提；NLL 在 σ→0 时数值不稳定，作为可选保护并记录 |
 | 不使用 EKF；轨迹按 DESIGN §5 积分 | 不改变网络结构，但**不是论文的完整系统** | 论文全部数值为 EKF 融合结果，IPB v1 只评“网络 + 统一积分”，对照口径见 §7 |
 | 偏置：官方用 EKF 估计的偏置在线扣除，IPB 不做偏置补偿，改用偏置增强 | 不改变结构 | IPB 数据格式没有偏置字段；这是滤波器在环与纯网络评测的固有差异 |

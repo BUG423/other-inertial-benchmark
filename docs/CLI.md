@@ -159,20 +159,24 @@ benchmark run planned: {"i": 1, "n": 36, "model": "ronin_resnet18", "dataset": "
 `continue_on_error: true`（或命令行 `continue_on_error=true`）时单个组合失败不终止矩阵：状态里
 带 `error`，写进 `benchmark.json`，命令最终以退出码 `1` 结束。
 
-#### 内置 `batchA`
+#### 内置 `batchA_v3`
 
-`cfg/benchmarks/batchA.yaml`：十个学习型算法 + 两个经典基线 × `ridi` / `imunet` / `rnin` × 种子 0，
+`cfg/benchmarks/batchA_v3.yaml`：十二个学习型算法 + 两个经典基线 × `ridi` / `imunet` / `rnin` × 种子 0，
 `recipe: unified`、`fitness=ate` + `fitness_stat=median`、`amp=false`、`deterministic=true`、
 `train_windows_budget=3.2e7`（`budget_max_epochs=400`），`splits: [val]` —— **只评 val**，遵守
 DESIGN 第 6 节的诚实协议。
 
+`batchA` 已因划分修正作废；`batchA_v2` 在固定提交 `90d698c` 上暴露了异方差 NLL 的有限前向 /
+NaN 反向问题，只保留作诊断证据。`batchA_v3` 使用代数等价的稳定 NLL，必须使用全新输出目录，
+不得与旧矩阵拼接。
+
 ```bash
-CUDA_VISIBLE_DEVICES=2 CUDA_DEVICE_ORDER=PCI_BUS_ID ipb benchmark cfg=batchA   # 启动/续跑
-ipb benchmark cfg=batchA dry_run=true                                          # 只看计划
-ipb report runs=<project>/batchA out=<project>/batchA/report                    # 部分完成即可汇总
+CUDA_VISIBLE_DEVICES=2 CUDA_DEVICE_ORDER=PCI_BUS_ID ipb benchmark cfg=batchA_v3   # 启动/续跑
+ipb benchmark cfg=batchA_v3 dry_run=true                                          # 只看计划
+ipb report runs=<project>/batchA_v3 out=<project>/batchA_v3/report                # 部分完成即可汇总
 ```
 
-最终一次性评 test（**需先确认**）：复制 `batchA.yaml`、保留同一个 `name` 与 `project`、删掉
+最终一次性评 test（**需先确认**）：复制 `batchA_v3.yaml`、保留同一个 `name` 与 `project`、删掉
 `splits`（改用各数据集 YAML 的 `test_splits`），再跑同一条命令——训练目录已有 `metrics.json`，
 训练会被跳过，只做一次 test 评测。
 

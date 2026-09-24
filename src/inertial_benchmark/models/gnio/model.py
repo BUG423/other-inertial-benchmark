@@ -117,7 +117,9 @@ class GNIOStaticWeightedLoss:
             logstd = torch.clamp(logstd, min=self.min_logstd, max=self.max_logstd)
         error = (pred - target) ** 2
         squared = masked_output_mean(error.sum(dim=-1), mask)
-        terms = 0.5 * error / torch.exp(2.0 * logstd) + logstd
+        # Precision form is mathematically identical to division by ``exp(2u)`` but avoids a
+        # finite forward / NaN backward path when a large positive ``u`` overflows the variance.
+        terms = 0.5 * error * torch.exp(-2.0 * logstd) + logstd
         nll = masked_mean(terms.sum(dim=-1, keepdim=True),
                           expand_mask(mask, terms.sum(dim=-1, keepdim=True)))
         loss = self.mse_weight * squared + self.nll_weight * nll

@@ -164,6 +164,18 @@ def test_gaussian_nll_value_and_clamp():
     assert torch.all(tiny.grad == 0)  # 裁剪区间外无梯度（与 TLIO 相同）
 
 
+def test_gaussian_nll_large_positive_logstd_has_finite_backward():
+    """Variance overflow must not turn a finite NLL into a NaN gradient."""
+    pred = torch.tensor([[1.0]], requires_grad=True)
+    logstd = torch.tensor([[60.0]], requires_grad=True)
+    value = gaussian_nll(pred, logstd, torch.zeros_like(pred), min_logstd=None,
+                         max_logstd=None)
+    value.backward()
+    assert value.item() == pytest.approx(60.0)
+    assert torch.isfinite(pred.grad).all() and torch.isfinite(logstd.grad).all()
+    assert logstd.grad.item() == pytest.approx(1.0)
+
+
 def test_losses_support_per_frame_and_multi_step_targets_with_masks():
     """逐帧/多步目标：损失按掩码跳过无效的帧/步（DESIGN 第 3 节）。"""
     pred = torch.tensor([[[1.0, 0.0], [0.0, 0.0], [5.0, 0.0]]])  # (B=1, R=3, D=2)

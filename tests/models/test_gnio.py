@@ -162,6 +162,7 @@ def test_motion_bank_residual_and_one_hot_attention():
 
 def test_static_weighted_loss():
     """式 13 是静态加权和：权重比 1e6，且不随 epoch 切换（规格卡 §10-1）。"""
+    build()  # import/register the model-specific loss even when this test runs in isolation
     loss_fn = build_loss("gnio_static_weighted")
     assert loss_fn.mse_weight == 1.0e2 and loss_fn.nll_weight == 1.0e-4
     assert loss_fn.mse_weight / loss_fn.nll_weight == pytest.approx(1.0e6)
@@ -182,6 +183,15 @@ def test_static_weighted_loss():
                         target, epoch=0)
     value.backward()
     assert logstd.grad is None or float(logstd.grad.abs().max()) == 0.0
+    # Large positive logstd used to keep the forward loss finite while producing NaN gradients
+    # through ``error / exp(2u)``.  GNIO intentionally has no paper-specified clamp, so the loss
+    # itself must use the equivalent, backward-stable precision form.
+    pred = torch.ones(BATCH, 3, requires_grad=True)
+    logstd = torch.full((BATCH, 3), 60.0, requires_grad=True)
+    value, _ = loss_fn({"vel": pred, "logstd": logstd}, torch.zeros_like(pred), epoch=0)
+    value.backward()
+    assert torch.isfinite(value) and torch.isfinite(pred.grad).all()
+    assert torch.isfinite(logstd.grad).all()
 
 
 def test_loss_masks_invalid_outputs():

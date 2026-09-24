@@ -1,6 +1,7 @@
 # IPB v1 开发交接文档 / Handoff
 
-> 状态快照：2026-09-18。分支 `dev/v1`，基准冻结提交 `90d698c`，705 个测试通过，`ruff check src tests` 0 错误。
+> 状态快照：2026-09-24。分支 `dev/v1`。`batchA_v2` 冻结在 `90d698c`；其数值失败已定位并
+> 修复，下一轮基准为 `batchA_v3`。最近一次完整回归为 705 个测试通过，`ruff check src tests` 0 错误。
 > 本文件面向**接手开发的人或 Agent**，回答四个问题：为什么做、要求是什么、做到哪了、接下来怎么做。
 > 设计决策的权威来源是 [`DESIGN.md`](DESIGN.md)（设计宪法），本文件不重复其内容，只做导航与状态记录。
 
@@ -154,9 +155,11 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
 ### 5.1 立刻要做的
 
 1. **基准矩阵**：旧 `batchA` 只完成 1 个 run 就因划分修正而作废；不要复用其输出目录。
-   新 `cfg/benchmarks/batchA_v2.yaml` 是 12 个代表性学习方法 + 2 个经典基线 × 3 数据集 × seed 0
-   （42 个 run，只评 val），去掉冗余 IMUNet 骨干变体，加入 RNIN、GNIO、VeloBins。矩阵必须跑在
-   固定提交的独立 detached worktree 上，否则开发中的改动会让前后 run 不可比。
+   `batchA_v2`（固定提交 `90d698c`）已遍历 42 项并得到 35 个有限 val 结果；GNIO 2 项、TLIO
+   3 项、LLIO 2 项因异方差 NLL 的数值反向问题失败。它们是诊断结果，不是完整主表。
+   `cfg/benchmarks/batchA_v3.yaml` 保持相同的 12 个学习方法 + 2 个经典基线、3 个数据集、seed 0
+   和 3.2e7 窗口预算，只加入 §6.2 的代数等价数值修复。v3 必须从零跑在新固定提交的独立
+   detached worktree 上；不得复用或混入 v2 输出，只评 val。
 
 已在本轮完成：分层划分真实数据 dry-run 审计（8/8 的 val 新条件为 0）、两处数据文档与四个新指纹更新
 （`34ee383`）；四模式 MC-dropout 守卫及矩阵摘要接入（`8afafd7`）。
@@ -196,7 +199,20 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
   无 dropout 者（`imunet`、`imunet_mobilenet`、`imunet_mobilenetv2`）、`tinyodom`（p=0）。
   其余含后续非线性的 dropout（包括注意力/多层 RNN 内部函数式 dropout）守卫必须开启。
 
-### 6.2 其他
+### 6.2 异方差 NLL 的有限前向 / NaN 反向陷阱
+
+`batchA_v2` 的 7 个失败项不是 checkpoint 损坏：权重和优化器状态全部有限，失败发生在连续训练中。
+根因是把高斯 NLL 写成 `error / exp(2u) + u`。较大的有限正 `u` 会使 `exp(2u)=inf`；前向商为
+0，loss 仍有限，但自动微分的除法链出现 `0 × inf`，梯度成为 NaN。GNIO/RIDI 的冻结 checkpoint
+在 epoch 2、batch 465 稳定复现：旧式 loss=3.218，但梯度范数为 NaN。
+
+修复与要求：
+- 改写为代数等价的精度形式 `error × exp(-2u) + u`，不改目标函数、clamp 或论文配方；
+- 每个 batch 在 optimizer step 前检查**未缩放梯度**的全局范数，即使 `grad_clip=0` 也检查；
+- 同一 GNIO/RIDI checkpoint 的修复后反事实复现完整跑过 771 个 batch，全部有限；
+- 因代码版本改变，不能只补跑 7 项并与 v2 的 35 项拼表，必须启动全新的 `batchA_v3`。
+
+### 6.3 其他
 
 - **验证集代表性**：RIDI 曾出现 val 只有 1 名受试者、且其携带方式在 train 中完全不存在，
   导致方向误差中位数 53°、均值 ATE 11 m 而中位数 1.58 m。已用分层划分修正，
