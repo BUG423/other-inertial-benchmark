@@ -158,8 +158,10 @@ ATE（欧氏定义）、ATE_aligned、RTE（RoNIN 定义）、T-RTE、D-RTE、PD
    `batchA_v2`（固定提交 `90d698c`）已遍历 42 项并得到 35 个有限 val 结果；GNIO 2 项、TLIO
    3 项、LLIO 2 项因异方差 NLL 的数值反向问题失败。它们是诊断结果，不是完整主表。
    `cfg/benchmarks/batchA_v3.yaml` 保持相同的 12 个学习方法 + 2 个经典基线、3 个数据集、seed 0
-   和 3.2e7 窗口预算，只加入 §6.2 的代数等价数值修复。v3 必须从零跑在新固定提交的独立
-   detached worktree 上；不得复用或混入 v2 输出，只评 val。
+   和 3.2e7 窗口预算，只加入 §6.2 的代数等价数值修复。v3 已冻结在提交 `5ac2dad`，独立
+   worktree 为 `/workspace/webCodex/ipb-bench-v3`，输出为
+   `/workspace/webCodex/ipb-runs/benchmark/batchA_v3`；42 项 dry-run 已通过，runner 在 GPU2
+   非空闲或驱动不可见时会拒绝启动。不得复用或混入 v2 输出，只评 val。
 
 已在本轮完成：分层划分真实数据 dry-run 审计（8/8 的 val 新条件为 0）、两处数据文档与四个新指纹更新
 （`34ee383`）；四模式 MC-dropout 守卫及矩阵摘要接入（`8afafd7`）。
