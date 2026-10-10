@@ -33,14 +33,7 @@ python -m pip install -e ".[test]"
 pytest -q
 ```
 
-Run the Android and conversion checks:
-
-```bash
-cd tools/inertial-positioning-lab
-./gradlew testDebugUnitTest lintDebug assembleDebug
-python -m pip install -r requirements-dev.txt
-pytest -q
-```
+Android capture and on-device evaluation checks are maintained in the standalone [`inertial-lab`](https://github.com/BUG423/inertial-lab) repository.
 
 The GitHub Actions workflow runs these checks on every push to `main`.
 

@@ -6,12 +6,13 @@
 
 [![CI](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
-![Android](https://img.shields.io/badge/Android-API%2026%2B-3DDC84?logo=android&logoColor=white)
+[![Android Lab](https://img.shields.io/badge/Android%20Lab-inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/inertial-lab)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/status-active-2ea44f)
 
 **🇨🇳 中文** · [🇬🇧 English](README_EN.md)
 
-[快速开始](#-快速开始) · [目录结构](#-目录结构) · [研究内容](#-研究内容) · [路线图](#-路线图)
+[快速开始](#-快速开始) · [研究内容](#-研究内容) · [路线图](#-路线图) · [贡献与许可](#-贡献与许可)
 
 </div>
 
@@ -21,25 +22,50 @@
 
 不同惯性里程计项目往往采用不同的数据格式、坐标系、窗口定义和评测协议，导致方法难以公平比较、实验难以完整复现。本仓库将以下内容统一组织在一套边界清晰的研究基础设施中：
 
-- 📦 **标准数据接口**：统一时间戳、坐标系、单位、HDF5 存储与窗口化；
-- 📱 **数据采集工具**：使用 Android 设备采集 IMU 与 ARCore VIO 参考轨迹；
-- 🧪 **研究内容**：保存方法提案、实验研究和相关图表；
-- 🧠 **科研工作流**：仅保留 PaperFlow 中面向惯性里程计的 IO 技能；
-- 📚 **环境复现文档**：归档 FAST-LIVO 在 Ubuntu 20.04 + ROS Noetic 下的依赖、编译与测试记录；
-- ✅ **自动化检查**：验证 Python 核心、Android 工程、转换工具和文档链接。
+- 📦 **标准数据接口**：统一时间戳、坐标系、单位、HDF5 存储与惰性滑窗数据集；
+- 📱 **配套数据采集**：与独立移动端实验工具 [Inertial Positioning Lab](https://github.com/BUG423/inertial-lab) 深度协同，支持 Android IMU 与 ARCore VIO 参考轨迹；
+- 🧪 **研究内容体系**：保存前沿方法提案、运动坐标系实证研究和可追溯图表；
+- 🧠 **科研工作流**：整合面向惯性里程计的专门研究技能工具；
+- 📚 **环境复现文档**：归档 FAST-LIVO 在 Ubuntu 20.04 + ROS Noetic 下的完整编译与复现记录；
+- ✅ **自动化检查**：全量保障 Python 核心接口、数据契约及文档一致性。
 
-目前，统一数据层与 Android 工具已经可用；公开数据集适配器、标准基线、固定评测协议和排行榜仍在建设中。
+### 视觉数据流与工程协同
 
-### 数据处理流程
+```mermaid
+flowchart TD
+    subgraph DataSources["📥 数据输入源"]
+        direction LR
+        Android["📱 Android 手机端采集<br/><b>Inertial Positioning Lab</b><br/>(200Hz IMU + ARCore VIO)"]
+        Public["🌐 公开基准数据集<br/>(RoNIN / RIDI / OxIOD / TLIO)"]
+    end
 
-```text
-设备采集 / 公开数据集
-        ↓
-CanonicalSequence（统一时间戳、坐标系与单位）
-        ↓
-HDF5 持久化 + WindowDataset 窗口化
-        ↓
-模型训练 / 方法评测 / 端侧部署
+    subgraph StandardContract["📐 标准数据契约与转换"]
+        IPLAB[".iplab 无损数据归档"]
+        Adapter["格式适配转换器<br/>(规范元数据 + 坐标系对齐)"]
+        HDF5["Canonical HDF5 (v0.1)<br/>严格单调时间戳 · wxyz 四元数 · 机体系比力"]
+    end
+
+    subgraph CoreBenchmark["🧭 Benchmark 核心层"]
+        Seq["CanonicalSequence<br/>统一序列对象"]
+        Win["WindowDataset<br/>惰性滑窗视图与特征提取"]
+    end
+
+    subgraph ResearchEcosystem["🔬 科学研究与应用"]
+        direction LR
+        Train["模型训练与基线评测"]
+        Research["方法提案 & 坐标系研究<br/>(PostDiffIO / ModeMoEIO)"]
+        EdgeDeploy["📲 LiteRT 端侧闭环验证<br/><b>Inertial Positioning Lab</b>"]
+    end
+
+    Android --> IPLAB
+    IPLAB --> Adapter
+    Public --> Adapter
+    Adapter --> HDF5
+    HDF5 --> Seq
+    Seq --> Win
+    Win --> Train
+    Win --> Research
+    Train -.-> EdgeDeploy
 ```
 
 > [!IMPORTANT]
@@ -47,42 +73,16 @@ HDF5 持久化 + WindowDataset 窗口化
 
 ## 🧩 当前组件
 
-| 组件 | 状态 | 说明 |
-| --- | --- | --- |
-| Benchmark Core | ✅ 可用 | `CanonicalSequence`、HDF5 I/O、窗口数据集与测试 |
-| Inertial Positioning Lab | ✅ 可用 | Android 采集、`.iplab` 归档、数据转换与端侧推理 |
-| Pedestrian Coordinate Frames | 📊 研究记录 | Global frame 与 body frame 的实验分析 |
-| PostDiffIO | 💡 方法提案 | 条件扩散后验细化与不确定性建模 |
-| ModeMoEIO | 💡 方法提案 | 面向不同运动状态的混合专家路由 |
-| PaperFlow IO | 🛠️ 研究工具 | IO 选题、文献复核、可行性评审与实验规划 |
-| FAST-LIVO Setup | 📚 环境文档 | ROS Noetic 下的 FAST-LIVO 历史复现与依赖说明 |
-| Public Baselines & Leaderboard | 🚧 规划中 | 数据适配器、固定划分、统一指标与排行榜 |
-
-## 🗂️ 目录结构
-
-```text
-inertial-positioning-benchmark/
-├── src/inertial_benchmark/       # Python 核心数据接口
-├── tests/                        # 核心、集成与文档一致性测试
-├── docs/                         # 数据规范、调研、环境复现与项目约定
-│   └── setup/fast-livo.md         # FAST-LIVO 历史环境复现指南
-├── tools/
-│   ├── inertial-positioning-lab/ # Android 采集与端侧评测工具
-│   └── paperflow-io/             # 仅面向 IO 的科研工作流
-├── research/
-│   ├── methods/                  # 尚未纳入正式基线的方法提案
-│   └── studies/                  # 可追溯的实验研究与资源
-├── .github/workflows/            # 全仓唯一的 CI 与发布流程
-└── pyproject.toml                # Python 项目与依赖配置
-```
-
-| 目录 | 内容入口 |
-| --- | --- |
-| `docs/` | [文档索引](docs/README.md) · [数据格式](docs/FORMAT.md) · [数据集](docs/DATASETS.md) · [论文](docs/PAPERS.md) · [FAST-LIVO 配置](docs/setup/fast-livo.md) |
-| `tools/` | [工具索引](tools/README.md) · [Android 工具](tools/inertial-positioning-lab/) · [PaperFlow IO](tools/paperflow-io/) |
-| `research/` | [研究索引](research/README.md) · [方法提案](research/methods/) · [实验研究](research/studies/) |
-
-目录职责、命名方式和新组件准入条件见[仓库目录规范](docs/REPOSITORY_LAYOUT.md)。
+| 组件 | 状态 | 仓库 / 说明 |
+| :--- | :--- | :--- |
+| **Benchmark Core** | ✅ 可用 | 本仓库内 `CanonicalSequence`、HDF5 I/O、窗口数据集与核心测试 |
+| **Inertial Positioning Lab** | 📱 独立工程 | [BUG423/inertial-lab](https://github.com/BUG423/inertial-lab) 专注于 Android 200Hz 采集、ARCore VIO 实时画布、`.iplab` 归档与 LiteRT 端侧推理 |
+| **Pedestrian Coordinate Frames** | 📊 研究记录 | [Global frame 与 body frame](research/studies/pedestrian-coordinate-frames/) 的行人惯导表征实验分析 |
+| **PostDiffIO** | 💡 方法提案 | [条件扩散后验细化](research/methods/postdiffio/)与不确定性建模提案 |
+| **ModeMoEIO** | 💡 方法提案 | [运动模式感知混合专家路由](research/methods/moe-io/)提案 |
+| **PaperFlow IO** | 🛠️ 研究工具 | [PaperFlow IO](tools/paperflow-io/) 惯导专用选题、文献复核与实验规划工作流 |
+| **FAST-LIVO Setup** | 📚 环境文档 | [ROS Noetic 环境文档](docs/setup/fast-livo.md) 下的 FAST-LIVO 历史复现指南 |
+| **Public Baselines & Leaderboard** | 🚧 规划中 | 自动化公开数据集适配器、固定划分基线、统一评测指标与排行榜 |
 
 ## 🚀 快速开始
 
@@ -96,20 +96,23 @@ python -m pip install -e ".[test]"
 
 项目要求 Python 3.9 或更高版本。
 
-### 2. 运行测试
+### 2. 运行自动化测试
 
 ```bash
 pytest -q
 ```
 
-该命令检查 Python 核心接口、Android 工具集成状态以及仓库内的相对文档链接。
+该命令执行 Python 核心数据接口、Android 数据规范契约以及全仓相对文档链接的自动化校验。
 
-### 3. 读取统一格式数据
+### 3. 读取统一规范数据
 
 ```python
 from inertial_benchmark import CanonicalSequence, WindowDataset
 
+# 加载标准化 HDF5 序列
 sequence = CanonicalSequence.from_hdf5("sequence.h5")
+
+# 构造模型滑窗数据集 (输入形状: 6 x window_size)
 dataset = WindowDataset(
     sequence,
     window_size=200,
@@ -117,28 +120,26 @@ dataset = WindowDataset(
     target="velocity",
 )
 sample = dataset[0]
+print("Feature shape:", sample.features.shape)  # (6, 200)
+print("Target velocity:", sample.target)         # [vx, vy, vz]
 ```
 
-核心数据层不依赖 PyTorch，可以由不同训练框架继续封装。
+核心数据层不依赖任何特定深度学习框架，可直接供 PyTorch、JAX 或 TensorFlow 调用。
 
-### 4. 转换 Android 采集数据
+### 4. 采集与转换 Android 数据
+
+手机端数据采集与真机评测已解耦为独立工程 [Inertial Positioning Lab](https://github.com/BUG423/inertial-lab)。
+
+使用流程：
+1. 从 [inertial-lab Releases](https://github.com/BUG423/inertial-lab) 下载并安装 APK；
+2. 在手机端完成 200 Hz IMU 与 ARCore VIO 轨迹采集，导出 `.iplab` 归档；
+3. 使用 `inertial-lab` 配套的转换工具导出为符合本基准契约的规范 HDF5：
 
 ```bash
-python tools/inertial-positioning-lab/tools/convert_dataset.py \
-  recording.iplab \
-  --output datasets/android
+python tools/convert_dataset.py recording.iplab --output datasets/android/
 ```
 
-格式详情请参阅 [Inertial Positioning Lab](tools/inertial-positioning-lab/)。
-
-### 5. 构建 Android 应用
-
-```bash
-cd tools/inertial-positioning-lab
-./gradlew testDebugUnitTest lintDebug assembleDebug
-```
-
-Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
+转换后的序列完全遵循本仓库的 `CanonicalSequence` 规范，可直接投入训练与评测。
 
 ## 🔬 研究内容
 
@@ -152,8 +153,8 @@ Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
 
 - [x] 定义统一序列结构、坐标系与单位约定
 - [x] 实现 HDF5 I/O、窗口数据集和核心测试
-- [x] 集成 Android 数据采集与端侧评测工具
-- [x] 整合研究方法、坐标系研究和 PaperFlow IO
+- [x] 解耦 Android 数据采集工程为独立仓库并制定统一转换契约
+- [x] 整合研究方法提案、坐标系实证研究和 PaperFlow IO
 - [x] 归档并整合 FAST-LIVO 的 ROS 1 环境复现指南
 - [ ] 接入首个可自动转换的公开数据集适配器
 - [ ] 集成至少一个端到端可复现基线
@@ -162,9 +163,10 @@ Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
 
 ## 🤝 贡献与许可
 
-本仓库只维护 `main`。提交内容前请阅读[贡献规范](CONTRIBUTING.md)，并为数据集、模型和第三方资源记录来源、许可证与再分发限制。
+本仓库只维护 `main` 分支。提交内容前请阅读[贡献规范](CONTRIBUTING.md)，并为数据集、模型和第三方资源记录来源、许可证与再分发限制。
 
-仓库级统一开源许可证尚未确定。源码公开不自动授予再分发或商业使用权；带独立许可证的组件继续遵循其目录中的条款。
+本项目采用 **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)** 许可协议。
+仅允许出于个人学习、学术交流与非商业性研究所需的阅读、本地运行与学习测试；未经原作者明确书面授权，严格禁止任何形式的商业用途与营利行为，禁止对外分发修改后的演绎产物。详见 [LICENSE](LICENSE)。
 
 ---
 

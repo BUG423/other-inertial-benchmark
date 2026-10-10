@@ -21,8 +21,9 @@ Environment-specific reproduction notes belong in `docs/setup/`. Each guide must
 
 Every direct child of `tools/` is one coherent component:
 
-- `inertial-positioning-lab/` owns Android capture, archive conversion, and on-device evaluation;
 - `paperflow-io/` owns the inertial-odometry-specific workflows preserved from PaperFlow's IO branch.
+
+The mobile data capture and on-device evaluation tool is maintained in the dedicated standalone repository [`inertial-lab`](https://github.com/BUG423/inertial-lab) and adheres to the benchmark's canonical data contracts.
 
 Generic paper-writing workflows do not belong in this repository.
 
