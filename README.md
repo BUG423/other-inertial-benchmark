@@ -1,20 +1,11 @@
-<div align="center">
+# 🧭 other-inertial-benchmark
 
-# 🧭 Inertial Positioning Benchmark
+[![CI](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Android Lab](https://img.shields.io/badge/Android%20Lab-app--inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/app-inertial-lab)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-red.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
-### 面向惯性定位研究的统一数据接口、采集工具与可复现实验平台
-
-[![CI](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
-[![Android Lab](https://img.shields.io/badge/Android%20Lab-inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/inertial-lab)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](LICENSE)
-![Status](https://img.shields.io/badge/status-active-2ea44f)
-
-**🇨🇳 中文** · [🇬🇧 English](README_EN.md)
-
-[快速开始](#-快速开始) · [研究内容](#-研究内容) · [路线图](#-路线图) · [贡献与许可](#-贡献与许可)
-
-</div>
+> **other-inertial-benchmark** 是面向惯性定位（Inertial Odometry）前沿研究的统一数据规范、标准接口契约与可复现科学评测基准平台。
 
 ---
 
@@ -23,7 +14,7 @@
 不同惯性里程计项目往往采用不同的数据格式、坐标系、窗口定义和评测协议，导致方法难以公平比较、实验难以完整复现。本仓库将以下内容统一组织在一套边界清晰的研究基础设施中：
 
 - 📦 **标准数据接口**：统一时间戳、坐标系、单位、HDF5 存储与惰性滑窗数据集；
-- 📱 **配套数据采集**：与独立移动端实验工具 [Inertial Positioning Lab](https://github.com/BUG423/inertial-lab) 深度协同，支持 Android IMU 与 ARCore VIO 参考轨迹；
+- 📱 **配套数据采集**：与独立移动端实验工具 [Inertial Positioning Lab](https://github.com/BUG423/app-inertial-lab) 深度协同，支持 Android IMU 与 ARCore VIO 参考轨迹；
 - 🧪 **研究内容体系**：保存前沿方法提案、运动坐标系实证研究和可追溯图表；
 - 🧠 **科研工作流**：整合面向惯性里程计的专门研究技能工具；
 - 📚 **环境复现文档**：归档 FAST-LIVO 在 Ubuntu 20.04 + ROS Noetic 下的完整编译与复现记录；
@@ -76,7 +67,7 @@ flowchart TD
 | 组件 | 状态 | 仓库 / 说明 |
 | :--- | :--- | :--- |
 | **Benchmark Core** | ✅ 可用 | 本仓库内 `CanonicalSequence`、HDF5 I/O、窗口数据集与核心测试 |
-| **Inertial Positioning Lab** | 📱 独立工程 | [BUG423/inertial-lab](https://github.com/BUG423/inertial-lab) 专注于 Android 200Hz 采集、ARCore VIO 实时画布、`.iplab` 归档与 LiteRT 端侧推理 |
+| **Inertial Positioning Lab** | 📱 独立工程 | [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab) 专注于 Android 200Hz 采集、ARCore VIO 实时画布、`.iplab` 归档与 LiteRT 端侧推理 |
 | **Pedestrian Coordinate Frames** | 📊 研究记录 | [Global frame 与 body frame](research/studies/pedestrian-coordinate-frames/) 的行人惯导表征实验分析 |
 | **PostDiffIO** | 💡 方法提案 | [条件扩散后验细化](research/methods/postdiffio/)与不确定性建模提案 |
 | **ModeMoEIO** | 💡 方法提案 | [运动模式感知混合专家路由](research/methods/moe-io/)提案 |
@@ -89,7 +80,7 @@ flowchart TD
 ### 1. 获取并安装
 
 ```bash
-git clone https://github.com/BUG423/inertial-positioning-benchmark.git
+git clone https://github.com/BUG423/other-inertial-benchmark.git
 cd inertial-positioning-benchmark
 python -m pip install -e ".[test]"
 ```
@@ -128,10 +119,10 @@ print("Target velocity:", sample.target)         # [vx, vy, vz]
 
 ### 4. 采集与转换 Android 数据
 
-手机端数据采集与真机评测已解耦为独立工程 [Inertial Positioning Lab](https://github.com/BUG423/inertial-lab)。
+手机端数据采集与真机评测已解耦为独立工程 [Inertial Positioning Lab](https://github.com/BUG423/app-inertial-lab)。
 
 使用流程：
-1. 从 [inertial-lab Releases](https://github.com/BUG423/inertial-lab) 下载并安装 APK；
+1. 从 [inertial-lab Releases](https://github.com/BUG423/app-inertial-lab) 下载并安装 APK；
 2. 在手机端完成 200 Hz IMU 与 ARCore VIO 轨迹采集，导出 `.iplab` 归档；
 3. 使用 `inertial-lab` 配套的转换工具导出为符合本基准契约的规范 HDF5：
 
@@ -161,12 +152,13 @@ python tools/convert_dataset.py recording.iplab --output datasets/android/
 - [ ] 固化数据划分与统一评测指标
 - [ ] 发布版本化 benchmark 结果和排行榜
 
-## 🤝 贡献与许可
+## 📄 知识产权与开源协议
 
-本仓库只维护 `main` 分支。提交内容前请阅读[贡献规范](CONTRIBUTING.md)，并为数据集、模型和第三方资源记录来源、许可证与再分发限制。
+本项目遵循 **[Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc-nd/4.0/)** 严格非商业开源许可：
 
-本项目采用 **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)** 许可协议。
-仅允许出于个人学习、学术交流与非商业性研究所需的阅读、本地运行与学习测试；未经原作者明确书面授权，严格禁止任何形式的商业用途与营利行为，禁止对外分发修改后的演绎产物。详见 [LICENSE](LICENSE)。
+- ❌ **严禁商用**：任何个人或组织不得将本项目源码、编译产物或衍生版本用于任何商业盈利目的。
+- ❌ **禁止演绎与分发修改版**：未经授权不得散布基于本项目修改后的二次分发版本。
+- 🔒 **权利保留**：作者保留对本平台代码与架构的所有版权与法律追责权利。
 
 ---
 
