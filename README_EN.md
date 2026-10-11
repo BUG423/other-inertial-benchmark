@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🧭 Inertial Positioning Benchmark
+# 🧭 other-inertial-benchmark
 
 ### Unified data interfaces, capture tools, and reproducible evaluation infrastructure for inertial positioning research
 
-[![CI](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml)
+[![CI](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
-[![Android Lab](https://img.shields.io/badge/Android%20Lab-inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/inertial-lab)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](LICENSE)
+[![Android Lab](https://img.shields.io/badge/Android%20Lab-app--inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/app-inertial-lab)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-red.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 ![Status](https://img.shields.io/badge/status-active-2ea44f)
 
 [🇨🇳 中文](README.md) · **🇬🇧 English**
@@ -76,7 +76,7 @@ flowchart TD
 | Component | Status | Description / Repository |
 | :--- | :--- | :--- |
 | **Benchmark Core** | ✅ Available | In-tree `CanonicalSequence`, HDF5 I/O, window datasets, and tests |
-| **Inertial Positioning Lab** | 📱 Independent | [BUG423/inertial-lab](https://github.com/BUG423/inertial-lab) dedicated to Android 200Hz capture, ARCore VIO canvas, `.iplab` archives, and LiteRT inference |
+| **Inertial Positioning Lab** | 📱 Independent | [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab) dedicated to Android 200Hz capture, ARCore VIO canvas, `.iplab` archives, and LiteRT inference |
 | **Pedestrian Coordinate Frames** | 📊 Study | [Global-frame versus body-frame](research/studies/pedestrian-coordinate-frames/) empirical representation analysis |
 | **PostDiffIO** | 💡 Proposal | [Conditional-diffusion posterior refinement](research/methods/postdiffio/) and uncertainty modeling proposal |
 | **ModeMoEIO** | 💡 Proposal | [Motion-aware mixture-of-experts](research/methods/moe-io/) routing proposal |
@@ -89,8 +89,8 @@ flowchart TD
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/BUG423/inertial-positioning-benchmark.git
-cd inertial-positioning-benchmark
+git clone https://github.com/BUG423/other-inertial-benchmark.git
+cd other-inertial-benchmark
 python -m pip install -e ".[test]"
 ```
 

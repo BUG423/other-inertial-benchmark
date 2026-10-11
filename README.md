@@ -81,7 +81,7 @@ flowchart TD
 
 ```bash
 git clone https://github.com/BUG423/other-inertial-benchmark.git
-cd inertial-positioning-benchmark
+cd other-inertial-benchmark
 python -m pip install -e ".[test]"
 ```
 
