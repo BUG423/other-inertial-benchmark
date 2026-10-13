@@ -1,6 +1,6 @@
 # 🧭 本轮状态 / Project Status
 
-> 更新：2026-10-13，19:57（北京时间）只读复核。当前验收来源 `dev/v1@2c1f57f`；区分代码存在、当前服务器验收、历史结果与待办。正式 GPU benchmark 尚未完成，实际 GPU 探测尚未执行，训练队列未 armed。
+> 更新：2026-10-13，本轮 IMUNet 全量接入与真实 XYZ CPU 闭环。当前执行来源 `dev/v1@fc6ce90`；历史测试保留各自源码和数据指纹。CPU 验收仅在 AutoDL 执行；GPU 尚未接入，容量实测、正式预算与训练队列仍待冻结。
 
 ## 交付与执行阶段
 
@@ -8,9 +8,9 @@
 
 | 阶段 | 现状与证据 |
 | :--- | :--- |
-| v1 代码 | 29 个注册架构、34 份模型配置（含三份三维适配）、21 个算法包、八个核心转换器与 train/val/predict/report 主干；导出 API 尚缺 |
+| v1 代码 | 29 个注册架构、34 份模型配置（含三份三维适配）、21 个算法包；20 个官方代码/规格迁移、7 个论文重实现、2 个经典基线；八个核心转换器与 train/val/predict/report 主干，导出 API 尚缺 |
 | 历史结果 | HANDOFF 的 705 tests、旧机器成绩和 AMP/dropout 观察为 2026-09-24 历史，不等于当前 AutoDL 复验 |
-| 当前 AutoDL | 六个核心数据集完整转换得到 1,155 份原生 HDF5、99.40744861 小时、725 条 train 序列，full/hash 零 errors，全部 train_ready=true；新增三维目标验收 144 passed / 0 skipped / 0 failed。此前短 CPU NIO 闭环及原 719 节点、`6d44573` 的 81 项验收按历史范围独立记录 |
+| 当前 AutoDL | 七个人体核心数据集 1,268 条、107.31900694 小时、790 条 train，full/hash 零 errors、全部 train_ready=true；加 EuRoC/Blackbird 后九个非空正式原生数据集 1,299 条、107.90444861 小时、795 条 train，八个可训练。首批四个 XYZ 配置的真实 CPU 生命周期通过；历史 144/719/81 项测试按各自范围独立记录 |
 | 旧候选评价 | 另一接口的服务器检查与代表预测，不计入 v1 当前测试或排行榜 |
 | GPU 阶段 | CPU 准入、预算/配方冻结后开展充分训练，目前不发布正式算法排名 |
 
@@ -18,15 +18,15 @@
 
 主 benchmark 使用真实预测 XYZ，以三维指标为主，并从同一预测的 XY 派生二维辅助指标。首批为 `ronin_resnet18_3d`、`ronin_lstm_3d`、`imunet_3d`（均标 `3d_adapted`）和原生三维 `tlio`；前三者共用原架构，保留必要的目标布局和损失，扩展可学习三维输出，不宣称原文二维 checkpoint 或论文精度等价。原二维配置/夹具作为独立参考保留。
 
-三维请求不得静默退成 XY，也不能以真值或零填充替代未预测的 Z；PDR 和常速航向的平面变体拒绝 `dims=3`，IONet/EqNIO-RoNIN 当前仍为二维专用。此前私有候选矩阵为四模型 × RIDI/RoNIN/IDOL × seed 0，仅验证集；当前六个 full-core 数据集均通过数据准入，扩展矩阵仍需重新绑定源码、数据指纹与容量预算，队列未 armed。旧混合二维计划已退役。CTIN 独立资源准入，不进入首批队列。
+三维请求不得静默退成 XY，也不能以真值或零填充替代未预测的 Z；PDR 和常速航向的平面变体拒绝 `dims=3`，IONet/EqNIO-RoNIN 当前仍为二维专用。四个首批 XYZ 配置 × 七个人体核心集形成 **28 项配置/metadata 准入候选**，尚未充分训练；私有矩阵需绑定当前源码、完整数据指纹、输入权限和 GPU 实测预算后才能 armed。EuRoC 按跨域 UAV 单独评价，Blackbird 仅 test，不进入人体训练矩阵。旧混合二维计划已退役，CTIN 独立资源准入。TLIO 当前实现为网络，不含论文 EKF。
 
-`2c1f57f` 的三维头/目标/损失/重载、严格评价、XY 派生与容量准入目标测试已在 AutoDL CPU 完成：144 unique passed / 0 skipped / 0 failed。此计数仅覆盖本次新增范围，不与下列历史 719/81 项相加，也不表示旧 suite 已全部通过。GPU 阶段先执行有时间上限的单模型容量测量，再冻结训练预算；实际 GPU 探测尚未执行，尚无 GPU 训练或三维精度复现结论。
+历史 `2c1f57f` 的三维头/目标/损失/重载、严格评价、XY 派生与容量准入目标测试已在 AutoDL CPU 完成：**144 unique passed / 0 skipped / 0 failed**，绑定 source manifest `5549c535e0e32b4240c2c4353440a7ef622b22d17165f445a60e1b4abaf4a761`。该计数不能声明为 `fc6ce90` 或后续文档提交重跑，也不与历史 719/81 或本次 IMUNet 14 项简单相加。GPU 阶段先测量容量和默认整批 gap，再冻结预算；尚无 GPU 训练或三维精度复现结论。
 
 ## 数据接入
 
 | 数据 / 资产 | 本轮事实 | 下一步 |
 | :--- | :--- | :--- |
-| 八个核心转换器 | RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 已有代码；RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD 六集完整数据已验收 | 用 full-core 原生数据开展 GPU pilot，来源指纹、划分和警告见下表 |
+| 八个核心转换器 | RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 已有代码；前七个人体核心集完整数据已验收 | 进入 full-core GPU 容量候选；来源指纹、划分和警告见下表 |
 | [EuRoC](datasets/euroc.md) | 11 条录制转换为 11 份原生 v1 HDF5，full/hash check 零 errors；correction 未应用 | 整录制 5 train / 1 val / 5 test，reference/oracle；部署输入权限仍需分 track |
 | [Blackbird](datasets/blackbird.md) | 20 个发布片段转换为 20 份原生 v1 HDF5，full/hash check 零 errors | route 保守同组，仅 test 审计目录，不等于独立 20 次飞行或训练/验证划分 |
 | [Pegasus](datasets/pegasus.md) / [ADVIO](datasets/advio.md) | 实际识别并拒收 7 / 3 个来源资产，两者均 0 canonical | 输出审计拒收报告；待来源姿态/帧契约证实后再接入 |
@@ -34,10 +34,10 @@
 | [TLIO](datasets/tlio.md) | 本轮 raw 全包与服务器哈希已验收，354 条原生序列 full/hash 零 errors，train_ready=true | VIO 参考、分组重叠警告保留，进入容量测量候选 |
 | [OxIOD](datasets/oxiod.md) | 本轮 raw 全包与服务器哈希已验收，128 个候选接收 126 / 拒收 2，五个主划分非空 | Vicon 参考；Tango、syn 和独立 test 目录暂不接入 |
 | [RNIN](datasets/rnin.md) | 本轮 raw 全包与服务器哈希已验收，301 个候选接收 300 / 拒收 1，train_ready=true | 混合参考：75 条外部系统、225 条 BVIO，test 9 条全为 VIO；与 IDOL raw 分开记账 |
-| [IMUNet](datasets/imunet.md) | 匿名下载需登录，尚未实收和验收完整 raw | 等待用户登录浏览器下载后上传；不读取浏览器凭据 |
-| [PedLocData](datasets/pedlocdata.md) | 已确认公开媒体入口，但有界慢速尝试仅留下未验收的部分文件，尚不可训练 | 暂缓下载，等待更快链路后断点续传并完整校验 |
+| [IMUNet](datasets/imunet.md) | 用户上传完整 ZIP 已做来源哈希与全成员 CRC 校验；126 个 processed CSV 接收 113 / 拒收 13，full/hash 零 errors、2 warnings | 65 train / 16 val / 32 test；同设备 Tango/ARCore VIO，参考姿态输入属 reference/oracle |
+| [PedLocData](datasets/pedlocdata.md) | 部分 raw/demo 和未完成文件已取得，完整包尚未验收；不可训练 | 等待完整来源校验与 native 准入 |
 
-### 六个核心数据集全量转换验收
+### 七个人体核心数据集全量转换验收
 
 | 数据 | 接收 / 拒收 | 实际划分（条） | 原生输出字节 / 检查 warnings |
 | :--- | :--- | :--- | :--- |
@@ -47,10 +47,11 @@
 | [RNIN](datasets/rnin.md) | 300 / 1 | train 240、val 51、test 9 | 357,298,253 / 15 |
 | [TLIO](datasets/tlio.md) | 354 / 0 | train 283、val 35、test 36 | 1,283,873,945 / 3 |
 | [OxIOD](datasets/oxiod.md) | 126 / 2 | train 48、val 13、test 9、test_unseen_subject 30、test_unseen_device 26 | 571,135,975 / 3 |
+| [IMUNet](datasets/imunet.md) | 113 / 13 | train 65、val 16、test 32；val 从官方 train 按 subject2 生成 | 327,224,823 / 2 |
 
-此前 RIDI/RoNIN/IDOL 批次共 **375 份 HDF5、1,914,869,600 字节**；本轮新增 RNIN/TLIO/OxIOD 共 **780 条、53.695518 小时**。六个核心数据集总计 **1,155 条、99.40744861 小时、725 条 train 序列**，全部 full/hash 检查零 errors，`train_ready=true`；上表前三集沿用此前 HDF5 文件字节证据，新增三集为发布 receipt 的原生输出文件字节总和（含 metadata），不是纯 HDF5 大小；当前磁盘占用另按下表去重统计。这证明数据契约和划分可进入训练，不是已完成充分训练或论文精度验证。作者官方 known/seen 划分允许 subject/group 共享，RIDI/RoNIN/IDOL 的 3/7/34 条 warning 均保存；没有序列重复不等于所有 train/test 主体独立。RoNIN `a011_3` 使用官方选择的 gyro_integration 姿态后，重力平均倾角 4.1° 导致物理检查失败，明确拒收。
+此前 RIDI/RoNIN/IDOL 批次为 **375 份 HDF5、1,914,869,600 字节**；RNIN/TLIO/OxIOD 增量为 **780 条、53.695518 小时**；本次 IMUNet 新增 **113 条、7.91155833 小时、65 条 train**。七个人体核心集总计 **1,268 条、107.31900694 小时、790 条 train**，均 full/hash 零 errors、`train_ready=true`。上表前三集保留此前 HDF5 文件字节证据，后四集为 receipt 的原生输出文件字节总和（含 metadata）；磁盘分配字节另行清点。作者官方 known/seen 划分允许 subject/group 共享，所有 warnings 保留。RoNIN `a011_3` 使用官方 gyro_integration 姿态后，重力平均倾角 4.1°，明确拒收。数据准入不证明充分训练或论文精度。
 
-服务器仓库根目录的相对位置为 `datasets/ipb-v1/full-core/{ridi,ronin,idol,rnin,tlio,oxiod}`。使用 `export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"` 后，六个同名 `data=` 配置直接指向本轮完整数据；不再把 `ridi_smoke` / `ronin_smoke` 当正式训练数据。
+服务器仓库根目录的相对位置为 `datasets/ipb-v1/full-core/{ridi,ronin,idol,rnin,tlio,oxiod,imunet}`。使用 `export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"` 后，七个同名 `data=` 配置直接指向完整数据；`ridi_smoke` / `ronin_smoke`、pilot 和工程截段不进入正式训练数据统计。
 
 | 数据 | 实际 dataset fingerprint |
 | :--- | :--- |
@@ -60,8 +61,13 @@
 | RNIN | `3b0898a8cf2a6c2a74965945aa9798dc36754f0627f1c7e20db320b7fbc361af` |
 | TLIO | `c2d0ddbe9d6ea11fa3e3ecd57783bc7a2abd4c2ea35550bc7c07922917d29638` |
 | OxIOD | `15551c06363ecfb6ca0651ed81dd5a1d24bda7f82028bdeb4fbe6de4c93a59e7` |
+| IMUNet | `3fe0f633264ab36a82814ea75211b359e91143e085d60ea8c26c7c31bdaca0a1` |
 
 本轮 RNIN/TLIO/OxIOD 全量转换与独立 CPU 数据验收绑定 `2c1f57f`，部署清单 `source_manifest.json` 的 SHA256 为 `5549c535e0e32b4240c2c4353440a7ef622b22d17165f445a60e1b4abaf4a761`，清单与其中逐个核验的 365 个受管源码文件在执行前后均不变；各新增数据发布时，此前已就绪核心数据的 manifest/指纹也保持不变。三集分别完成四个首批模型任务视图 × train/val/test 的 12 个真实 B=2 XYZ 批次与四项 CLI dry-run；XY 与同一 XYZ 目标截取一致。这里只验数据与接口，不运行 GPU 训练，不建立精度排名。
+
+本次 IMUNet 沿用 dev/v1 已有 `imunet@1.0` 转换器，无另写 converter。用户 ZIP **2,592,746,775 B**，SHA256 `d873476439b115aee77cbde6b40efcafdcfe62a736c2c3d5492d9079062275cb`；263 个文件 / 516 个 ZIP 成员 CRC 全部通过，解压 raw 文件共 **5,828,310,200 B**，包含 126 个 `processed/data.csv`。实际 raw 为 `/root/autodl-tmp/other-inertial-benchmark-v1/datasets/raw-incoming/imunet/d873476439b115ae/extracted/IMUNet_dataset`。原生输出为 `datasets/ipb-v1/full-core/imunet`；接收 113 / 拒收 13，共 **7.911558333333334 h、30,803.358194 m**，输出文件 **327,224,823 B**。13 条拒收为 11 条小米加速度比例异常、1 条参考世界系倾斜、1 条 train/test 逐字节重复；原始数据与拒收报告保留，不静默校准。原始四设备经拒收后剩 S10 38 / S21 26 / Tango 49，三个设备类型。官方 train/test 为 90/36；拒收后 81/32，官方 train 再按 subject2 抽出 16 条 val，正式 65/16/32；full/hash 的 test/train 三组、test/val 一组受试者重叠作为两条 warnings 保留。参考为同设备 Tango/ARCore VIO，参考姿态输入属 `reference/oracle`，相机到 IMU 杆臂未知；不称为独立外部真值。
+
+IMUNet 本次转换、独立 XYZ 数据验收与真实 CPU 生命周期均绑定 `dev/v1@fc6ce90`、source manifest SHA256 `681b09b6150ef54aa773ae4a9eb6b3bdf20aa70c9353d281a0c279da64f47cac`；逐个核验的 **365 个受管源码文件**在执行前后未变，既有正式 native 的 manifest/指纹/划分哈希保持不变。四首批模型 × train/val/test 共 **12 个真实 B=2 XYZ 批次**通过，Z 来自 native 实测参考位置的数值推导，XY 与同一 XYZ 目标截取一致；**4 项 CLI dry-run**通过。已有 converter/raw 两模块的 **14 项测试通过，0 skipped / 0 failed**，包含全 raw 重复扫描与真实 ARCore 共轭负对照；计数不与历史 suite 简单相加。
 
 RNIN 位置标签为混合参考：75 条使用 VICON 或其他外部定位系统，225 条使用 BVIO；其 9 条 test 全为 VIO，不将这部分称为独立外部真值，也不将 75 条全部标为 VICON。TLIO 使用 headset MSCKF/VIO 参考；OxIOD 保留 Vicon 实测 XYZ，但标记点与 IMU 的 lever arm 未知。OxIOD 的 val 从官方 train 按会话生成，与 train 会话不重叠；官方 test 和额外 subject/device 集不混入 train。iPhone 的 gravity/user_acc 按 G 恢复完整加速度，Android 使用对应 SI 列；八条 Nexus5 序列缺设备姿态，仅设备姿态依赖方法不能使用。RNIN 的 15、TLIO 的 3、OxIOD 的 3 条 full/hash warning 保留，包含官方分组重叠和边缘重力诊断。OxIOD 的 `handbag_data2_seq3` 与 `multi_users_user5_seq5` 因时间戳精度损坏拒收；Tango、syn 与独立 test 目录是未接入范围，不计入两条拒收。
 
@@ -73,42 +79,68 @@ RNIN 位置标签为混合参考：75 条使用 VICON 或其他外部定位系�
 
 ## 当前数据磁盘清点
 
-2026-10-13 20:02（北京时间）只读统计覆盖服务器当前 v1 与历史数据目录，按 `(st_dev, st_ino)` 去重，不跟随候选目录的 symlink 别名。12 个数据集有文件（含 PedLocData partial）；实际占用 **71,288,442,880 B = 71.28844288 GB = 66.3925 GiB**。这里使用文件系统分配字节（含目录开销），GB 为 10⁹ B、GiB 为 2³⁰ B；当时可用空间约 **130.83 GiB**，可用空间不等于数据体积。真实保留的归档、解压数据与历史副本各自占盘，均计入总数。
+**2026-10-13 22:28（北京时间）** 的最终只读清点覆盖当前正式 v1、raw、归档、历史副本、pilot/staging 和 partial，按 `(st_dev, st_ino)` 去重，不跟随 symlink 别名；15 个数据集有占盘资产，HelmetPoser raw=0。实际文件系统分配字节共 **80,096,964,608 B = 80.096964608 GB = 74.5961113 GiB**，可用空间 **122.4149132 GiB**；GB=10⁹ B，GiB=2³⁰ B。归档与解压 raw 均实际保留，各占一层空间；逻辑文件大小 **80,084,460,718 B** 与分配字节分开报告，分配字节包含目录开销。IMUNet 所有保存层合计 **8.778166272 GB**。本次存储清点不重算内容哈希。
 
 | 保存层 | 分配字节（B） | GB |
 | :--- | ---: | ---: |
-| 原始归档 | 22,243,061,760 | 22.243062 |
-| 解压 raw | 39,895,445,504 | 39.895446 |
-| 当前六核心原生输出 | 4,131,315,712 | 4.131316 |
-| 历史原生副本 | 4,620,910,592 | 4.620911 |
-| EuRoC/Blackbird 等原生扩展 | 24,379,392 | 0.024379 |
-| pilot / 调试 / staging | 271,200,256 | 0.271200 |
-| 未完成 partial | 2,502,656 | 0.002503 |
-| 元数据及未归类资产 | 99,627,008 | 0.099627 |
+| 原始归档 | 24,864,436,224 | 24.864436224 |
+| 解压 raw | 45,724,356,608 | 45.724356608 |
+| 当前七人体核心原生输出 | 4,458,782,720 | 4.458782720 |
+| EuRoC/Blackbird 等原生扩展（含空拒收目录 metadata） | 24,379,392 | 0.024379392 |
+| 历史原生副本 | 4,620,910,592 | 4.620910592 |
+| pilot / 调试 / staging | 287,596,544 | 0.287596544 |
+| 失败转换 staging（保留审计） | 12,533,760 | 0.012533760 |
+| 真实数据工程截段夹具 | 737,280 | 0.000737280 |
+| 未完成 partial | 3,551,232 | 0.003551232 |
+| 来源及审计 metadata | 4,947,968 | 0.004947968 |
+| 未归类资产 | 94,732,288 | 0.094732288 |
 
-当前六核心加 EuRoC/Blackbird 的原生格式合计约 **4.15 GB**，区别于所有保存副本的 **71.29 GB**。八个非空当前原生数据集合计 **1,186 条、99.99289 小时、730 条 train 序列**；Blackbird 仅 test，不把八个非空 manifest 等同于八个可训练数据集。此清点读取现有 metadata，未重新运行 full/hash；数据准入依据上文已完成的独立验收，不重复计数历史或 pilot，也不累加辅助 test 子集。
+九个非空正式原生数据集合计 **1,299 条、107.90444861 小时、795 条 train 序列**；八个可训练，Blackbird 仅 test。七个人体核心集为 **1,268 条、107.31900694 小时、790 条 train**；EuRoC 11 条（5/1/5）为跨域 UAV，Blackbird 20 个片段仅 test / 10 route groups。当前 native 保存层分配字节为 **4.483162112 GB**，含空拒收目录 metadata。序列统计不加入 pilot、legacy、历史副本、工程夹具或辅助 test 子集，存储统计包含实际保存副本。
 
 | 数据集 | 所有服务器保存层 GB | 当前范围 |
 | :--- | ---: | :--- |
-| ridi | 1.104163 | 完整当前核心原生数据；保留 raw/历史副本 |
-| ronin | 38.592078 | 完整当前核心原生数据；保留四个官方归档及 raw/历史副本 |
-| idol | 5.142503 | 完整当前核心原生数据；保留 building 归档与 raw/历史副本 |
-| rnin | 6.658167 | 完整当前核心原生数据；含归档、raw 与 pilot |
-| tlio | 14.476202 | 完整当前核心原生数据；含归档、raw 与 pilot |
-| oxiod | 4.485308 | 126 条当前核心原生数据；额外 Tango/syn/test 未接入 |
-| euroc | 0.172245 | 11 条原生录制，5 train / 1 val / 5 test；取得的发布版本 |
-| blackbird | 0.119190 | 20 个发布片段，仅 test / 10 route groups |
-| pegasus | 0.062493 | 归档与拒收报告；0 条当前原生序列 |
-| advio | 0.324440 | 三个来源归档与拒收报告；0 条当前原生序列 |
-| tartanimu | 0.149123 | 公开 raw 样例子集，不是完整数据集 |
-| pedlocdata | 0.002503 | 仅未完成 partial；不可训练 |
-| 共享 / 未归类 | 0.000029 | 不归入特定数据集 |
+| ridi | 1.104723968 | 94 条人体核心原生序列；保留 raw/历史副本/工程夹具 |
+| ronin | 38.592077824 | 151 条人体核心原生序列；保留四个官方归档与 raw/历史副本 |
+| idol | 5.142503424 | 130 条人体核心原生序列；保留 building 归档与 raw/历史副本 |
+| rnin | 6.658166784 | 300 条人体核心原生序列；归档、raw 与 pilot |
+| tlio | 14.476201984 | 354 条人体核心原生序列；归档、raw 与 pilot |
+| oxiod | 4.485308416 | 126 条人体核心原生序列；额外 Tango/syn/test 未接入 |
+| imunet | 8.778166272 | 113 条人体核心原生序列；完整 ZIP/raw、pilot、失败 staging 与工程夹具 |
+| euroc | 0.172244992 | 11 条跨域 UAV 原生录制，5 train / 1 val / 5 test |
+| blackbird | 0.119189504 | 20 个发布片段，仅 test / 10 route groups |
+| pegasus | 0.062492672 | 来源归档与拒收报告；0 条正式原生序列 |
+| advio | 0.324440064 | 三个来源归档与拒收报告；0 条正式原生序列 |
+| tartanimu | 0.149123072 | 公开 raw 样例子集；未接入完整数据集 |
+| pedlocdata | 0.002502656 | 本次服务器仅未完成 partial；不可训练 |
+| grandtour | 0.028655616 | 一个小 mission 的 9 个来源文件；无正式 native |
+| aqualoc | 0.001130496 | reference/calibration 与 1 MiB IMU partial；无正式 native |
+| helmetposer | 0.000000000 | 目录为空，raw=0；无正式 native |
+| shared_or_unclassified | 0.000036864 | 共享 / 未归类 metadata；不归入特定数据集 |
 
-各行包含该数据集的原始归档、解压数据、当前/历史原生输出及 pilot 等实际保存层，舍入后合计可能有末位差异；这些体积对应已取得的版本或子集，不代表所有公开全集。IMUNet、HeadLoc、Aria、AQUALOC、GrandTour 在本次限定目录清点中未发现文件，这不证明其来源或转换器已接入；待单独来源审计与下载验收。本地 RNIN/TLIO/OxIOD 三个原始归档共 **5,872,302,083 B（5.8723 GB）**，独立保留，不计入服务器总量。
+GrandTour 已取得一个小 mission 的 9 个文件、约 28.63 MB，逐文件 raw SHA 已核验，尚未转换为 native；AQUALOC 已取得 69,958 B 的 updated reference/calibration，IMU 包仅 1 MiB partial；HelmetPoser 尚无 raw。PedLocData 为部分 raw/demo 与未完成包；Pegasus/ADVIO 已保存来源 raw 和拒收报告但无正式 native。取得来源文件不等于完整公开全集或训练准入。本机 RNIN/TLIO/OxIOD/IMUNet 四个原始归档共 **8,465,048,858 B（8.465048858 GB）**，IMUNet 的 hardlink 别名不重复计数；本地归档不计入服务器总量，不作两端相加。
+
+### 跨输入重复与划分审计
+
+2026-10-13 22:28（北京时间）审计读取九个正式 native 的 manifest 与实际 split 文件，1,299 条序列的非空有效 `imu_sha256` 全部不同：1,299 个已知哈希、0 unknown、0 exact IMU hash matches，跨集与集内 train/test 精确输入重复候选均为 0。该检查为 metadata-only，未重新读取 HDF5 或重算输入内容哈希；九个 manifest 与存储清点时一致。无精确 IMU 哈希相等不能证明位置标签、整条轨迹、主体或路线相互独立；Blackbird 的重复 route 和重叠片段仍按相关样本处理，官方 subject/group overlap warnings 不因此删除。数据和划分未修改。
+
+存储审计 receipt SHA256 `3dfb9d82b06313bd14bb46db33685ff0b02073cf746aa71c75588ee5b4bac1fc`，跨输入审计 receipt SHA256 `d384fc6ea581e6c9e1bff4875fec89aee91bdb142c12b3e2e28c29b7e35eb85f`；最终 metadata audit 绑定 source manifest `681b09b6150ef54aa773ae4a9eb6b3bdf20aa70c9353d281a0c279da64f47cac`，未导入模型、读取 HDF5 或修改受管 source/native。
 
 ## 当前服务器 CPU 闭环证据
 
-当前 `2c1f57f` 的新增三维协议与容量准入目标测试为 **144 unique passed / 0 skipped / 0 failed**，独立于历史 suite。2026-10-13 19:57（北京时间）只读复核确认上述部署清单及逐文件哈希未变化、CPU/GPU 锁空闲，无活动下载/转换/训练 worker；实际 GPU 能力仍待探测，预算和队列未冻结/armed。
+当前 CPU 执行绑定 `fc6ce90` 与 manifest `681b09b6150ef54aa773ae4a9eb6b3bdf20aa70c9353d281a0c279da64f47cac`，所有训练与测试均在 AutoDL，CUDA 未初始化。历史 `2c1f57f` 的 **144 unique passed / 0 skipped / 0 failed**绑定上文原 manifest；本次 IMUNet 14 项不简单相加，文档改动不冒称测试重跑。
+
+首批真实 XYZ CPU 生命周期实际通过如下（均 standard NIO/Trainer，1 epoch、B=2、2 次真实 optimizer updates，workers=0、cache=false；纯工程截段）：
+
+| 模型 / 真实数据 | AutoDL CPU 用时 | 闭环结果 |
+| :--- | ---: | :--- |
+| `ronin_resnet18_3d` / RIDI | 25.856 s | train/val/predict、XYZ 输出与 checkpoint 重载一致 |
+| `ronin_lstm_3d` / RIDI | 18.372 s | train/val/predict、XYZ 输出与 checkpoint 重载一致 |
+| `tlio` / RIDI | 21.753 s | train/val/predict、XYZ 输出与 checkpoint 重载一致；网络范围，不含 EKF |
+| `imunet_3d` / IMUNet | 22.283 s | 98 个可训练参数张量真实更新且 optimizer state step=2，loss=4.0785136 且 finite；XYZ 位置和实际窗口 vel_pred/target 重载前后严格相等 |
+
+IMUNet 使用真实 train/val/test 230/210/200 样本截段，传感器、完整 XYZ 参考、相对时钟间隔与有效掩码均保留，仅工程时间原点归零。默认 `train_eval_gap` 实际执行 2 个 val 窗口、eval/dropout_only/bn_only/train 四模式，保留 MC=8，无 monkeypatch；新训练仅两次更新的速度比 2.223 产生 warning，不能推导精度、轨迹收缩原因或充分训练下的 BN 结论。四闭环保持全部九个正式 native 的 metadata/指纹/划分哈希不变。它们证明工程流程，不证明全数据默认 1,024 窗口整批 gap 的 GPU 容量或正式预算。
+
+GPU 私有容量探测、默认整批 gap 与真实 tiny 生命周期检查已准备，实际 GPU 尚未接入；CPU 与私有准备已验收，可安排 4090D 接卡；接卡后实测显存、吞吐与默认整批 gap，再冻结正式预算。实测前不冻结 batch/lr/epoch/早停，不 armed 正式队列。广覆盖使用 seed=0；关键科学结论和消融最多 seeds 0/1/2。
 
 此前 2026-10-13，pristine `faee13c` 核心加独立 CPU 验收 helper，实际完成：
 
