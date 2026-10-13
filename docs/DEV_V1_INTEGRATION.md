@@ -1,6 +1,6 @@
 # 🧭 本轮状态 / Project Status
 
-> 更新：2026-10-14（北京时间）。主线为 `dev/v1`；新 AutoDL 已有 RTX 4090D 24 GiB、16 CPU 和约 62 GiB RAM。当前 13 个独立来源完成已取得版本/子集的原生准入，53 个模型配置完成 CPU 工程检查、49 个神经配置完成标准 GPU 生命周期。完整覆盖为 2,067 个单元，充分训练的正式 benchmark 尚未开始；统一采样、预算和成本仍在验收冻结。
+> 更新：2026-10-14（北京时间）。主线为 `dev/v1`；新 AutoDL 已有 RTX 4090D 24 GiB、16 CPU 和约 62 GiB RAM。当前 13 个独立来源完成已取得版本/子集的原生准入，53 个模型配置完成 CPU 工程检查、49 个神经配置完成标准 GPU 生命周期。完整覆盖为 2,067 个单元，统一正式配方已冻结，GPU 实验正在运行，已有单元完成 train/best/test；完整矩阵尚未完成。
 
 ## 🎯 交付与执行状态
 
@@ -14,8 +14,8 @@
 | CPU 工程 | 53/53 配置实际通过标准框架流程 | 神经模型真实短训练；CPU-only 方法按其真实标定/回归逻辑，不伪造 optimizer updates |
 | GPU 工程 | 49/49 神经配置实际通过标准生命周期和容量检查 | 4090D 上真实 train/val/predict/checkpoint 重载；工程截段不构成论文主结果 |
 | 完整矩阵 | 53 配置 × 13 来源 × 3 种子 = 2,067 覆盖单元 | 能力不适用、待 checkpoint、pending/failed 都保留，不等于已完成 2,067 次训练 |
-| 评价增量 | 默认 56 个 XYZ 轨迹/速度输出键、同预测 XY 和原生任务不确定性 | 原生任务不确定性 25 节点通过；框架目标 49 unique 节点最终通过，采样/scheduler/NIO 性能新源码仍在定向验收 |
-| 正式训练 | 尚未开始充分训练 | 采样公平性、资源预算、容量绑定、存储成本和正式配方验收冻结后执行 |
+| 评价增量 | 默认 56 个 XYZ 轨迹/速度输出键、同预测 XY 和原生任务不确定性 | 原生任务不确定性 25 节点通过；框架 49 unique 节点最终通过；当前冻结源码锁/身份/dispatcher 8 定向节点通过 |
+| 正式训练 | 统一正式配方已冻结、GPU 单元运行中 | 真实 train/best/test 已有完成单元；不是全矩阵完成，也不是论文主结果全部复现 |
 
 按仓库拥有者的作者排除规则，张珊珊（Shanshan Zhang）相关被排除方法不进入活跃目录和队列；[IONext 排除记录](models/excluded-methods.json)保留一手作者依据和历史源码。算法规格与适配见 [ALGORITHMS.md](ALGORITHMS.md) 和 [模型卡](models/)。
 
@@ -154,13 +154,21 @@ receipt：`.local/reports/cross-dataset-input-overlap-newserver.json`，SHA256 `
 
 所有测试、转换和模型工程运行均在 AutoDL。53 个配置分批完成真实 CPU 工程流程，49 个神经配置在 4090D 上完成标准 NIO/Trainer 训练、验证、预测、真实参数更新、默认模式诊断及 checkpoint 重载。各自 receipt 保存实际 source manifest、配置、输入和过程；短截段只用于工程，不加入正式数据统计或精度榜。
 
-当前默认 `train_eval_gap` 按统一配置实测；历史 1,024 窗口整批诊断与有限工程预算分别记录，不能把改变 batch 组成的分块称为无损替代。正式 batch/lr/epoch/早停、各任务视图真实窗口数、公平采样和全矩阵存储成本仍待验收冻结；候选值不是已完成实验结果。
+当前默认 `train_eval_gap` 按统一配置实测；历史 1,024 窗口整批诊断与有限工程预算分别记录，不能把改变 batch 组成的分块称为无损替代。本轮统一正式配方已按 49 配置实际容量与批准的源码桥冻结：30 epochs / min 15 / patience 10 / val interval 5 / batch 与 val batch 128 / stride 200 / eval stride 10 / AdamW lr 1e-3。cosine、weight decay 1e-4、AMP=false、cache=true、workers=2、gap_windows=128 等完整参数见[公开协议](protocols/common-benchmark-v1.json)；保留每模型窗口、history、损失与训练阶段，非梯度经典算法不伪造 AdamW 训练。其他数据来源计时仍以测得的 RIDI pipeline 投影，不把预算预测称为整矩阵实测。
 
 新增位置分位数/分轴、连续段漂移、时间 RPE 和原生任务高斯不确定性已有代码；其中原生任务不确定性的 25 个节点已在服务器实际全部通过。无姿态预测时 rotation RPE 明确不可用；不把参考姿态当预测。只有原生 task 的 target/prediction/covariance variable、frame、units、DOF 一致才计算不确定性；缺 covariance/logstd 不假设单位方差。主 XYZ 与同预测 XY、对齐诊断、oracle、reference/oracle 输入、CPU-only 校准、同域/跨域和 XY 原文参考协议分别标识。
 
-绑定 `2efd` source manifest 前缀 `607ebacf` 的框架目标 49 unique 节点最终全部通过：首次 45 passed / 4 fixture failed，修正测试夹具后独立复跑 4/4 passed；保留首次失败证据，不重跑或重复计数此前 45 项。25 个不确定性节点不与 49 项简单相加。四个 test-only transfer 流程实际执行 train-only 经典方法 → val/test/保存 → public shared state → target test-only；错误 seed、来源和篡改 checkpoint 的负对照明确拒绝。稍后 sampling/scheduler/NIO 性能增量仍待当前源码定向验收，正式训练未开始。
+绑定 `2efd` source manifest 前缀 `607ebacf` 的框架目标 49 unique 节点最终全部通过：首次 45 passed / 4 fixture failed，修正测试夹具后独立复跑 4/4 passed；保留首次失败证据，不重跑或重复计数此前 45 项。25 个不确定性节点不与 49 项简单相加。四个 test-only transfer 流程实际执行 train-only 经典方法 → val/test/保存 → public shared state → target test-only；错误 seed、来源和篡改 checkpoint 的负对照明确拒绝。当前正式 immutable source manifest `1897c9ccfa959199ef3f8dbf8c7863dd40d5472d4da9b5551154366458650949` 的锁、来源/seed 身份与 dispatcher 8 定向节点实际通过；CPU/GPU 历史科学源码桥分别批准。正式 GPU 实验已运行，2026-10-13 17:59 UTC 已有单元完成 train/best/test，覆盖尚未完成。
 
 历史 719/144/81/14 项验收各自保留当时的源码、资源和覆盖证据；本轮定向增量不与历史计数相加，也不把过去 skipped/resource_unverified 改写为全部通过。当前准备通过不证明论文 accuracy，尚无正式排行榜或收缩机制定论。
+
+### 完整 13 来源采样准入
+
+2026-10-13 **17:59:39 UTC**，425 个文件的冻结源码完成 714.028 s、RC0 的服务器只读采样资格链：**2,067 行全部核验，2,019 passed / 48 unsupported / 0 pending，377 个唯一 taskview identity**。采样均为 train stride 200 / eval stride 10；每个合法 split 记录实际 valid_windows、原生目标/输入形状、额外输入及 XYZ→XY 精确截取，三种子共享同一科学采样身份。
+
+全部 **1,323 个神经训练行与 588 个神经 test-only 行通过**。48 个不支持行来自 `mean_speed_heading` 和 `pdr`，每个配置 24 行；EuRoC、Blackbird、OxIOD、TLIO、GrandTour、SubT-MRS、UZH-FPV、PedLocData 各 6 行，原因都是声明的 primary/extra split 缺少设备 `imu/orientation`。OxIOD 此限制来自 Nexus5 子集。所有行仍在完整矩阵，不以 reference quaternion 暗补 device input。
+
+13 来源的 manifest 与全部 split 摘要、425 个冻结源码文件逐 SHA 前后完全相同，检查不执行模型或 GPU。server-original qualification receipt SHA256 为 `8753d8a6d35b0ada587abcc3cd365e957dc392ee150e185be6a3e9f4e2da5bb5`；完整 qualified coverage SHA256 为 `a271ba4ceef4eb6780acbbb7cfc5c92b9caa702f68c676676d4de6726acb044c`。本地 JSON 重排镜像的字节摘要与原服务器 receipt 不同，精确原字节镜像与语义等价证明另存；公开协议引用原服务器摘要。正式 coverage 由执行 owner 合并资格，逐单元 run-state 独立保存，不重置在运行或已完成的单元。
 
 ## 🛣️ 完整矩阵与研究路径
 
@@ -169,8 +177,8 @@ receipt：`.local/reports/cross-dataset-input-overlap-newserver.json`，SHA256 `
 | 顺序 | 工作 | 必需验收 |
 | :--- | :--- | :--- |
 | 1 | 全来源/全配置科学 taskview 和资格 | 实际窗口、单位/参考权限、XYZ/XY、训练与目标 split、输入能力、独立来源及 warnings |
-| 2 | 冻结公平采样与正式预算 | 相同可比预算、batch/gap/cache/AMP 与实际容量绑定、完整矩阵时间/存储成本；train/val 选模，不用 test 调参 |
-| 3 | 执行全矩阵与 checkpoint 依赖 | 同三 seed、immutable source/recipe、单元状态与原子结果保存；test-only 来源核验预注册 origin |
+| 2 | 已冻结公平采样与正式预算 | 统一配方与实际容量绑定；完整任务视图已验收，持续核算真实执行时间/存储，train/val 选模，不用 test 调参 |
+| 3 | 正在执行全矩阵与 checkpoint 依赖 | 同三 seed、immutable source/recipe、单元状态与原子结果保存；test-only 来源核验预注册 origin，未完成单元保留真实状态 |
 | 4 | 统一评价与收缩诊断 | XYZ 主结果、同预测 XY、oracle/长度支持、幅值方向/模式/精度/泛化；报告有效覆盖和 NA |
 | 5 | 研究发布 | 足够训练的比较和受控消融、可复现数据/算法矩阵、代码/配置/来源与局限；目标 ICRA / IEEE RA-L |
 

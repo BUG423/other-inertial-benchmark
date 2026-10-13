@@ -1,0 +1,147 @@
+{
+  "schema": "ib.public.common-benchmark-protocol.v1",
+  "status": "frozen_protocol_formal_execution_in_progress",
+  "frozen_utc": "2026-10-13T17:55:57.406630+00:00",
+  "seeds": [
+    1735231569,
+    843628571,
+    951150512
+  ],
+  "seed_sampling": {
+    "entropy_source": "operating_system_random_via_python_secrets",
+    "sample_once": true,
+    "same_three_for_all_eligible_cells": true
+  },
+  "training": {
+    "recipe": "unified",
+    "epochs": 30,
+    "min_epochs": 15,
+    "patience": 10,
+    "val_interval": 5,
+    "batch": 128,
+    "val_batch": 128,
+    "stride": 200,
+    "eval_stride": 10,
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "scheduler": "cosine",
+    "weight_decay": 0.0001,
+    "lr_final": 0.01,
+    "warmup_epochs": 0,
+    "grad_clip": 0.0,
+    "fitness": "ate",
+    "fitness_stat": "mean",
+    "train_windows_budget": 0,
+    "amp": false,
+    "cache": true,
+    "workers": 2,
+    "deterministic": true,
+    "gap_windows": 128,
+    "save_predictions": false,
+    "save_period": 0,
+    "plots": true,
+    "max_plots": 4,
+    "efficiency": false
+  },
+  "method_counts": {
+    "registered_architectures": 31,
+    "active_profiles": 53,
+    "paper_methods": 21,
+    "published_papers": 19,
+    "preprints": 2,
+    "classical_definitions": 2,
+    "learned_profiles": 49,
+    "main_xyz_learned_profiles": 30,
+    "main_xyz_ridi_calibration_profiles": 1
+  },
+  "scope": {
+    "independent_sources": 13,
+    "native_sequences": 1376,
+    "native_hours": 114.30638333333334,
+    "trainable_sources": 9,
+    "train_sequences": 827,
+    "test_only_sources": 4,
+    "coverage_cells": 2067,
+    "taskview_qualified_cells": 2067,
+    "taskview_passed_cells": 2019,
+    "unsupported_input_cells": 48,
+    "taskview_pending_cells": 0,
+    "coverage_completed": false
+  },
+  "scientific_exceptions": {
+    "preserved_per_profile": [
+      "scientific_window",
+      "history",
+      "tensor_layout",
+      "target_variable",
+      "output_dimensions",
+      "scientific_loss",
+      "training_phase_switches"
+    ],
+    "phase_minimum": "min_epochs=15 reaches the latest zero-based epoch10 phase; it is a common budget, not a promise of convergence or original-paper accuracy",
+    "nongradient_classical": "Classical calibration/regression uses its actual scientific algorithm; no fictitious AdamW updates or optimizer epochs",
+    "dimension_protocol": "Canonical data retain XYZ; real XYZ predictions have same-prediction XY metrics; original 2D profiles remain a separate XY reference protocol; missing predicted Z is never filled",
+    "reference_permission": "Reference attitude or initial state stays in a declared reference/oracle track; reference inputs do not become deployable device sensors",
+    "unsupported_input_profiles": [
+      "mean_speed_heading",
+      "pdr"
+    ],
+    "unsupported_input_sources": [
+      "blackbird",
+      "euroc",
+      "oxiod",
+      "tlio",
+      "grandtour",
+      "subt_mrs",
+      "uzh_fpv",
+      "pedlocdata"
+    ],
+    "unsupported_reason": "Required device imu/orientation is absent in at least one declared primary/extra evaluation split; retain all48 coverage cells with the reason instead of substituting reference quaternion",
+    "test_only_checkpoint_sources": {
+      "blackbird": "euroc",
+      "uzh_fpv": "euroc",
+      "grandtour": "ridi",
+      "subt_mrs": "ridi"
+    },
+    "test_only_checkpoint_requirements": [
+      "matching_profile",
+      "matching_architecture",
+      "matching_scientific_InputSpec",
+      "matching_input_track",
+      "matching_seed",
+      "matching_frozen_recipe",
+      "formal_training_origin_identity",
+      "checkpoint_SHA256"
+    ],
+    "robot_transfer": "RIDI human-to-robot transfer is a cross-domain diagnostic, outside the human in-domain training leaderboard",
+    "model_selection": "Use train/validation for fitting and selection; no test tuning",
+    "labels_and_source_scope": "Acquired versions/subsets only; reference system fidelity and group overlap warnings remain source-specific; mixed-source repackaging and duplicate views do not increase independent counts",
+    "predictions": "Main full-matrix cells save_predictions=false; controlled shrinkage replay artifacts use a separate bounded diagnostic protocol",
+    "checkpoint_retention": "completed_best_only"
+  },
+  "execution_resource_parameters": {
+    "maximum_learned_cells": 3,
+    "threads_per_cell": 2,
+    "host_memory_fraction": 0.75,
+    "gpu_free_reserve_bytes": 2147483648,
+    "disk_free_reserve_bytes": 32212254720
+  },
+  "performance_forecast": {
+    "actual_ridi_pipeline_measurements": true,
+    "other_dataset_timing_is_projected": true,
+    "entire_matrix_wall_time_or_convergence_is_not_guaranteed": true,
+    "full_formal_matrix_completed": false
+  },
+  "evidence_sha256": {
+    "formal_source_manifest": "1897c9ccfa959199ef3f8dbf8c7863dd40d5472d4da9b5551154366458650949",
+    "code_snapshot_deployment_id": "6c973dd21f56b3417163cf790a4018fde2dfa85303a0574816f91a55d0cca6cc",
+    "immutable_managed_file_count": 425,
+    "frozen_private_policy": "b520dbc13422d81405cb743ab4666c1f88e428c46af5745c127a152f46edff41",
+    "capacity_receipt": "49b8be0f977dd31482533458ed7aa849e25ae7b3bc8327b00847a1db7e496567",
+    "seed_record": "f8deca0961ef8519909bc921f2a5e0cd3011b4c6e24df6ca5464fcd283cb501a",
+    "taskview_qualification_server_original": "8753d8a6d35b0ada587abcc3cd365e957dc392ee150e185be6a3e9f4e2da5bb5",
+    "qualified_coverage": "a271ba4ceef4eb6780acbbb7cfc5c92b9caa702f68c676676d4de6726acb044c",
+    "test_only_transfer_preregistration": "bc3ab673c0af355f2da671392010edad09313ff88c1fc910fe38bbde86130b31"
+  },
+  "reproduction_boundary": "This public record is a scientific protocol, not private operational state. Source/data/CPU/capacity admission must be independently established on another installation; formal results are still being produced."
+}
