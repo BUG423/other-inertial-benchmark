@@ -1,5 +1,7 @@
 # Begin 代码结构 (先验知识)
 
+> 历史先验：本文件保留原 Begin 结构供研究规划参考。当前 benchmark 新数据/算法接入以 dev/v1 的 [converter 契约](../../../../src/inertial_benchmark/data/converters/base.py)、[模型接口](../../../../src/inertial_benchmark/nn/base.py)、[注册器](../../../../src/inertial_benchmark/nn/registry.py)及[接入步骤](../../../../CONTRIBUTING.md)为准；下文路径与工厂不作为本仓库接口。
+
 ## 仓库概览
 
 Begin 是基于 IMU 的行人航位推算研究代码库。任务: 6 轴 IMU (3 陀螺+3 加速度) → 3D 速度向量。

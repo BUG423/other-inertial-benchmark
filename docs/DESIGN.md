@@ -302,8 +302,8 @@ class BaseModel(nn.Module):
 
 
 class SequenceModel(BaseModel):   # 序列级 / 有状态模型（PDR、递推、滤波类）
-    def predict_sequence(self, seq, view) -> tuple   # (times, velocities[, extras])
-    def calibrate(self, views) -> dict               # 只在 train 划分上拟合标定标量
+    def predict_sequence(self, seq, view, starts) -> tuple   # (times, velocities[, extras])
+    def calibrate(self, views, split="train") -> dict        # 只在 train 划分上拟合标定标量
 ```
 
 - `forward` 接收 `(B, 6, T)`（声明 `history` 时为 `(B, H_in, 6, T)`），输出形状由
@@ -316,11 +316,11 @@ class SequenceModel(BaseModel):   # 序列级 / 有状态模型（PDR、递推�
   `@register_loss("name")` 注册的专用损失，由模型 YAML 的 `loss`/`loss_kwargs` 引用）都按这个
   四参数签名实现并处理 `mask`。
 - **序列级 / 有状态模型**（不能逐窗口独立运行的方法：PDR、有状态递推、滤波、测试时训练）实现
-  `SequenceModel`：`predict_sequence(seq, view) -> (times, velocities[, extras])`，其中 `times`
-  必须落在视图的窗口网格（`view.target_times(view.starts(eval_stride))`）上、`velocities` 为**视图
+  `SequenceModel`：`predict_sequence(seq, view, starts) -> (times, velocities[, extras])`，其中 `starts`
+  由 Predictor 按 `eval_stride` 传入，`times` 必须落在视图的窗口网格（`view.target_times(starts)`）上、`velocities` 为**视图
   坐标系**中的窗口速度，从而与逐窗口模型共用第 5 节的轨迹重建与第 6 节的全部指标。
-  需要标定的方法实现 `calibrate(views)`：Trainer 检测到序列级模型时不跑梯度循环，只用 **train 划分**
-  的视图调用一次 `calibrate`，标定量写入 `model_cfg["calibration"]`（随 checkpoint 与结果发布），
+  需要标定的方法实现 `calibrate(views, split="train")`：Trainer 检测到序列级模型时不跑梯度循环，只用 **train 划分**
+  的视图调用一次 `calibrate` 并显式传入 `split`；实现应拒绝非 train 划分。标定量写入 `model_cfg["calibration"]`（随 checkpoint 与结果发布），
   之后走同一套验证与选模。
 
 - 通过 `@register_model("name")` 注册，`cfg/models/<name>.yaml` 给出结构参数与训练配方。

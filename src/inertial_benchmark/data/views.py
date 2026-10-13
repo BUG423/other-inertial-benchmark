@@ -41,6 +41,7 @@ CHANNELS = ("gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z")
 # 额外输入（DESIGN 第 3 节）；``init_velocity`` 来自参考真值，属于**特权输入**
 EXTRA_INPUTS = ("orientation", "gravity", "init_velocity")
 PRIVILEGED_INPUTS = ("init_velocity",)
+_ALL_SAMPLES = slice(None)
 
 
 @dataclass(frozen=True)
@@ -261,7 +262,7 @@ def device_yaw_offset(seq: Sequence) -> float:
 
 
 def input_orientation(seq: Sequence, cfg: ViewConfig, yaw_offset: Optional[float] = None,
-                      sl: slice = slice(None)) -> np.ndarray:
+                      sl: slice = _ALL_SAMPLES) -> np.ndarray:
     """视图用于旋转的姿态（参考姿态，或偏航对齐后的设备姿态），float64。"""
     if cfg.orientation == "reference":
         return seq.orientation[sl].astype(np.float64)

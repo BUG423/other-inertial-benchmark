@@ -23,7 +23,7 @@
 | [Blackbird](datasets/blackbird.md) | 20 个发布片段转换为 20 份原生 v1 HDF5，full/hash check 零 errors | route 保守同组，仅 test 审计目录，不等于独立 20 次飞行或训练/验证划分 |
 | [Pegasus](datasets/pegasus.md) / [ADVIO](datasets/advio.md) | 实际识别并拒收 7 / 3 个来源资产，两者均 0 canonical | 输出审计拒收报告；待来源姿态/帧契约证实后再接入 |
 | [TartanIMU 2025 来源审计](datasets/tartanimu_2025.md) | 新增审计卡，无本轮 converter 注册 | 不把来源卡计为可训练数据或转换器 |
-| TLIO / IMUNet | 原生转换器已有 | 本轮新增 raw 尚无实收证据，不宣称数据准备完成 |
+| TLIO / IMUNet | 原生转换器已有，本轮 raw 未实收 | 服务器网络限制，等待外部补齐 raw 后记录资产哈希并按 v1 转换/校验；已有数据与其他工作继续 |
 
 新增共四个 converter 注册入口：EuRoC/Blackbird 两个原生转换器、Pegasus/ADVIO 两个审计拒收入口；TartanIMU 2025 只有来源卡。逐数据集细节见 [datasets/](datasets/)。本轮新增合计 31 份原生 v1 文件、24,158,461 字节：EuRoC 15,790,930 字节 / 1,348.34 s；Blackbird 8,367,531 字节 / 759.25 s，保守划为 10 个 route groups。转换器针对四个文件的服务器测试为 10 passed（5.60 s），ruff 通过；两数据集 full/hash 检查均零 errors；保留 EuRoC 两条原官方集合重叠 warning，以及 Blackbird 缺少 train/val 和三个 egg 片段重力 marginal 共五条 warning，不隐去边界信息。验收记录为 `new-datasets-v1.json`，SHA256 `1b5f9d393804ef5fe898cb9ab9fa064ad724f9fbc4915735a9f49a35c066d4a5`；完整 suite 计数随后单独记录。
 
@@ -49,11 +49,13 @@
 | :--- | :--- | :--- |
 | 1. 新数据契约 | 按现有 v1 converter API 审计字段、时间、单位、重力、参考姿态、mask 与 group；不满足条件明确拒收 | 数据卡、conversion_report、dataset.json/指纹、接收/拒收数与物理检查 |
 | 2. 当前 CPU 链路 | 有来源数据上验 NIO train/val/predict、checkpoint、保存结果；真实运行新服务器 suite | 环境和源码指纹、测试记录、闭环 receipt；工程结果独立标记 |
-| 3. AutoDL GPU pilot | 获 GPU 后选择代表算法与数据，实测显存/吞吐；冻结 epoch/lr/batch/早停/窗口/权限/评价预算 | 配方、硬件实测、可运行 pilot 与队列；搜索与选模只用 train/val |
+| 3. AutoDL GPU pilot | 获 GPU 后选择代表算法与数据，实测训练、验证和模式诊断的显存/吞吐；冻结 epoch/lr/batch/早停/窗口/权限/评价预算 | 配方、硬件实测、可运行 pilot 与队列；搜索与选模只用 train/val；另测 train_eval_gap 整批资源门槛 |
 | 4. 单 seed 广覆盖 | 先 seed=0 扩展已验收数据/算法，充分训练；按输入权限、评价维度和来源协议独立比较 | 主矩阵、逐序列结果、覆盖/NA、统计与图；测试集固定不调参 |
 | 5. 三 seed 核心主张 | 对最终主结果与关键消融最多三个 seed，分别检验 oracle/长度支持、幅值方向、模式/精度与泛化 | 收缩机制证据、受控对比、局限、版本化发布与论文材料 |
 
 阶段可并行开展来源审计和增量实现，但后一个结果依赖前一个准入证据。研究目标为 ICRA / IEEE RA-L，不设未经核实的会议截止日期或录用承诺。
+
+GPU pilot 必须单独验 [Trainer.train_eval_gap](../src/inertial_benchmark/engine/trainer.py) 的资源开销：当前默认最多将 1,024 个窗口作为一个整批，未按 `val_batch` 限制；训练模式和 BatchNorm 的统计依赖批组成，直接分块会改变诊断语义，不能当作无损内存优化。先测量其可行预算与语义再冻结配方。此资源热点不是本次 CTIN SIGKILL 的已证实根因：本次未生成先于 gap 的 CSV/checkpoint，已经排除执行到该诊断；目前定位范围为训练 batch=16 或首次验证 batch=46，仍需实际 hooks 证据。
 
 ## 已确认的评价增量待办
 

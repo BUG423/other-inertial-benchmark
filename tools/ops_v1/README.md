@@ -30,13 +30,14 @@ On the server, use the shared CPU lock for acceptance and conversion tasks:
 cd /root/autodl-tmp/other-inertial-benchmark-v1
 /root/miniconda3/bin/python -m venv --system-site-packages .venv
 .venv/bin/python -m pip install --cache-dir .local/pip-cache -e '.[train,test,ops]'
+.venv/bin/python -m pip install --cache-dir .local/pip-cache --ignore-installed --no-deps ruff==0.13.2
 source .venv/bin/activate
 export IPB_DATASETS="$PWD/datasets/ipb-v1"
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 python -c 'import inertial_benchmark; print(inertial_benchmark.__file__)'
 ipb info
 flock /root/autodl-tmp/inertial-benchmark/.local/campaigns/cpu-resource.lock python tools/ops_v1/server_acceptance.py --stage cpu-acceptance
-flock /root/autodl-tmp/inertial-benchmark/.local/campaigns/cpu-resource.lock python tools/ops_v1/run_checks.py --stage integrated-v1
+flock /root/autodl-tmp/inertial-benchmark/.local/campaigns/cpu-resource.lock python tools/ops_v1/run_checks.py --stage cpu-file-acceptance --pytest-isolation=file
 ```
 
 The independent virtual environment shares the installed Torch wheels and
@@ -45,6 +46,9 @@ the old environment installed. `ipb` and package imports should work without
 `PYTHONPATH`; the printed package path must point to this v1 directory.
 `run_checks.py` records pytest, Ruff, compileall, package location, `ipb info`,
 resolved config and benchmark dry-run with the exact deployment manifest hash.
+Use a new `--stage` name for each attempt; the tool refuses to overwrite existing
+evidence. The Ruff install gives the independent environment its own CLI while
+retaining the historical environment.
 
 `server_acceptance.py` reads RIDI and RoNIN raw recordings from the historical
 server directory, converts three recordings per dataset with the existing v1
@@ -60,6 +64,16 @@ visible, and export is not part of this acceptance.
 `cpu_pytest.py` restores one Torch thread after the repository test conftest is
 loaded. Test fixtures remain unchanged. Tests requiring unavailable full dataset
 manifests skip explicitly; a passed synthetic test is not a public-data run.
+On the 2 GiB CPU instance, `--pytest-isolation=file` runs each original test module
+in a fresh process. It collects nodeids first and rejects missing, duplicated or
+unfinished nodes. Per-module JUnit, logs and atomic node reports survive an
+interrupted test process. The default `session` mode runs the usual whole suite.
+Both modes set `MALLOC_ARENA_MAX=2` and record allocator, BLAS and Torch thread
+settings; this changes the resource environment while preserving test parameters.
+Repeat `--pytest-path tests/test_views.py` for an explicit affected-module scope;
+the receipt distinguishes this scope from a full run. Explicit `IPB_RAW_*`
+environment variables select available real raw sources and are recorded in the
+receipt. The tool does not create source views automatically.
 
 Use `datasets/ipb-v1/<dataset>/` for full v1 conversions and the `IPB_DATASETS`
 variable to select this root. `_smoke` and `_cpu_excerpt` directories are private

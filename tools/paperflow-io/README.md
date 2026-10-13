@@ -2,6 +2,8 @@
 
 This self-contained component preserves only the former `paperflow` repository's `IO` branch. Generic paper-writing workflows were intentionally excluded from the benchmark.
 
+Its Begin-specific knowledge is historical planning context. New benchmark datasets and algorithms must follow dev/v1's [converter contract](../../src/inertial_benchmark/data/converters/base.py), [model interface](../../src/inertial_benchmark/nn/base.py), [registry](../../src/inertial_benchmark/nn/registry.py) and [integration steps](../../CONTRIBUTING.md); the old Begin directory, factory and command examples do not define this repository's interfaces.
+
 - [Roadmap](ROADMAP.md)
 - [IO ideation skill](paper-ideation-inertial/SKILL.md)
 - [IO experiment skill](paper-experiment-inertial/SKILL.md)

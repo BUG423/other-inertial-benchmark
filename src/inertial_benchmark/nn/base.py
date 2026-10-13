@@ -157,7 +157,7 @@ class SequenceModel(BaseModel):
 
     def forward(self, imu: torch.Tensor) -> dict:  # pragma: no cover - 序列级模型不逐窗口前向
         raise NotImplementedError(
-            f"{type(self).__name__} is a SequenceModel: use predict_sequence(seq, view)")
+            f"{type(self).__name__} is a SequenceModel: use predict_sequence(seq, view, starts)")
 
     def predict_sequence(self, seq: Any, view: Any,
                          starts: Any) -> tuple:  # pragma: no cover - 抽象方法

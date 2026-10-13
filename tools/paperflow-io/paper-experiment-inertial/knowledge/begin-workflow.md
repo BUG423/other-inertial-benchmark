@@ -1,5 +1,7 @@
 # Begin 操作工作流 (先验知识)
 
+> 历史先验：本文件保留原 Begin 工作流供研究规划参考。当前 benchmark 新数据/算法接入以 dev/v1 的 [converter 契约](../../../../src/inertial_benchmark/data/converters/base.py)、[模型接口](../../../../src/inertial_benchmark/nn/base.py)、[注册器](../../../../src/inertial_benchmark/nn/registry.py)及[接入步骤](../../../../CONTRIBUTING.md)为准；下文 forward、工厂与命令示例不作为本仓库接口。
+
 ## 1. 新增算法全流程
 
 ### 1.1 建目录骨架

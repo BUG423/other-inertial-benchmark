@@ -1,5 +1,7 @@
 # Idea 规范约定 (ideation → experiment 交接契约)
 
+> 组件交接约定：本文件保留原 PaperFlow 的研究规划契约；其中 Begin 专用路径和接口属于历史先验。当前 benchmark 新数据/算法接入以 dev/v1 的 [converter 契约](../../../../src/inertial_benchmark/data/converters/base.py)、[模型接口](../../../../src/inertial_benchmark/nn/base.py)、[注册器](../../../../src/inertial_benchmark/nn/registry.py)及[接入步骤](../../../../CONTRIBUTING.md)为准。
+
 ## 存储位置
 
 实验阶段从以下固定位置读取 idea:

@@ -5,6 +5,8 @@
 > 忠实性由 `tests/fixtures/algorithms/<name>.json` 夹具（参数量与逐项参数形状）锁定。
 > 本文件只描述规格，不代表 `src/` 中已有实现。
 
+当前接入以 `dev/v1` 的 [模型接口](../src/inertial_benchmark/nn/base.py)、[注册器](../src/inertial_benchmark/nn/registry.py)和 [模型配置](../src/inertial_benchmark/cfg/models/)为准；现有实现与本轮服务器验收见 [当前状态](DEV_V1_INTEGRATION.md)。下表的“可移植”等标签保留规格基线含义，算法实现、形状夹具核对与论文精度复现分别记录。
+
 ## 1. 约定
 
 - **fidelity**
