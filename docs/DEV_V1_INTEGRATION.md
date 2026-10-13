@@ -10,7 +10,7 @@
 | :--- | :--- |
 | v1 代码 | 29 个注册架构、31 份模型配置、21 个算法包、八个核心转换器与 train/val/predict/report 主干；导出 API 尚缺 |
 | 历史结果 | HANDOFF 的 705 tests、旧机器成绩和 AMP/dropout 观察为 2026-09-24 历史，不等于当前 AutoDL 复验 |
-| 当前 AutoDL | RIDI / RoNIN 各三条录制已用原生转换器接收，均 0 拒绝；短 CPU NIO 训练/验证/预测与重载一致性已完成，完整 suite 仍待本轮执行结果 |
+| 当前 AutoDL | RIDI / RoNIN 各三条录制已用原生转换器接收，均 0 拒绝；短 CPU NIO 闭环已完成；原冻结 719 节点覆盖为 665 passed / 52 skipped / 2 resource_unverified，新绘图补丁目标验收另记 |
 | 旧候选评价 | 另一接口的服务器检查与代表预测，不计入 v1 当前测试或排行榜 |
 | GPU 阶段 | CPU 准入、预算/配方冻结后开展充分训练，目前不发布正式算法排名 |
 
@@ -23,7 +23,7 @@
 | [Blackbird](datasets/blackbird.md) | 20 个发布片段转换为 20 份原生 v1 HDF5，full/hash check 零 errors | route 保守同组，仅 test 审计目录，不等于独立 20 次飞行或训练/验证划分 |
 | [Pegasus](datasets/pegasus.md) / [ADVIO](datasets/advio.md) | 实际识别并拒收 7 / 3 个来源资产，两者均 0 canonical | 输出审计拒收报告；待来源姿态/帧契约证实后再接入 |
 | [TartanIMU 2025 来源审计](datasets/tartanimu_2025.md) | 新增审计卡，无本轮 converter 注册 | 不把来源卡计为可训练数据或转换器 |
-| TLIO / IMUNet | 原生转换器已有，本轮 raw 未实收 | 服务器网络限制，等待外部补齐 raw 后记录资产哈希并按 v1 转换/校验；已有数据与其他工作继续 |
+| TLIO / IMUNet | 原生转换器已有，本轮 raw 未实收 | 服务器网络限制，继续核验 AutoDL 公开下载入口；实收后记录资产哈希并按 v1 转换/校验，已有数据与其他工作继续 |
 
 新增共四个 converter 注册入口：EuRoC/Blackbird 两个原生转换器、Pegasus/ADVIO 两个审计拒收入口；TartanIMU 2025 只有来源卡。逐数据集细节见 [datasets/](datasets/)。本轮新增合计 31 份原生 v1 文件、24,158,461 字节：EuRoC 15,790,930 字节 / 1,348.34 s；Blackbird 8,367,531 字节 / 759.25 s，保守划为 10 个 route groups。转换器针对四个文件的服务器测试为 10 passed（5.60 s），ruff 通过；两数据集 full/hash 检查均零 errors；保留 EuRoC 两条原官方集合重叠 warning，以及 Blackbird 缺少 train/val 和三个 egg 片段重力 marginal 共五条 warning，不隐去边界信息。验收记录为 `new-datasets-v1.json`，SHA256 `1b5f9d393804ef5fe898cb9ab9fa064ad724f9fbc4915735a9f49a35c066d4a5`；完整 suite 计数随后单独记录。
 
@@ -39,9 +39,14 @@
 | 重载与结果 | checkpoint 重载后的 val/predict 为严格 array_equal，maxabs=0；预测 NPZ 与 PNG 保存 |
 | 运行环境 | PyTorch 2.12.1+cu130，线程数 1，CUDA unavailable；当前无卡 CPU 模式约 0.5 CPU / 2 GiB |
 | 模式守卫 | 未充分训练的 dropout delta 有 warning/error，记录诊断，不推导算法排名或收缩机制 |
-| 完整 suite | 待最终集成源码部署后的一遍服务器执行；不能将历史 705 项作为本轮通过数量 |
+| 原冻结 suite | 719 unique 节点：665 passed / 52 skipped / 2 resource_unverified；首次单进程 SIGKILL 未生成 JUnit，随后逐文件隔离覆盖与原参数补测；不是全部通过 |
+| 新绘图补丁 | 有效维度时间图/CDF与多模型分页的独立目标验收待服务器执行，不并入原冻结 719 节点计数 |
 
 闭环用截段与极少更新，验证接口、保存和重载一致性，不能证明充分训练精度，也不是完整 benchmark 数据发布。
+
+原科学验收冻结 source manifest SHA256 为 `89736fbb634a023bcbf7a47fb7e04a26c6de2fdb2d170b08005441c45c669c40`。61 个文件分片先得到 635 passed / 69 skipped；随后 13 项 CTIN 常规测试通过，RIDI 8 / RoNIN 6 / IDOL 3 项真实 raw 测试通过并替换原跳过项，按 nodeid 去重后得到 665 / 52 / 2，不重复累加。52 个跳过项分别为：16 项需要已转换数据、9 项 IMUNet 与 11 项 OxIOD 使用不可用的旧 raw 路径、4 项 PedLocData / 7 项 RNIN / 5 项 TLIO 缺 raw。
+
+两项未验证都是 CTIN：原参数 mean 训练/验证闭环测试进程 SIGKILL（-9），center 未独立执行。最后一次 hook 位于首次训练 `B=16, N=200` 的 decoder/MHA，尚无顶层 forward_end/batch_end，也未到验证或 gap；没有证据据此确定 OOM 原因。唯一节点覆盖记录为 `integrated-v1-final-unique-coverage.json`，SHA256 `ac1b9a2f93e2b1ea64097d232d5c2265533a20b73b1c14e5d6d579e41e8f51da`。
 
 ## 从交付倒推的五个阶段门槛
 
@@ -55,15 +60,15 @@
 
 阶段可并行开展来源审计和增量实现，但后一个结果依赖前一个准入证据。研究目标为 ICRA / IEEE RA-L，不设未经核实的会议截止日期或录用承诺。
 
-GPU pilot 必须单独验 [Trainer.train_eval_gap](../src/inertial_benchmark/engine/trainer.py) 的资源开销：当前默认最多将 1,024 个窗口作为一个整批，未按 `val_batch` 限制；训练模式和 BatchNorm 的统计依赖批组成，直接分块会改变诊断语义，不能当作无损内存优化。先测量其可行预算与语义再冻结配方。此资源热点不是本次 CTIN SIGKILL 的已证实根因：本次未生成先于 gap 的 CSV/checkpoint，已经排除执行到该诊断；目前定位范围为训练 batch=16 或首次验证 batch=46，仍需实际 hooks 证据。
+GPU pilot 必须单独验 [Trainer.train_eval_gap](../src/inertial_benchmark/engine/trainer.py) 的资源开销：当前默认最多将 1,024 个窗口作为一个整批，未按 `val_batch` 限制；训练模式和 BatchNorm 的统计依赖批组成，直接分块会改变诊断语义，不能当作无损内存优化。先测量其可行预算与语义再冻结配方。它不是本次 CTIN SIGKILL 已证实的根因，实测 hooks 表明进程尚未完成首次训练前向，未到验证或该诊断。
 
 ## 已确认的评价增量待办
 
 | 优先级 | 待办 | 审计与验收 |
 | :--- | :--- | :--- |
 | P0 | 输入权限 track / 报告隔离 | data/views 可用逐时刻 reference attitude，特权列表只含 init_velocity，报表只检查评价键；区分 sensor/device/reference attitude/initial state 并防混表 |
-| P0 | 3D 图与指标一致 | engine/results 的 CDF/误差时间图默认二维；传 metric_dims 或显式输出水平/垂直/3D 图 |
-| P1 | 超过八模型的分页/分面 | utils/reports 当前直接跳过全部比较图，扩展后保留可读性 |
+| 本轮实现，待目标验收 | 有效维度图与指标一致 | 时间误差/CDF按 metric_dims 和实际预测维数绘制并标注；独立 server 目标测试待执行，水平/垂直分解与3D轨迹图仍待扩展 |
+| 本轮实现，待目标验收 | 超过八模型的分页 | 每 dataset/split 分页保留所有模型箱线/CDF/PLR，全局 Pareto 集合保持完整；独立 server 目标测试待执行 |
 | P1 | NA、覆盖与定义目录 | 记录缺失能力原因、单位、DOF、support、长度分辨率、aggregation 和评价源码指纹 |
 | P1 | 严格 gap-aware profile | 现 RTE/D-RTE 允许有效端点跨 gap，短 RTE 会换算；新连续支持/不外推诊断独立版本化，保留旧定义 |
 | P1 | 六面板 / HTML / 离线重算 | 复用 SequenceResult.load 和当前绘图/报告；新输出 receipt，不覆盖旧结果 |

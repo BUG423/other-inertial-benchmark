@@ -120,7 +120,7 @@ APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://
 
 ## 🔬 研究与验证状态
 
-当前 AutoDL 已将 RIDI、RoNIN 各三条录制转换为原生 v1，并完成代表短段的 CPU NIO 训练、验证、预测与 checkpoint 重载一致性检查（各 1 epoch / 2 updates）。新增 31 份原生 v1 文件已验收；完整测试计数以本轮记录为准，之后开展 GPU 充分训练。2026-09-24 交接中的 **705 项测试**、旧机器成绩及 AMP/dropout 观察属于历史记录，不代表当前服务器复验；本轮以[项目状态](docs/DEV_V1_INTEGRATION.md)和验收记录为准。
+当前 AutoDL 已将 RIDI、RoNIN 各三条录制转换为原生 v1，并完成短 CPU NIO 闭环（各 1 epoch / 2 updates）；新增 31 份原生 v1 文件已验收。原冻结 719 个测试节点去重覆盖为 **665 passed / 52 skipped / 2 resource_unverified**，两项未验证为 CTIN 训练/验证闭环测试；新绘图补丁待独立服务器目标验收。2026-09-24 交接中的 **705 项测试**、旧机器成绩及 AMP/dropout 观察属于历史记录；本轮范围与限制见[项目状态](docs/DEV_V1_INTEGRATION.md)。
 
 路径普遍偏短需要分别检验目标/积分 oracle、时间与长度分辨率、速度幅值/方向、训练和推理模式失配、精度设置与泛化。已有长度分解和模式守卫提供起点，结论须由充分训练的多算法实验支持。
 

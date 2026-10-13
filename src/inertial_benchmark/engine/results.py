@@ -107,7 +107,7 @@ class SequenceResult:
         return path_length(self.pos_gt, self.valid_pose, self.rate) if len(self.t) else 0.0
 
     def position_error(self, dims: int = 2) -> np.ndarray:
-        """逐帧水平位置误差（无效参考处为 NaN）。"""
+        """按所选维度计算逐帧位置误差（无效参考处为 NaN）。"""
         err = np.linalg.norm(self.pos_pred[:, :dims] - self.pos_gt[:, :dims], axis=1)
         return np.where(self.valid_pose, err, np.nan)
 
@@ -308,6 +308,15 @@ class RunResult:
 
         out = Path(out)
         seqs = sorted(self.evaluated, key=lambda s: s.sequence_id)
+        requested_dims = int(self.cfg.get("metric_dims") or 2)
+        effective_dims = {min(requested_dims, s.pos_pred.shape[1]) for s in seqs}
+        if len(effective_dims) != 1:
+            raise ValueError("error plots require one effective position dimension per run")
+        dims = effective_dims.pop()
+        if dims != requested_dims:
+            LOGGER.warning(f"error plots use effective {dims}D positions "
+                           f"(metric_dims requested {requested_dims}D)")
+        error_label = f"{dims}D position error (m)"
         files = []
         for s in seqs[:max_plots]:
             files.append(out / f"traj_{s.sequence_id}.png")
@@ -316,12 +325,13 @@ class RunResult:
                   "oracle": s.pos_oracle, "title": s.sequence_id} for s in seqs]
         files.append(out / "trajectories.png")
         plotting.plot_trajectory_grid(items, files[-1], max_plots)
-        errors = np.concatenate([s.position_error() for s in seqs])
+        errors = np.concatenate([s.position_error(dims=dims) for s in seqs])
         files.append(out / "error_cdf.png")
-        plotting.plot_error_cdf({self.model: errors}, files[-1])
-        curves = [{"t": s.t, "error": s.position_error(), "title": s.sequence_id} for s in seqs]
+        plotting.plot_error_cdf({self.model: errors}, files[-1], xlabel=error_label)
+        curves = [{"t": s.t, "error": s.position_error(dims=dims), "title": s.sequence_id}
+                  for s in seqs]
         files.append(out / "error_over_time.png")
-        plotting.plot_error_over_time(curves, files[-1], max_plots)
+        plotting.plot_error_over_time(curves, files[-1], max_plots, ylabel=error_label)
         files.append(out / "ate_box.png")
         plotting.plot_boxplot({self.model: [s.metrics.get("ate", math.nan) for s in seqs]},
                               files[-1])

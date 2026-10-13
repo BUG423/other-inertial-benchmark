@@ -169,3 +169,9 @@ MultiheadAttention `= 4·L·E² + L²·E`。不同后端约定略有差异（Res
 `test` 及其官方子集只在最终评测（`ipb val split=test` 或 `ipb benchmark`）中运行。
 序列级/标定型方法（`pdr`、`mean_speed_heading`）的标定标量只在 `train` 划分上拟合，
 结果写入 `metrics.json` 的 `calibration` 块随结果一起发布。
+
+## 7. 可视化范围
+
+逐帧误差时间图和 CDF 使用 `metric_dims`，按预测位置实际维数截断，与 `compute_metrics()` 的规则一致；轴标签注明有效 2D 或 3D。请求 3D 而预测只有 2D 时，图明确标为 2D 并记录提示，不把水平误差展示为 3D。无效参考位姿仍为 NaN，CDF 只使用有限误差样本。轨迹俯视图仍显示 x/y。
+
+多模型报表按每个 dataset/split 的模型名排序，箱线图、CDF 和 PLR 每页至多八个模型，超过八个时输出 `_page01`、`_page02` 等文件；八个以内保留原文件名。页内各图使用相同模型顺序；跨页按模型名识别。Pareto 图始终使用该 dataset/split 的完整模型集合计算前沿，不以分页子集代替全局集合。分页只影响图，CSV、统计和指标定义保持原有协议。

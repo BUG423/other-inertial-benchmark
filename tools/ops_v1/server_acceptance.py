@@ -68,6 +68,7 @@ def ridi_source_view(root: Path, production: Path) -> tuple:
 def make_excerpts(root: Path, dataset: str, converted: Path, manifest: dict) -> tuple:
     """Copy 800 valid samples per split; retain disjoint recording identities."""
     import numpy as np
+
     from inertial_benchmark.data.format import load_sequence, save_sequence
     from inertial_benchmark.data.manifest import fingerprint
     from inertial_benchmark.data.splits import read_split, write_split
@@ -105,7 +106,8 @@ def make_excerpts(root: Path, dataset: str, converted: Path, manifest: dict) -> 
     if len({sid for ids in splits.values() for sid in ids}) != 3:
         raise RuntimeError("CPU train/val/test excerpts must use distinct recordings")
     derived = {"schema_version": "1.0", "dataset": f"{dataset}_cpu_excerpt",
-               "cpu_acceptance_only": True, "source_conversion_fingerprint": manifest["fingerprint"],
+               "cpu_acceptance_only": True,
+               "source_conversion_fingerprint": manifest["fingerprint"],
                "sequences": sequences, "splits": splits,
                "fingerprint": fingerprint({sid: item["sha256"] for sid, item in sequences.items()},
                                           splits)}
@@ -116,6 +118,7 @@ def make_excerpts(root: Path, dataset: str, converted: Path, manifest: dict) -> 
 def real_data_acceptance(root: Path, production: Path, stage: str) -> dict:
     import numpy as np
     import torch
+
     from inertial_benchmark import NIO
     from inertial_benchmark.data.convert import convert_dataset
     from inertial_benchmark.utils import yaml_load
@@ -142,7 +145,8 @@ def real_data_acceptance(root: Path, production: Path, stage: str) -> dict:
         windows = len(trainer.train_set)
         updates = len(trainer.train_loader)
         if windows != 4 or updates != 2:
-            raise RuntimeError(f"unexpected execution budget: {windows} windows / {updates} updates")
+            raise RuntimeError(
+                f"unexpected execution budget: {windows} windows / {updates} updates")
         reloaded = NIO(checkpoint)
         val = reloaded.val(**profile, data=str(excerpt), split="val",
                            project=str(project), name="reload-val")
@@ -157,10 +161,13 @@ def real_data_acceptance(root: Path, production: Path, stage: str) -> dict:
         artifacts = {str(path.relative_to(project)): sha256(path) for path in project.rglob("*")
                      if path.is_file() and path.suffix in (".pt", ".npz", ".png", ".json", ".yaml")}
         receipts.append({"dataset": dataset, "source_raw": str(raw), "raw_selection": selected,
-                         "converted_recordings": 3, "conversion_fingerprint": manifest["fingerprint"],
+                         "converted_recordings": 3,
+                         "conversion_fingerprint": manifest["fingerprint"],
                          "conversion_manifest_sha256": sha256(converted / "dataset.json"),
-                         "excerpts": records, "train_windows": windows, "optimizer_updates": updates,
-                         "epochs": 1, "model": "ronin_resnet18", "model_parameters": model.model.num_params,
+                         "excerpts": records, "train_windows": windows,
+                         "optimizer_updates": updates,
+                         "epochs": 1, "model": "ronin_resnet18",
+                         "model_parameters": model.model.num_params,
                          "checkpoint": str(checkpoint), "checkpoint_sha256": sha256(checkpoint),
                          "nio_train_val_predict_save_load": True,
                          "checkpoint_prediction_max_abs_error": 0.0,

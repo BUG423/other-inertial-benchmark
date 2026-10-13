@@ -118,7 +118,8 @@ def main() -> int:
     parser.add_argument("--stage", default="integrated-v1")
     parser.add_argument("--pytest-isolation", choices=("session", "file"), default="session")
     parser.add_argument("--pytest-path", action="append", default=[],
-                        help="Explicit test scope; repeat for affected modules. Default: full tests.")
+                        help="Explicit test scope; repeat for affected modules. "
+                             "Default: full tests.")
     args = parser.parse_args()
     root = args.root.resolve()
     report = root / ".local/reports"
@@ -189,7 +190,8 @@ def main() -> int:
     commands = [
         ("ruff", [python, "-m", "ruff", "check", "src", "tests"]),
         ("compileall", [python, "-m", "compileall", "-q", "src", "tests", "tools"]),
-        ("import_location", [python, "-c", "import inertial_benchmark as ib; from pathlib import Path; "
+        ("import_location", [python, "-c",
+                             "import inertial_benchmark as ib; from pathlib import Path; "
                              "p = Path(ib.__file__).resolve(); print(p); "
                              f"assert p.is_relative_to(Path({str(root / 'src')!r}).resolve()), "
                              "'package must resolve inside this deployment src'"]),
@@ -205,22 +207,27 @@ def main() -> int:
                                                for name, expected_hash in files.items())
     summary, skipped, coverage = summarize_nodes(expected, evidence)
     receipt = {"schema": "ib.dev-v1.server-checks.v2", "stage": args.stage,
-               "created_utc": datetime.now(timezone.utc).isoformat(), "source_manifest_sha256": before,
+               "created_utc": datetime.now(timezone.utc).isoformat(),
+               "source_manifest_sha256": before,
                "deployment_id": source.get("deployment_id"), "source_stable_during_checks": stable,
                "checks": results, "pytest": summary, "skipped_tests": skipped,
-               "pytest_isolation": args.pytest_isolation, "pytest_scope": args.pytest_path or ["tests"],
-               "coverage": coverage, "collection_sha256": digest(collection) if collection.exists() else None,
+               "pytest_isolation": args.pytest_isolation,
+               "pytest_scope": args.pytest_path or ["tests"],
+               "coverage": coverage,
+               "collection_sha256": digest(collection) if collection.exists() else None,
                "collection_events": payload.get("collection_events", []) if payload else [],
                "input_roots": {key: value for key, value in env.items()
                                if key == "IPB_DATASETS" or key.startswith("IPB_RAW_")},
                "resource_environment": {key: env.get(key) for key in
-                                        ("MALLOC_ARENA_MAX", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+                                        ("MALLOC_ARENA_MAX", "OMP_NUM_THREADS",
+                                         "OPENBLAS_NUM_THREADS",
                                          "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS")},
                "source_file_count": len(files), "python": python, "implicit_pythonpath": False,
                "resources": resource_snapshot(),
                "cpu_memory_scope": "actual cgroup limits in resources; one Torch compute thread"}
     target.write_text(json.dumps(receipt, indent=2) + "\n")
-    return 0 if stable and coverage["complete"] and all(item["returncode"] == 0 for item in results) else 1
+    return (0 if stable and coverage["complete"]
+            and all(item["returncode"] == 0 for item in results) else 1)
 
 
 if __name__ == "__main__":

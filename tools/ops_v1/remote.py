@@ -56,7 +56,8 @@ def execute(client, command: str, timeout: float) -> int:
             if channel.recv_stderr_ready():
                 sys.stderr.buffer.write(channel.recv_stderr(65536))
                 sys.stderr.buffer.flush()
-            if channel.exit_status_ready() and not channel.recv_ready() and not channel.recv_stderr_ready():
+            if (channel.exit_status_ready() and not channel.recv_ready()
+                    and not channel.recv_stderr_ready()):
                 return channel.recv_exit_status()
             if time.monotonic() - start > timeout:
                 raise TimeoutError("SSH command timed out; use detached workers for long checks")
@@ -100,7 +101,8 @@ def deploy(client, selected: list | None, timeout: float) -> int:
             previous = json.loads(previous_bytes)
         previous_sha = hashlib.sha256(previous_bytes).hexdigest()
         if selected:
-            files = {**previous.get("files", {}), **previous.get("operational_acceptance_helpers", {}),
+            files = {**previous.get("files", {}),
+                     **previous.get("operational_acceptance_helpers", {}),
                      **hashes}
         else:
             files = hashes
@@ -114,7 +116,8 @@ def deploy(client, selected: list | None, timeout: float) -> int:
                     "archive_sha256": archive_sha, "deployed_paths": names,
                     "removed_previously_managed_source_files": stale,
                     "previous_source_manifest_sha256": previous_sha,
-                    "deployment_id": hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest(),
+                    "deployment_id": hashlib.sha256(
+                        json.dumps(identity, sort_keys=True).encode()).hexdigest(),
                     "credentials_included": False, "production_source_modified": False}
         with sftp.file(location + "/source.tar.gz", "wb") as handle:
             handle.write(archive_bytes)
@@ -124,11 +127,13 @@ def deploy(client, selected: list | None, timeout: float) -> int:
                f"root=Path({REMOTE_ROOT!r});stale=json.loads({json.dumps(stale)!r});"
                f"old=json.loads({json.dumps(previous.get('files', {}))!r});"
                f"excluded={EXCLUDED!r};\n"
-               f"if hashlib.sha256((root/'source_manifest.json').read_bytes()).hexdigest()!={previous_sha!r}:"
+               "if hashlib.sha256((root/'source_manifest.json').read_bytes()).hexdigest()"
+               f"!={previous_sha!r}:"
                "raise RuntimeError('deployment manifest advanced; stage a fresh snapshot')\n"
                "for name in stale:\n"
                " p=root/name\n"
-               " if name.startswith(excluded) or Path(name).is_absolute() or '..' in Path(name).parts "
+               " if name.startswith(excluded) or Path(name).is_absolute() "
+               "or '..' in Path(name).parts "
                "or p.is_symlink():raise RuntimeError('unsafe managed removal path')\n"
                " if p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()!=old[name]:"
                "raise RuntimeError('managed source changed before removal')\n"
@@ -161,7 +166,8 @@ def status_command() -> str:
     script = ("import hashlib,importlib.metadata,json,os;from pathlib import Path;"
               f"root=Path({REMOTE_ROOT!r});p=root/'source_manifest.json';"
               "v=os.statvfs(root);print(json.dumps({'root':str(root),"
-              "'source_manifest_sha256':hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None,"
+              "'source_manifest_sha256':hashlib.sha256(p.read_bytes()).hexdigest() "
+              "if p.exists() else None,"
               "'memory_max':Path('/sys/fs/cgroup/memory.max').read_text().strip(),"
               "'cpu_max':Path('/sys/fs/cgroup/cpu.max').read_text().strip(),"
               "'free_disk_bytes':v.f_bavail*v.f_frsize,"

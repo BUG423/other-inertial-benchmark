@@ -120,7 +120,7 @@ APP source, APKs, `.iplab` conversion and builds belong to [app-inertial-lab](ht
 
 ## 🔬 Research and Validation Status
 
-On the current AutoDL server, three RIDI and three RoNIN recordings were converted to native v1. Representative short CPU NIO runs completed training, validation, prediction and checkpoint reload consistency checks (one epoch / two updates each). The 31 new native v1 files passed data acceptance; full-suite counts follow this round's records before full GPU training. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results from another environment, not current-server verification. Refer to [project status](docs/DEV_V1_INTEGRATION.md) and acceptance records.
+On the current AutoDL server, three RIDI and three RoNIN recordings were converted to native v1, and short CPU NIO runs completed the engineering loop (one epoch / two updates each). The 31 new native v1 files passed data acceptance. Unique coverage of the 719 frozen test nodes is **665 passed / 52 skipped / 2 resource_unverified**; the two unverified cases are CTIN end-to-end train/validation tests. The new plotting patch awaits separate targeted server acceptance. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results. See [project status](docs/DEV_V1_INTEGRATION.md) for current evidence and limits.
 
 Shrinkage should be tested through target/integration oracles, time/length resolution, speed/direction, train/eval mode differences, precision and generalization. Existing length decomposition and mode guards provide a starting point; conclusions require sufficiently trained algorithms and controlled experiments.
 

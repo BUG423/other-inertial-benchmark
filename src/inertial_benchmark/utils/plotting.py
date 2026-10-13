@@ -173,7 +173,7 @@ def plot_error_cdf(errors: Mapping[str, np.ndarray], path: Optional[PathLike] = 
 
 
 def plot_error_over_time(curves: Sequence[Mapping], path: Optional[PathLike] = None,
-                         max_n: int = 12):
+                         max_n: int = 12, ylabel: str = "position error (m)"):
     """小多图：每个面板一条序列的位置误差随时间曲线（``t``、``error``、``title``）。"""
     curves = list(curves)[:max_n]
     rows, cols = _grid_shape(len(curves))
@@ -188,7 +188,7 @@ def plot_error_over_time(curves: Sequence[Mapping], path: Optional[PathLike] = N
             ax.set_title(c.get("title", ""), loc="left")
             ax.set_xlabel("time (s)")
             if k % cols == 0:
-                ax.set_ylabel("position error (m)")
+                ax.set_ylabel(ylabel)
             ax.set_ylim(bottom=0)
         _save(fig, path)
     return fig

@@ -266,6 +266,7 @@ def to_latex(summary, metrics: Sequence[str] = MAIN_METRICS, digits: int = 3) ->
 def make_plots(df, summary, out: Path, metric: str = "ate") -> list:
     """每个 (dataset, split) 的箱线图、逐序列误差 CDF、长度比散点，以及全局帕累托图。"""
     from .plotting import (
+        PALETTE,
         plot_boxplot,
         plot_error_cdf,
         plot_length_ratio,
@@ -273,24 +274,24 @@ def make_plots(df, summary, out: Path, metric: str = "ate") -> list:
     )
 
     files = []
-    models = sorted(df["model"].unique())
-    if len(models) > 8:
-        LOGGER.warning("report: more than 8 models; per-model plots are skipped")
-        return files
     for (dataset, split), part in df.groupby(["dataset", "split"]):
         seq = part.groupby(["model", "sequence_id"], as_index=False).mean(numeric_only=True)
-        values = {m: seq.loc[seq["model"] == m, metric].to_numpy() for m in models
-                  if (seq["model"] == m).any()}
         tag = f"{dataset}_{split}"
-        files.append(out / f"box_{metric}_{tag}.png")
-        plot_boxplot(values, files[-1], ylabel=display_name(metric))
-        files.append(out / f"cdf_{metric}_{tag}.png")
-        plot_error_cdf(values, files[-1], xlabel=f"per-sequence {display_name(metric)}")
-        if {"plr", "distance_m"} <= set(seq.columns):
-            pts = {m: (seq.loc[seq["model"] == m, "distance_m"],
-                       seq.loc[seq["model"] == m, "plr"]) for m in values}
-            files.append(out / f"plr_{tag}.png")
-            plot_length_ratio(pts, files[-1])
+        models = sorted(seq["model"].unique())
+        pages = [models[k:k + len(PALETTE)] for k in range(0, len(models), len(PALETTE))]
+        for page, names in enumerate(pages, 1):
+            page_tag = tag if len(pages) == 1 else f"{tag}_page{page:02d}"
+            values = {m: seq.loc[seq["model"] == m, metric].to_numpy() for m in names}
+            files.append(out / f"box_{metric}_{page_tag}.png")
+            plot_boxplot(values, files[-1], ylabel=display_name(metric))
+            files.append(out / f"cdf_{metric}_{page_tag}.png")
+            plot_error_cdf(values, files[-1], xlabel=f"per-sequence {display_name(metric)}")
+            if {"plr", "distance_m"} <= set(seq.columns):
+                pts = {m: (seq.loc[seq["model"] == m, "distance_m"],
+                           seq.loc[seq["model"] == m, "plr"]) for m in names}
+                files.append(out / f"plr_{page_tag}.png")
+                plot_length_ratio(pts, files[-1])
+        # The Pareto front uses every model in this dataset/split, never one page.
         sub = summary[(summary["dataset"] == dataset) & (summary["split"] == split)]
         if f"{metric}_mean" in sub and sub["params"].notna().any():
             files.append(out / f"pareto_params_{metric}_{tag}.png")
