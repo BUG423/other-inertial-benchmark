@@ -25,7 +25,7 @@
 | **统一数据层** | IPB v1 HDF5、200 Hz 时间轴、单位/坐标系、来源、有效掩码、分组划分与检查 | [设计规范](docs/DESIGN.md) · [数据集目录](docs/DATASETS.md) |
 | **数据接入** | 13 个独立来源的已取得版本/子集通过原生 XYZ 准入，共 1,376 条、114.30638333 小时；9 个有 train/val，4 个仅 test | [数据卡](docs/datasets/) · [转换器](src/inertial_benchmark/data/converters/)；来源、拒收与划分见[本轮状态](docs/DEV_V1_INTEGRATION.md) |
 | **算法库** | 31 个活跃架构、53 份配置；21 个论文方法（19 个已发表、2 个预印本）及 2 个经典定义 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/)；骨干和维度变体不增加独立论文数量 |
-| **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；导出 API 尚待建设 |
+| **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；`NIO.export()` / `ipb export` 提供原生科学推理包及已审查的 RoNIN ResNet、IMUNet 张量适配器（TorchScript/ONNX），见[导出说明](docs/EXPORT.md) |
 | **评价与报告** | 56 个默认 XYZ 轨迹/速度指标输出键，同预测 XY 派生；ATE/RTE/RPE、误差分位数、漂移、长度/方向、覆盖与效率；原生任务高斯不确定性 | [指标定义](docs/METRICS.md)；原生任务不确定性 25 节点已通过；无预测姿态或协方差时明确不可用 |
 | **跨域数据** | EuRoC、Blackbird、GrandTour、SubT-MRS、UZH-FPV 已按真实参考契约接入；后三者取得代表子集 | [本轮状态](docs/DEV_V1_INTEGRATION.md) · [数据卡](docs/datasets/)；仅 test 来源采用预注册 checkpoint 迁移，人体到机器人单列诊断 |
 | **独立移动端** | Android 采集与端侧评测工程 | [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab) · [交换契约](docs/TOOLS.md)；ARCore 是 VIO 参考源 |

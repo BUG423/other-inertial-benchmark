@@ -15,6 +15,7 @@ idol = ["pyarrow>=10"]  # IDOL 的 .feather 文件
 grandtour = ["numcodecs>=0.11"]  # GrandTour 原始 Zarr-v2 Blosc/LZ4 chunks
 ridi = ["scikit-learn>=1.2"]  # RIDI train-only SVM/SVR baseline
 train = ["torch>=2.0", "pandas>=1.5", "matplotlib>=3.6"]
+export = ["torch>=2.0", "onnx>=1.14", "onnxruntime>=1.16"]  # verified CPU ONNX backend
 test = ["pytest>=7"]
 ops = ["paramiko>=3"]
 

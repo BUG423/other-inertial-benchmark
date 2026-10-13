@@ -17,8 +17,8 @@ an operator's authorized action, not a claim that a campaign has already run.
 The current source inventory has **31 registered architectures, 53 profiles and
 21 independent paper-method sources**, plus two repository-defined physical
 classics. Architecture, backbone/profile and paper-method counts are different.
-The accepted-native registry currently lists 12 independent sources, with 1,329
-accepted sequences and 110.87389583 hours; raw partials
+The accepted-native registry currently lists 13 independent sources, with 1,376
+accepted sequences and 114.306383333 hours; raw partials
 and engineering excerpts do not count. Both inventories are dynamic. See
 [algorithm provenance](../../docs/models/provenance.json) for exclusions, authors,
 source versions and implementation fidelity. This procedure does not certify
@@ -342,6 +342,61 @@ runner for its persisted run-state/transfer handling; do not interpret a CLI
 pending transfer as a completed evaluation. Standalone `ipb train`, `val`,
 `predict`, `export`, `report` remain the model-facing API, but a manual run does
 not inherit a campaign's scientific identity just by using the same model name.
+
+### Inference export acceptance
+
+The new `NIO.export()` / `ipb export` implementation passed a separate
+server CPU admission gate; it is not part of the already running immutable
+formal snapshot. Native packages preserve scientific InputSpec, loss/phase and
+numeric trained or calibrated state, with a verified member inventory. They omit
+optimizer state and explicitly reject resume; use the original training
+checkpoint for continuation or `pretrained` for a new run.
+
+```bash
+PYTHONPATH="$IPB_EXPORT_SNAPSHOT/src" "$IPB_OPS_PYTHON" -m inertial_benchmark export \
+  model="$IPB_TRAINING_CHECKPOINT" format=native path="$IPB_EXPORT_OUTPUT/native"
+PYTHONPATH="$IPB_EXPORT_SNAPSHOT/src" "$IPB_OPS_PYTHON" -m inertial_benchmark predict \
+  model="$IPB_EXPORT_OUTPUT/native" source="$IPB_ACCEPTED_TEST_SEQUENCE" device=cpu save=false
+```
+
+Bind `IPB_EXPORT_SNAPSHOT` to the separately reviewed export snapshot and use a
+new output directory. Do not replace the source or environment of active jobs.
+TorchScript/ONNX are enabled only for the reviewed RoNIN ResNet and IMUNet tensor
+adapters, with the original scientific span and dynamic batch. Other models have
+an explicit unsupported graph status; no trace fallback is accepted. Every
+published graph executes and compares raw outputs before publication.
+
+`NIO(model.onnx)` / `NIO(model.torchscript)` verifies that bundle and reloads its
+native `model.pt` for the IPB Predictor. It **does not execute the tensor backend**.
+Use an independent ONNX Runtime/TorchScript session for raw tensor inference;
+see [export contracts and examples](../../docs/EXPORT.md).
+
+Actual server acceptance collected and passed **45 targeted nodes**, including
+both reviewed XYZ adapters through TorchScript and ONNX Runtime at batches 1/2/5,
+native real-record/CLI roundtrips, resume refusal, and three ordinary checkpoint
+resume/phase regressions. The RoNIN tensor test uses a smaller engineering
+structure; IMUNet uses its original model. Missing optional dependencies are not
+an ONNX pass. Install
+`onnx`/`onnxruntime` into a private `--target` directory using bounded server-only
+acquisition, without upgrading the base training Torch/numpy. Run only in the
+coordinated nonblocking CPU lease; record actual threads, collection, formats,
+checks and hashes. No GPU or formal run is needed for these inference checks.
+An additional 70.16 s native-only batch reused all **53 accepted engineering
+checkpoints and their original RIDI excerpts**, without training: 53/53 state,
+InputSpec, loss/phase/evidence, raw/trajectory/target outputs, metrics and RNG
+roundtrips were exact. RIDI XYZ also traversed actual CLI export/predict/NPZ.
+Torch2/interop1 and ORT2/1 were recorded; CUDA stayed uninitialized. New429 source,
+formal425 source,13 native metadata and477 original checkpoint/proof/fixture
+files stayed unchanged. The 45-node and 53-native batches used a distinct,
+authorized supplemental two-thread CPU lease; the classic CPU/GPU queues continued.
+
+Source manifest: `d58706ac0feb287685a5f48eb4184d9855ff12c64e76efaa24c759cb8ce0f484`.
+Targeted receipt SHA: `cb9f9600b795839fb59ff291e2aae113b8d154b9257af43b598e7cc72d3b598f`.
+Native53 receipt SHA: `0b02b27e2773776571fcf6bdefbdd1bc074e71627f3150f7e0dda1fa6ee0697b`.
+Receipts are retained in `.local/reports/export-supplemental-next-d587/` and
+`.local/reports/native53-export-d587/`; tested snapshot bytes remain unchanged
+when later documentation is published. This makes no all-53-format tensor export
+or formal accuracy claim.
 
 XYZ-capable output is a dimensional capability, not proof that the original
 paper was three-dimensional. Preserve `3d_adapted`, original XY reference,

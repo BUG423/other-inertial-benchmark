@@ -118,19 +118,24 @@ ipb benchmark cfg=main dry_run=true                      # 内置 cfg/benchmarks
 ipb benchmark cfg=benchmarks/my.yaml device=0            # 自定义 YAML；其余 key=value 覆盖所有运行
 ```
 
-`cfg` 为 YAML 路径；路径不存在时按文件名在 `cfg/benchmarks/` 中查找（`cfg=main` 即内置主基准：
-`ronin_resnet18_3d` × 八个数据模板 × 首轮种子 0，主指标 `metric_dims=3`；模板不表示已下载，关键结论最多三个种子。`cfg=batchA` 见下）。
+`cfg` 为 YAML 路径；路径不存在时按文件名在 `cfg/benchmarks/` 中查找。`cfg=main` 动态枚举全部
+active profiles × 实际验收通过的独立 native 来源 × 同一份 OS 随机记录中的三个种子；原生 XYZ、
+三维适配与原论文二维参考保留各自身份，unsupported 项明确记录。当前项目持久化种子为
+`1735231569 / 843628571 / 951150512`，各运行复用，不在每次训练前重新抽取。
+`cfg=batchA` 是历史工程示例，不代表当前正式矩阵范围。
 
 ```yaml
-name: custom_xyz                    # 自定义三维示例；不是已准入的 GPU 执行队列
+name: custom_matrix                # 自定义矩阵仍需来源、CPU、容量与策略准入
 project: runs/benchmark            # 输出 <project>/<name>/<label>/<dataset>/seed<k>/{train,<split>}/
-models:
-  - ronin_resnet18_3d                # 独立标注的三维适配版
-  - tlio                            # 原生三维位移 + logstd；窗口/损失按模型定义保留
-datasets: [ronin, ridi, {data: /data/ipb/oxiod, overrides: {batch: 256}}]
-seeds: [0]                         # 广覆盖先一个；关键结论独立计划最多三个种子
+models: all_active_profiles
+datasets: accepted_native
+seeds: random_record
+native_registry: .local/reports/formal-native-registry.json
+seed_record: .local/plans/random-seeds.json
+policy: .local/plans/frozen-main-policy.json
+admission: .local/matrix/main/coverage.json
 splits:                            # 缺省为数据集 YAML 的 test_splits；[val] = 只评 val
-overrides: {train_windows_budget: 3.2e+7, device: 0, metric_dims: 3}
+overrides: {recipe: unified, device: "0"}
 report: true                       # 结束后汇总到 <project>/<name>/report
 continue_on_error: false           # true 时单项失败只记录进 benchmark.json 并继续
 ```
@@ -194,6 +199,41 @@ models:
 `android_device` / `ios_device`；其他机体系必须显式配置
 （`model_args={body_axes: {<body_frame>: [[fx,fy,fz],[ax,ay,az]]}}`），否则该数据集会报错。
 `orientation=device` 只能用于提供了 `imu/orientation` 的数据集。
+
+### `ipb export` — 推理包与独立张量后端
+
+```bash
+ipb export model=runs/train/exp/weights/best.pt format=native path=exports/native
+ipb predict model=exports/native source=/data/ipb/ridi/sequences/example.h5 device=cpu
+ipb export model=runs/train/exp/weights/best.pt format=torchscript path=exports/script
+ipb export model=runs/train/exp/weights/best.pt format=onnx path=exports/onnx batch=2 opset=17
+```
+
+`native` 包保存真实数字权重或经典标定状态、科学 InputSpec、模型与损失配置、训练阶段证据、
+来源和文件 SHA256；重新加载时先核完整性。导出不重训，也不补充不存在的 sigma 训练证据。
+已有目的目录拒绝覆盖；推理包删去优化器/调度器，`resume=true` 或 `resume=<包>/model.pt`
+明确拒绝。续训应使用原训练 checkpoint；导出权重可作为 `pretrained` 开启一次新训练。
+
+TorchScript/ONNX 目前仅开放经过显式数学适配的 RoNIN ResNet 与 IMUNet 原模型类；固定原科学
+窗口、通道和任务，只有 batch 动态变化。两者输出 `vel` 是**原任务单位/坐标系的窗口输出**，
+不包含 IPB 的坐标转换、滑窗合并或积分。未审查模型、LieEvents 数据相关控制流、随机模型与
+序列物理模型的张量格式明确 unsupported；它们可尝试有完整原生状态的 native 导出。
+导出需执行实际后端并比对多个 batch 后才发布，不使用 trace 兜底。
+
+```python
+from inertial_benchmark import NIO
+
+artifact = NIO("runs/train/exp/weights/best.pt").export(format="native", path="exports/native")
+restored = NIO(artifact)
+trajectory = restored.predict("/data/ipb/ridi/sequences/example.h5", device="cpu")
+```
+
+`NIO("exports/onnx/model.onnx")` 和 `NIO("exports/script/model.torchscript")` 会核验同包的
+`model.pt`，再执行**原生 IPB Predictor**，并不调用 ONNX/TorchScript 后端。独立 runtime 示例、
+依赖、能力和验收边界见 [EXPORT.md](EXPORT.md)。服务器实际通过 45 项定向验收及全部 53 个既有
+工程 checkpoint 的 native 导出/原生 Predictor 精确重载；RIDI XYZ 另走过真实 CLI export/predict。
+两个 XYZ 适配器的 TorchScript/ONNX 已实际验证 batch 1/2/5，全 53 配置的全部张量格式未作此声明。
+源绑定与 receipt SHA 见导出文档；验收使用独立快照和 CPU 预算，不改正在运行的正式训练身份。
 
 ### `ipb report` — 汇总
 

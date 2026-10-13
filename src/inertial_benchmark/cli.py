@@ -24,6 +24,7 @@ commands:
   train      model=ronin_resnet18 data=ronin epochs=40 device=0 ...
   val        model=runs/train/exp/weights/best.pt data=ronin split=test
   predict    model=... source=seq.h5|dir [save=true]
+  export     model=weights/best.pt [format=native|torchscript|onnx] [path=exports/model]
   benchmark  cfg=benchmarks/main.yaml [dry_run=true] [report=false] [key=value overrides]
   report     runs=runs/benchmark/main [out=reports/main] [metrics=[ate,rte]] [plots=true]
   info       [model=...] [data=...]   (no arguments: list models, datasets, converters)
@@ -157,6 +158,20 @@ def cmd_predict(kv: dict) -> int:
     return 0
 
 
+def cmd_export(kv: dict) -> int:
+    from .cfg.export import ExportOptions
+    from .engine.model import NIO
+
+    _check_keys(kv, {"model", "format", "path", "batch", "opset", "rtol", "atol"}, "export")
+    _require(kv, "model")
+    values = {key: value for key, value in kv.items() if key != "model"}
+    options = ExportOptions.from_kwargs(values)  # typed validation before model construction
+    nio = NIO(kv["model"], device="cpu")
+    path = nio.export(**options.__dict__)
+    print(str(path))
+    return 0
+
+
 def cmd_benchmark(kv: dict) -> int:
     from .engine.benchmark import run_benchmark
 
@@ -245,6 +260,7 @@ COMMANDS: dict = {
     "train": cmd_train,
     "val": cmd_val,
     "predict": cmd_predict,
+    "export": cmd_export,
     "benchmark": cmd_benchmark,
     "report": cmd_report,
     "info": cmd_info,

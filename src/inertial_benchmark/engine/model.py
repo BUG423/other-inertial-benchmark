@@ -20,11 +20,13 @@ PathLike = Union[str, Path]
 
 
 class NIO:
-    """神经惯性里程计模型门面：``train`` / ``val`` / ``predict`` / ``info`` / ``benchmark``。"""
+    """模型门面：``train`` / ``val`` / ``predict`` / ``export`` / ``info`` / ``benchmark``。"""
 
     def __init__(self, model: Union[PathLike, dict] = "ronin_resnet18", **overrides: Any) -> None:
         from .predictor import load_model
+        from ..cfg.export import resolve_export_model
 
+        model = resolve_export_model(model)
         if isinstance(model, Path):
             model = str(model)
         self.overrides = {"model": model, **overrides}
@@ -101,6 +103,20 @@ class NIO:
             self.predict_dir = save_dir
         self.results = predictor.results
         return out
+
+    def export(self, format: str = "native", path: Optional[PathLike] = None,
+               **kwargs: Any) -> Path:
+        """导出可重载推理包；张量后端按显式能力开放，详见 exporter。
+
+        ``native`` 返回目录，``NIO(directory)`` 保留完整科学视图/轨迹管线。
+        ``torchscript`` / ``onnx`` 返回原始任务输出文件，并附带原生推理状态。
+        不改变当前模型、科学输入、loss、随机状态或训练 checkpoint。
+        """
+        from ..cfg.export import ExportOptions
+        from .exporter import export_model
+
+        options = ExportOptions.from_kwargs({"format": format, "path": path, **kwargs})
+        return export_model(self.model, get_cfg(self.overrides), options, self.ckpt_path)
 
     # ------------------------------------------------------------------ 信息
     def info(self, verbose: bool = True, flops: bool = True) -> dict:

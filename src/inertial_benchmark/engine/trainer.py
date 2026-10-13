@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 from .. import __version__
-from ..cfg import ConfigError, get_cfg, protocol_from_cfg
+from ..cfg import ConfigError, get_cfg, is_checkpoint, protocol_from_cfg
 from ..data.build import build_dataloader, build_dataset
 from ..data.manifest import resolve_dataset
 from ..metrics import METRIC_INFO
@@ -69,8 +69,23 @@ class Trainer:
         overrides["mode"] = "train"
         self.resume_ckpt = None
         if overrides.get("resume"):
+            from ..cfg.export import SCHEMA, resolve_export_model
+
+            def require_training_checkpoint(ckpt: dict) -> None:
+                exported = ckpt.get("inference_export")
+                if isinstance(exported, dict) and exported.get("schema") == SCHEMA:
+                    raise ConfigError("inference export cannot resume training: use the original "
+                                      "training checkpoint, or start a new train with pretrained weights")
+
+            value = overrides["resume"]
+            automatic = value is True or isinstance(value, str) and value.lower() in ("true", "1")
+            selected = overrides.get("model")
+            if automatic and selected is not None and is_checkpoint(selected):
+                require_training_checkpoint(load_checkpoint(resolve_export_model(selected)))
             self.resume_ckpt = self._resume_path(overrides)
+            self.resume_ckpt = Path(resolve_export_model(self.resume_ckpt))
             ckpt = load_checkpoint(self.resume_ckpt)
+            require_training_checkpoint(ckpt)
             saved = dict(ckpt["cfg"])
             saved.update({k: overrides[k] for k in RESUME_KEEP if k in overrides})
             overrides = saved

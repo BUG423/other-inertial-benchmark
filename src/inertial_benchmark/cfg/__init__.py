@@ -71,6 +71,9 @@ def model_yaml_names() -> list:
 
 
 def is_checkpoint(model: Any) -> bool:
+    from .export import resolve_export_model
+
+    model = resolve_export_model(model)
     return isinstance(model, (str, Path)) and str(model).endswith((".pt", ".pth"))
 
 
@@ -80,6 +83,9 @@ def load_model_cfg(model: Union[str, Path, Mapping, None]) -> dict:
     模型配置字段：``name``、``arch``（注册名，缺省同 name）、``args``、``input``、``loss``、
     ``recipes``，以及论文/仓库/许可等元信息。
     """
+    from .export import resolve_export_model
+
+    model = resolve_export_model(model)
     if model is None:
         raise ConfigError("model is required (e.g. model=ronin_resnet18)")
     if isinstance(model, Mapping):
@@ -253,6 +259,12 @@ def get_cfg(overrides: Optional[Mapping[str, Any]] = None,
     check_keys(overrides, defaults)
     merged = dict(defaults)
     model = overrides.get("model", defaults.get("model"))
+    from .export import resolve_export_model
+
+    resolved_model = resolve_export_model(model)
+    if resolved_model != model:
+        model = resolved_model
+        overrides["model"] = resolved_model
     if model is not None:
         mcfg = load_model_cfg(model)
         name = mcfg["name"]
