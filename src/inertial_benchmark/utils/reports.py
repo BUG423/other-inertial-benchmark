@@ -23,7 +23,7 @@ def _pd():
     try:
         import pandas as pd
     except ImportError as exc:  # pragma: no cover
-        raise ImportError("reports need pandas: pip install 'inertial-positioning-benchmark"
+        raise ImportError("reports need pandas: pip install 'other-inertial-benchmark"
                           "[train]'") from exc
     return pd
 

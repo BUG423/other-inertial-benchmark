@@ -1,49 +1,29 @@
 # Contributing
 
-Thank you for contributing to the Inertial Positioning Benchmark.
+Contributions to other-inertial-benchmark should support common data contracts, faithful algorithm interfaces, comparable evaluation and auditable experiments.
 
-## Scope
+## Scope and conventions
 
-Contributions should fit at least one of these areas:
-
-- canonical data formats and dataset adapters;
-- reproducible baselines and evaluation protocols;
-- Android data capture or on-device evaluation;
-- auditable empirical studies;
-- inertial-odometry-specific research workflows.
-
-Method proposals belong in `research/methods/` and must be labeled as proposals until code, configurations, and reproducible results are available.
-
-## Repository conventions
-
-- Commit changes directly to `main`; this repository does not use feature branches.
-- Use `README.md` for Chinese/default documentation and `README_EN.md` for English.
-- Keep executable benchmark code under `src/`, tests under `tests/`, independently runnable components under `tools/`, and non-executable research material under `research/`.
-- Treat the root `.github/workflows/` directory as the only CI and release-workflow location; nested component workflows are not active after consolidation.
-- Use repository-relative links for files in this repository.
-- Do not claim performance improvements without an auditable result table, fixed data split, configuration, and source commit.
-- Preserve dataset, model, and third-party asset provenance and licensing information.
+- Use dev/v1, NIO/ipb and native IPB v1 model/converter interfaces for all new integrations.
+- Keep code in src/inertial_benchmark, tests in tests, specifications/cards in docs and proposals/studies in research.
+- Android source, builds, APKs, capture and device testing belong to [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab). This repository tests exchanged data.
+- Use README.md for Chinese/default and README_EN.md for English. Keep capabilities, status and commands aligned; use tables/Mermaid instead of directory trees.
+- Record third-party terms, official sources, independent implementations, assumptions and adaptations separately.
+- Save splits, input permissions, budgets, seeds, evaluation definitions and source versions. Implementation or CPU checks do not establish reproduced paper accuracy.
+- Do not commit raw datasets, checkpoints, generated artifacts or credentials. Update affected links, cards and commands with changes.
 
 ## Validation
 
-Run the benchmark tests:
-
 ```bash
-python -m pip install -e ".[test]"
+python -m pip install -e ".[train,test]" ruff
+ruff check src tests
 pytest -q
 ```
 
-Run the Android and conversion checks:
+Python CI retains v1 training dependencies and its Python matrix. Android checks run in the independent APP repository. Changed data contracts need physical/analytical boundary checks; benchmark claims also need sufficient training.
 
-```bash
-cd tools/inertial-positioning-lab
-./gradlew testDebugUnitTest lintDebug assembleDebug
-python -m pip install -r requirements-dev.txt
-pytest -q
-```
+## License and evidence
 
-The GitHub Actions workflow runs these checks on every push to `main`.
+Repository-owned material follows [CC BY-NC-ND 4.0](LICENSE); third-party components and datasets retain their own terms. Proposals remain labeled until code, fixed configuration, splits and traceable results are available.
 
-## Documentation
-
-Update the nearest README and any affected file in `docs/` together with code changes. Bilingual documents should remain semantically aligned; a translation does not need to be word-for-word, but status, limitations, paths, and commands must agree.
+Read [layout](docs/REPOSITORY_LAYOUT.md), [current status](docs/DEV_V1_INTEGRATION.md) and the relevant data/algorithm cards.

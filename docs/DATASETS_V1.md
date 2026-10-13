@@ -129,7 +129,8 @@
 
 ```bash
 # 1) 安装（读取 IDOL 的 .feather 需要 idol 可选依赖；训练另需 train）
-git clone <repo> && cd inertial-positioning-benchmark
+git clone --branch dev/v1 https://github.com/BUG423/other-inertial-benchmark.git
+cd other-inertial-benchmark
 pip install -e ".[idol]"            # 或 pip install -e ".[idol,train,test]"
 
 # 2) 原始数据：按各数据卡片第 1 节的入口自行获取并解压（仓库不再分发）

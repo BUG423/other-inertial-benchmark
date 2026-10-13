@@ -41,12 +41,14 @@
 
 ## 1. 四阶段总览
 
-```
-  Stage 1            Stage 2                    Stage 3          Stage 4
-  Ideation   ──►     Experiment       ──►       Writing   ──►    Revision   ──► [待实现]
-  提出 idea          设计实验（双模式）          写论文           返修            一键投稿
-                     ├─ 模式A：实验文档（人执行）
-                     └─ 模式B：可执行方案（模型执行）
+```mermaid
+flowchart LR
+    Ideation["Stage 1: Ideation"] --> Experiment["Stage 2: Experiment"]
+    Experiment --> Human["模式 A: 人执行的实验文档"]
+    Experiment --> Execute["模式 B: 模型执行的方案"]
+    Experiment --> Writing["Stage 3: Writing"]
+    Writing --> Revision["Stage 4: Revision"]
+    Revision --> Submit["一键投稿: 待实现"]
 ```
 
 | 阶段 | 名称 | 目标 | 主要产出 | 对应 skill | 现状 |

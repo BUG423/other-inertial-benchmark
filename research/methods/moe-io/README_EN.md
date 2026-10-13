@@ -1,4 +1,4 @@
-> **Consolidation note:** This research proposal now lives in `inertial-positioning-benchmark`. Its maturity is Proposal and it is not yet an official benchmark entry.
+> **Consolidation note:** This research proposal now lives in `other-inertial-benchmark`. Its maturity is Proposal and it is not yet an official benchmark entry.
 
 # ModeMoEIO: Motion-Mode-Conditioned Mixture-of-Experts for Learning-Based Inertial Odometry
 
@@ -363,7 +363,7 @@ This repository grants no open-source license. Except where explicitly permitted
   title        = {{ModeMoEIO}: Motion-Mode-Conditioned Mixture-of-Experts for Learning-Based Inertial Odometry},
   year         = {2026},
   publisher    = {GitHub},
-  url          = {https://github.com/BUG423/inertial-positioning-benchmark/tree/main/research/methods/moe-io},
+  url          = {https://github.com/BUG423/other-inertial-benchmark/tree/dev/v1/research/methods/moe-io},
   note         = {Preliminary Working Paper, version 0.1.0}
 }
 ```

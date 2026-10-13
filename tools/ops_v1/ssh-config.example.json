@@ -1,0 +1,7 @@
+{
+  "host": "<your-autodl-host>",
+  "port": 22,
+  "user": "<your-ssh-user>",
+  "password": "<your-ssh-password>",
+  "remote_root": "/root/autodl-tmp/other-inertial-benchmark-v1"
+}

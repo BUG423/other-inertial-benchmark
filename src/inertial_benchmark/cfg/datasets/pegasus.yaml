@@ -1,0 +1,8 @@
+name: pegasus
+path: pegasus
+splits: {}
+test_splits: []
+notes: >-
+  Audit-only AirIO simulation source. Converter records rejection until the
+  FRD/FLU ground-truth body frame and pose lever arm are independently verified.
+  No valid IPB v1 canonical or training split is fabricated.

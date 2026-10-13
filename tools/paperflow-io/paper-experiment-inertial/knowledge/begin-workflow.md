@@ -3,13 +3,13 @@
 ## 1. 新增算法全流程
 
 ### 1.1 建目录骨架
-```text
-network/<算法名>/
-├── README.md
-└── model/
-    ├── model.py
-    └── components.py  # 可选
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `network/<算法名>/` | — |
+| `network/<算法名>/README.md` | — |
+| `network/<算法名>/model/` | — |
+| `network/<算法名>/model/model.py` | — |
+| `network/<算法名>/model/components.py` | 可选 |
 
 ### 1.2 实现模型代码
 - 必须实现 `forward(feat, targ) → pred (B,3)` 或 `→ (pred, pred_cov)`

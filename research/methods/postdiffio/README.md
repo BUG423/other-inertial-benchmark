@@ -1,4 +1,4 @@
-> **整合说明**：本研究提案已迁入 `inertial-positioning-benchmark`，当前状态为 Proposal，尚未进入正式基准排行榜。
+> **整合说明**：本研究提案已迁入 `other-inertial-benchmark`，当前状态为 Proposal，尚未进入正式基准排行榜。
 
 <p align="right">
   <b>🇨🇳 中文</b> | <a href="README_EN.md">🇬🇧 English</a>

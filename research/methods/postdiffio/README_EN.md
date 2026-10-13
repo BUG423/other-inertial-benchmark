@@ -1,4 +1,4 @@
-> **Consolidation note:** This research proposal now lives in `inertial-positioning-benchmark`. Its maturity is Proposal and it is not yet an official benchmark entry.
+> **Consolidation note:** This research proposal now lives in `other-inertial-benchmark`. Its maturity is Proposal and it is not yet an official benchmark entry.
 
 <p align="right">
   <a href="README.md">🇨🇳 中文</a> | <b>🇬🇧 English</b>

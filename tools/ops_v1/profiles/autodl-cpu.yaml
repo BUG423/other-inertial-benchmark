@@ -1,0 +1,20 @@
+# CPU acceptance on short, disjoint excerpts of converted public recordings.
+# This verifies execution; it is not a research training or ranking recipe.
+device: cpu
+epochs: 1
+batch: 2
+val_batch: 2
+workers: 0
+cache: false
+amp: false
+deterministic: true
+seed: 42
+window: 200
+stride: 200
+eval_stride: 200
+augment: []
+orientation: device
+efficiency: false
+save_predictions: true
+plots: true
+max_plots: 1

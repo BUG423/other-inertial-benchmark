@@ -4,16 +4,16 @@
 
 Begin 是基于 IMU 的行人航位推算研究代码库。任务: 6 轴 IMU (3 陀螺+3 加速度) → 3D 速度向量。
 
-```text
-Begin/
-├── bash/              # 训练启动脚本 (冒烟测试 / baseline 一键训练 / 单算法脚本)
-├── load_dataset/      # 数据集加载与预处理 (6 数据集 + 统一入口 + 缓存机制)
-├── network/           # 神经网络模型库 (对比算法 + 自研算法)
-├── plot/              # 结果可视化 (轨迹图/CDF/PDE/性能对比/特征分析)
-├── train_test/        # 训练/测试主流程 (main.py + Train_Test.py + losses.py)
-├── pyproject.toml     # uv 依赖管理
-└── README.md
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `Begin/` | — |
+| `Begin/bash/` | 训练启动脚本 (冒烟测试 / baseline 一键训练 / 单算法脚本) |
+| `Begin/load_dataset/` | 数据集加载与预处理 (6 数据集 + 统一入口 + 缓存机制) |
+| `Begin/network/` | 神经网络模型库 (对比算法 + 自研算法) |
+| `Begin/plot/` | 结果可视化 (轨迹图/CDF/PDE/性能对比/特征分析) |
+| `Begin/train_test/` | 训练/测试主流程 (main.py + Train_Test.py + losses.py) |
+| `Begin/pyproject.toml` | uv 依赖管理 |
+| `Begin/README.md` | — |
 
 ## 核心概念
 
@@ -27,13 +27,13 @@ Begin/
 
 每个算法一个目录，固定结构:
 
-```text
-network/<算法名>/
-├── README.md          # 论文信息 + 核心思想 + arch 名→文件映射表
-└── model/
-    ├── model.py       # 核心模型 (或其他命名)
-    └── components.py  # 可选: 内部组件
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `network/<算法名>/` | — |
+| `network/<算法名>/README.md` | 论文信息 + 核心思想 + arch 名→文件映射表 |
+| `network/<算法名>/model/` | — |
+| `network/<算法名>/model/model.py` | 核心模型 (或其他命名) |
+| `network/<算法名>/model/components.py` | 可选: 内部组件 |
 
 模型工厂 `network/model_factory.py` 通过 `args.network` 用相对导入创建模型:
 ```python
@@ -93,10 +93,10 @@ checkpoint 结构: `{model_state_dict, epoch, optimizer_state_dict, scheduler_st
 数据目录约定:
 ```text
 <DATA_ROOT>/<数据集>v2/
-├── all/          # 所有样本子目录
-├── train.txt     # 每行一个样本名
-├── val.txt
-└── test.txt
+all/          # 所有样本子目录
+train.txt     # 每行一个样本名
+val.txt
+test.txt
 ```
 
 ## bash/ — 启动脚本
@@ -127,7 +127,7 @@ checkpoint 结构: `{model_state_dict, epoch, optimizer_state_dict, scheduler_st
 
 ```text
 results/<算法名>/<Coordinate>/<数据集>/<算法>/
-├── checkpoints/    # checkpoint_best.pt + checkpoint_latest.pt
-├── training.log    # 训练日志
-└── ...             # 评估指标 JSON / 轨迹图
+checkpoints/    # checkpoint_best.pt + checkpoint_latest.pt
+training.log    # 训练日志
+...             # 评估指标 JSON / 轨迹图
 ```

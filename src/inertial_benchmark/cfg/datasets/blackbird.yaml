@@ -1,0 +1,11 @@
+name: blackbird
+path: blackbird
+splits:
+  test: test
+test_splits: [test]
+strata: [route_id]
+notes: >-
+  Conversion/evaluation catalogue only. Twenty published segments do not mean
+  twenty independent flights. All partitions of a route share group_id;
+  train and val are disabled. Author Vicon/NED/body-to-IMU transform uses zero
+  lever-arm proxy. No device orientation or control/thrust input is supplied.

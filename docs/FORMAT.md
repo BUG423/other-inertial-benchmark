@@ -1,7 +1,7 @@
 # 统一数据规范 / Unified Data Specification
 
-> 状态：草案 v0.1  
-> 适用范围：RoNIN、RIDI、OxIOD、IMUNet_dataset、TLIO、RNIN-VIO/SenseINS  
+> 状态：历史 v0.1 交换格式；当前训练数据契约以 [DESIGN.md](DESIGN.md) 的 IPB v1 为准
+> 适用范围：RoNIN、RIDI、OxIOD、IMUNet_dataset、TLIO、RNIN-VIO/SenseINS
 > 设计原则：规范数据事实，模型窗口与训练目标由实验配置生成。
 
 [中文](#中文) | [English](#english)
@@ -23,16 +23,10 @@
 
 推荐每条轨迹保存为一个 HDF5 文件：
 
-```text
-<dataset>/
-├── sequences/
-│   ├── <sequence_id>.h5
-│   └── ...
-└── splits/
-    ├── train.txt
-    ├── val.txt
-    └── test.txt
-```
+| 数据集相对路径 | 内容 |
+| :--- | :--- |
+| `sequences/<sequence_id>.h5` | 一条规范轨迹 |
+| `splits/train.txt` · `splits/val.txt` · `splits/test.txt` | 每行一个 sequence_id 的划分文件 |
 
 划分文件每行一个 `sequence_id`。优先保留数据集官方划分；若无官方划分，必须记录生成方法、随机种子和分组单位，且同一受试者或同一采集场景不得无意跨集合泄漏。
 
@@ -106,7 +100,7 @@
 
 表中只描述公开实现所需的通用转换职责；具体字段映射将以各数据集公开文档为准独立实现。
 
-除公开数据集适配器外，仓库内置的 [Inertial Positioning Lab](../tools/inertial-positioning-lab) 提供真实 Android 设备采集入口。其 `.iplab` 转换器输出同一 HDF5 契约，并明确保存 ARCore VIO 来源、局部坐标系和逐样本有效掩码；它不会把 VIO 标记为独立高精度真值。
+除公开数据集适配器外，独立 [Inertial Positioning Lab](https://github.com/BUG423/app-inertial-lab) 提供真实 Android 设备采集入口。其 `.iplab` 转换器输出同一 HDF5 契约，并明确保存 ARCore VIO 来源、局部坐标系和逐样本有效掩码；它不会把 VIO 标记为独立高精度真值。
 
 ### 6. 任务视图
 
@@ -148,4 +142,8 @@ Official dataset splits take priority. Derived splits must record their method a
 
 The first adapter set covers RoNIN, RIDI, OxIOD, IMUNet_dataset, TLIO, and RNIN-VIO/SenseINS. Conversion code will be independently implemented from public dataset documentation. This public repository does not redistribute source datasets or private reference material.
 
-The bundled [Inertial Positioning Lab](../tools/inertial-positioning-lab) additionally provides a real-device Android capture path. Its `.iplab` converter writes the same HDF5 contract while retaining the ARCore VIO provenance, local frame, and per-sample validity masks; it does not present VIO as independent precision ground truth.
+The independent [Inertial Positioning Lab](https://github.com/BUG423/app-inertial-lab) additionally provides a real-device Android capture path. Its `.iplab` converter writes the same HDF5 contract while retaining the ARCore VIO provenance, local frame, and per-sample validity masks; it does not present VIO as independent precision ground truth.
+
+## v1 读取与准入 / v1 compatibility
+
+`load_sequence()` 可以读取并在内存重采样旧数据，但保留原 world_frame 和来源字段，不静默改写为合法 v1。完整 v1 校验与惰性训练仍要求原生契约；ARCore 等来源需显式审计。参见[交换限制](TOOLS.md)。

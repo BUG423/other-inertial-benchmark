@@ -222,19 +222,19 @@ ipb cfg model=ronin_resnet18 recipe=official   # 打印合并后的完整配置
 
 ## 3. 输出目录
 
-```text
-runs/<mode>/<name>/            # mode = train / val / predict；name 缺省 exp，已存在时 exp2、exp3…（exist_ok=true 则复用）
-├── args.yaml                  # 完整解析后的配置，外加 protocol 块（生效的输入规格与评测协议）
-├── env.json                   # git 提交与是否有未提交修改、依赖版本、GPU、数据集指纹与 dataset.json 哈希
-├── log.txt
-├── weights/{best,last}.pt     # 训练：模型配置、输入规格、完整 cfg、epoch、优化器/调度器状态（best 去掉优化器）、git 提交
-├── results.csv                # 训练：每轮 train/loss、val/*、lr、fitness、耗时
-├── metrics.json               # 聚合指标（mean/median/std/count）、protocol、privileged_inputs、calibration、
-│                              # 效率指标、train_eval_gap（四模式失配守卫，见第 4.2 节）
-├── sequences.csv              # 逐序列指标
-├── predictions/<seq>.npz      # 逐帧预测/参考/oracle 轨迹，窗口级 vel_pred/vel_target/(logstd)，其他模型输出 out_<键>
-└── plots/*.png                # 轨迹叠加、误差 CDF、误差随时间、箱线图、长度比、训练曲线
-```
+运行输出位于 `runs/<mode>/<name>/`；mode 为 train / val / predict，默认 name 为 exp，已存在时自动递增（exist_ok=true 则复用）。
+
+| 相对路径 | 内容 |
+| :--- | :--- |
+| `args.yaml` | 完整配置与生效的 protocol |
+| `env.json` | git 版本/dirty、依赖、GPU、数据指纹与 dataset.json 哈希 |
+| `log.txt` | 执行日志 |
+| `weights/best.pt` · `weights/last.pt` | 训练 checkpoint：模型/输入规格、cfg、epoch、状态与来源版本 |
+| `results.csv` | 每轮 train/loss、val/*、lr、fitness 与耗时 |
+| `metrics.json` | mean/median/std/count、protocol、privileged_inputs、calibration、效率与 train_eval_gap |
+| `sequences.csv` | 逐序列指标 |
+| `predictions/<seq>.npz` | 预测/参考/oracle 轨迹、窗口输出、logstd 与其他 out_* 字段 |
+| `plots/*.png` | 轨迹、CDF、误差时间、箱线、长度比与训练曲线 |
 
 ## 4. 全部配置键（`default.yaml`）
 

@@ -1,0 +1,9 @@
+name: advio
+path: advio
+splits: {}
+test_splits: []
+notes: >-
+  Audit-only iPhone source. IMU-correlated manual-fixpoint camera reference;
+  camera-to-IMU rotation direction and lever arm require verification. Published
+  acceleration is already SI. Rejection reports are supported; native v1
+  canonical, training splits, and valid body attitude are not fabricated.

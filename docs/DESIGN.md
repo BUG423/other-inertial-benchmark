@@ -15,40 +15,40 @@
 
 ## 1. 总体架构（参考 Ultralytics 的组织方式）
 
-```text
-src/inertial_benchmark/
-├── __init__.py            # 公共 API：NIO、load_sequence、Sequence、__version__
-├── cfg/                   # 配置系统（YAML + CLI key=value 覆盖）
-│   ├── __init__.py        # get_cfg / 合并 / 校验未知键
-│   ├── default.yaml       # 全部超参数的唯一默认来源
-│   ├── datasets/*.yaml    # 每个数据集一个：路径、划分、元信息
-│   └── models/*.yaml      # 每个模型一个：结构参数、输入规格、损失、训练配方
-├── data/
-│   ├── format.py          # IPB v1 序列格式：Sequence 数据类、读写、校验（兼容读取 v0.1）
-│   ├── resample.py        # 统一采样率（抗混叠、SLERP、缺口掩码）
-│   ├── converters/        # 原始数据 → IPB v1：ronin, ridi, oxiod, tlio, idol, rnin, imunet, pedlocdata, iplab
-│   ├── splits.py          # 官方划分优先；分组感知的 val 生成与泄漏检查
-│   ├── views.py           # 任务视图：坐标变换、目标构造（无 torch 依赖）
-│   ├── augment.py         # 数据增强（随机偏航、时间抖动、偏置/噪声注入…）
-│   ├── dataset.py         # torch Dataset / 缓存 / 采样器
-│   └── build.py           # build_dataset / build_dataloader
-├── nn/
-│   ├── modules/           # 通用积木：1D ResNet、TCN、LSTM、Transformer 块等
-│   ├── heads.py           # 速度头、高斯头（协方差）、极坐标头（速度大小+方向）
-│   ├── losses.py          # 通用损失：MSE、Gaussian NLL、TLIO 式调度等
-│   └── registry.py        # @register_model / build_model(cfg)
-├── models/                # 每个算法一个子包：model.py（结构）+ 可选 loss / trainer 钩子
-│   └── ronin/ tlio/ rnin/ imunet/ ctin/ imot/ eqnio/ ...
-├── engine/
-│   ├── model.py           # NIO 门面：.train() .val() .predict() .benchmark() .info()
-│   ├── trainer.py         # 训练循环、回调、AMP、断点、早停、fitness
-│   ├── validator.py       # 窗口级损失 + 轨迹级指标
-│   ├── predictor.py       # 序列 → 窗口 → 速度 → 轨迹
-│   └── results.py         # Trajectory / SequenceResult / RunResult
-├── metrics/               # ATE/RTE/漂移/长度/方向/速度/效率 指标
-├── utils/                 # 日志、回调、torch 工具、绘图、报表、统计检验、环境检查
-└── cli.py                 # 命令行入口 `ipb`
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `src/inertial_benchmark/` | — |
+| `src/inertial_benchmark/__init__.py` | 公共 API：NIO、load_sequence、Sequence、__version__ |
+| `src/inertial_benchmark/cfg/` | 配置系统（YAML + CLI key=value 覆盖） |
+| `src/inertial_benchmark/cfg/__init__.py` | get_cfg / 合并 / 校验未知键 |
+| `src/inertial_benchmark/cfg/default.yaml` | 全部超参数的唯一默认来源 |
+| `src/inertial_benchmark/cfg/datasets/*.yaml` | 每个数据集一个：路径、划分、元信息 |
+| `src/inertial_benchmark/cfg/models/*.yaml` | 每个模型一个：结构参数、输入规格、损失、训练配方 |
+| `src/inertial_benchmark/data/` | — |
+| `src/inertial_benchmark/data/format.py` | IPB v1 序列格式：Sequence 数据类、读写、校验（兼容读取 v0.1） |
+| `src/inertial_benchmark/data/resample.py` | 统一采样率（抗混叠、SLERP、缺口掩码） |
+| `src/inertial_benchmark/data/converters/` | 原始数据 → IPB v1：ronin, ridi, oxiod, tlio, idol, rnin, imunet, pedlocdata, iplab |
+| `src/inertial_benchmark/data/splits.py` | 官方划分优先；分组感知的 val 生成与泄漏检查 |
+| `src/inertial_benchmark/data/views.py` | 任务视图：坐标变换、目标构造（无 torch 依赖） |
+| `src/inertial_benchmark/data/augment.py` | 数据增强（随机偏航、时间抖动、偏置/噪声注入…） |
+| `src/inertial_benchmark/data/dataset.py` | torch Dataset / 缓存 / 采样器 |
+| `src/inertial_benchmark/data/build.py` | build_dataset / build_dataloader |
+| `src/inertial_benchmark/nn/` | — |
+| `src/inertial_benchmark/nn/modules/` | 通用积木：1D ResNet、TCN、LSTM、Transformer 块等 |
+| `src/inertial_benchmark/nn/heads.py` | 速度头、高斯头（协方差）、极坐标头（速度大小+方向） |
+| `src/inertial_benchmark/nn/losses.py` | 通用损失：MSE、Gaussian NLL、TLIO 式调度等 |
+| `src/inertial_benchmark/nn/registry.py` | @register_model / build_model(cfg) |
+| `src/inertial_benchmark/models/` | 每个算法一个子包：model.py（结构）+ 可选 loss / trainer 钩子 |
+| `src/inertial_benchmark/models/<algorithm>/` | ronin、tlio、rnin、imunet、ctin、imot、eqnio 等算法包 |
+| `src/inertial_benchmark/engine/` | — |
+| `src/inertial_benchmark/engine/model.py` | NIO 门面：.train() .val() .predict() .benchmark() .info() |
+| `src/inertial_benchmark/engine/trainer.py` | 训练循环、回调、AMP、断点、早停、fitness |
+| `src/inertial_benchmark/engine/validator.py` | 窗口级损失 + 轨迹级指标 |
+| `src/inertial_benchmark/engine/predictor.py` | 序列 → 窗口 → 速度 → 轨迹 |
+| `src/inertial_benchmark/engine/results.py` | Trajectory / SequenceResult / RunResult |
+| `src/inertial_benchmark/metrics/` | ATE/RTE/漂移/长度/方向/速度/效率 指标 |
+| `src/inertial_benchmark/utils/` | 日志、回调、torch 工具、绘图、报表、统计检验、环境检查 |
+| `src/inertial_benchmark/cli.py` | 命令行入口 `ipb` |
 
 Python API：
 
@@ -74,17 +74,17 @@ ipb report  runs=runs/benchmark/main out=reports/main
 
 运行输出目录：
 
-```text
-runs/<mode>/<name>/
-├── args.yaml               # 完整解析后的配置
-├── env.json                # git commit、包版本、GPU、数据集指纹
-├── weights/{best,last}.pt  # 含模型结构配置、输入规格、训练状态
-├── results.csv             # 每轮训练/验证记录
-├── metrics.json            # 聚合指标
-├── sequences.csv           # 逐序列指标
-├── predictions/<seq>.npz   # 轨迹与窗口级输出
-└── plots/*.png
-```
+| 运行内相对路径 | 内容 |
+| :--- | :--- |
+| `args.yaml` | 完整解析后的配置 |
+| `env.json` | git commit、包版本、GPU、数据集指纹 |
+| `weights/best.pt` · `weights/last.pt` | 模型结构、输入规格与训练状态 |
+| `results.csv` | 每轮训练/验证记录 |
+| `metrics.json` · `sequences.csv` | 聚合与逐序列指标 |
+| `predictions/<seq>.npz` | 轨迹与窗口级输出 |
+| `plots/*.png` | 结果图 |
+
+根位置为 `runs/<mode>/<name>/`。
 
 ## 2. 数据格式 IPB v1.0
 
@@ -93,15 +93,17 @@ runs/<mode>/<name>/
 
 ### 2.1 目录
 
-```text
-<root>/<dataset>/
-├── dataset.json           # 数据集级元信息：版本、采样率、来源、许可、转换器版本、划分方法、统计、文件校验和
-├── sequences/<sequence_id>.h5
-├── splits/{train,val,test}.txt       # 可附加 test_seen.txt / test_unseen.txt 等官方子集、
-│                                     # 转换器声明的附加测试子集（test_unseen_subject.txt 等）、
-│                                     # 以及泄漏的官方划分 official_*.txt（见 2.4）
-└── conversion_report.json # 每条序列的接收/拒绝原因与警告
-```
+| 数据集内相对路径 | 内容 |
+| :--- | :--- |
+| `dataset.json` | 版本、采样率、来源、许可、转换器、划分、统计与校验和 |
+| `sequences/<sequence_id>.h5` | 原生 v1 序列 |
+| `splits/train.txt` · `splits/val.txt` · `splits/test.txt` | 基础划分 |
+| `splits/test_seen.txt` · `splits/test_unseen.txt` | 可选官方子集 |
+| `splits/test_unseen_subject.txt` 等 | 转换器声明的附加测试子集 |
+| `splits/official_*.txt` | 需标注泄漏的官方划分，见 2.4 |
+| `conversion_report.json` | 每条序列接收/拒绝原因与警告 |
+
+根位置为 `<root>/<dataset>/`。
 
 默认数据根目录：环境变量 `IPB_DATASETS`，缺省为 `~/datasets/ipb`。本机为 `/workspace/webCodex/datasets/ipb`。
 

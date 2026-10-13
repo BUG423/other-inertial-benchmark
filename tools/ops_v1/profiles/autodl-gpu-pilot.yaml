@@ -1,0 +1,9 @@
+# Planned profile only. No GPU campaign is armed by this file.
+# Seed 42 is for engineering pilots; the future research matrix starts with seed 0.
+# Select batch and val_batch from measured 24 GiB capacity/throughput per model.
+device: 0
+workers: 0
+cache: false
+amp: false
+deterministic: true
+seed: 42

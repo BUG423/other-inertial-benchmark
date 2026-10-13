@@ -1,0 +1,13 @@
+name: euroc
+path: euroc
+splits:
+  train: train
+  val: val
+  test: test
+test_splits: [test]
+strata: [device_id]
+notes: >-
+  EuRoC image-free AirIO source, native IPB v1 at 200 Hz. Default whole-recording
+  split is 5 train / 1 val / 5 test; AirIO train and val were identical and are
+  preserved as official_* provenance only. UAV reference/oracle-attitude track:
+  no deployable device orientation, no reference bias applied to IMU inputs.

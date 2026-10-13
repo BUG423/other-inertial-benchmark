@@ -1,209 +1,158 @@
-<div align="center">
+# 🧭 other-inertial-benchmark
 
-# 🧭 Inertial Positioning Benchmark
-
-### 面向惯性定位研究的统一数据接口、采集工具与可复现实验平台
-
-[![CI](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/BUG423/inertial-positioning-benchmark/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
-![Android](https://img.shields.io/badge/Android-API%2026%2B-3DDC84?logo=android&logoColor=white)
-![Status](https://img.shields.io/badge/status-active-2ea44f)
+[![CI](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml/badge.svg?branch=dev%2Fv1)](https://github.com/BUG423/other-inertial-benchmark/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Android Lab](https://img.shields.io/badge/Android%20Lab-app--inertial--lab-3DDC84?logo=android&logoColor=white)](https://github.com/BUG423/app-inertial-lab)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-red.svg)](LICENSE)
 
 **🇨🇳 中文** · [🇬🇧 English](README_EN.md)
 
-[快速开始](#-快速开始) · [目录结构](#-目录结构) · [研究内容](#-研究内容) · [路线图](#-路线图)
-
-</div>
+> **other-inertial-benchmark** 为惯性定位研究提供统一数据契约、算法接口、可比评价和可审计实验，连接原始数据转换、模型训练、轨迹预测与结果比较。
 
 ---
 
 ## 🌟 项目简介
 
-不同惯性里程计项目往往采用不同的数据格式、坐标系、窗口定义和评测协议，导致方法难以公平比较、实验难以完整复现。本仓库将以下内容统一组织在一套边界清晰的研究基础设施中：
+最终交付是一套可持续扩展的惯性定位 benchmark：原始数据各有格式，转换后遵循统一存储契约；算法保留自己的窗口、输出与损失逻辑，通过统一接口训练和预测；结果在明确的数据划分、输入权限和评价协议下比较，并保存配置、来源和实验记录。
 
-- 📦 **标准数据格式 IPB v1**：统一 200 Hz 时间轴、重力对齐坐标系、单位、HDF5 存储、划分与转换报告；
-- 🏋️ **训练与评测框架**：Ultralytics 风格的 `ipb` 命令行与 `NIO` Python API，统一任务视图、训练循环与轨迹级指标；
-- 📱 **数据采集工具**：使用 Android 设备采集 IMU 与 ARCore VIO 参考轨迹；
-- 🧪 **研究内容**：保存方法提案、实验研究和相关图表；
-- 🧠 **科研工作流**：仅保留 PaperFlow 中面向惯性里程计的 IO 技能；
-- 📚 **环境复现文档**：归档 FAST-LIVO 在 Ubuntu 20.04 + ROS Noetic 下的依赖、编译与测试记录；
-- ✅ **自动化检查**：验证 Python 核心、Android 工程、转换工具和文档链接。
+**一切以 `dev/v1` 为主线**：使用 IPB v1 数据格式、`NIO` Python API、`ipb` CLI 和现有 model/converter 接口接入新数据与算法。模型实现不等于已复现论文精度；官方来源、独立重实现、论文假设和协议适配见[算法规格卡](docs/ALGORITHMS.md)。
 
-目前，IPB v1 数据层、训练/评测框架、RoNIN 参考基线与 Android 工具已经可用；各公开数据集转换器、更多基线与排行榜仍在建设中。
-设计约束见 [设计宪法](docs/DESIGN.md)。
+## ✨ 核心能力与组件
 
-### 数据处理流程
+| 组件 | 当前能力 | 入口与边界 |
+| :--- | :--- | :--- |
+| **统一数据层** | IPB v1 HDF5、200 Hz 时间轴、单位/坐标系、来源、有效掩码、分组划分与检查 | [设计规范](docs/DESIGN.md) · [数据集目录](docs/DATASETS.md) |
+| **核心转换器** | 已有 RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 八个转换器 | [数据卡](docs/datasets/) · [代码](src/inertial_benchmark/data/converters/)；实收与验收状态分别记录 |
+| **算法库** | 29 个注册架构、31 份模型配置、21 个算法包；含 RoNIN、TLIO、RNIN、IMUNet、EqNIO、AirIO、DIVE 和经典基线 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/) |
+| **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；导出 API 尚待建设 |
+| **评价与报告** | ATE、独立对齐诊断、时间/距离 RTE、终点漂移、长度比、速度/方向、效率；CSV/Markdown/LaTeX、统计与图表 | [指标定义](docs/METRICS.md)；短序列换算、oracle、对齐诊断按各自定义解释 |
+| **新增数据接入** | EuRoC 11、Blackbird 20 个发布片段已转换为原生 v1，full/hash 检查通过；Pegasus/ADVIO 审计拒收；TartanIMU 2025 来源卡 | [本轮状态](docs/DEV_V1_INTEGRATION.md) · [数据卡](docs/datasets/)；Blackbird 按 route 分组、仅 test 审计，不作训练/验证集 |
+| **独立移动端** | Android 采集与端侧评测工程 | [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab) · [交换契约](docs/TOOLS.md)；ARCore 是 VIO 参考源 |
+| **研究与追溯** | 轨迹变短、坐标系研究、方法提案、IO 专用研究工具 | [研究索引](research/README.md) · [工具索引](tools/README.md)；提案与正式实验分开标注 |
 
-```text
-公开数据集 / 设备采集
-        ↓  ipb convert（解析 → 200 Hz 重采样 → 掩码 → 重力等校验 → HDF5 + 划分 + 清单）
-IPB v1 序列（Sequence）
-        ↓  任务视图（坐标系、窗口、目标、增强）
-ipb train / ipb val（模型 → 窗口速度 → 统一轨迹重建）
-        ↓
-轨迹级与窗口级指标 → ipb benchmark / ipb report（表格、统计检验、论文图）
+### 数据与实验流程
+
+```mermaid
+flowchart LR
+    Raw["公开数据集 / 独立采集 APP"] --> Audit["来源、单位、时钟与坐标系审计"]
+    Audit --> Convert["数据集专用转换器"]
+    Convert --> Data["IPB v1 HDF5、掩码、划分与指纹"]
+    Data --> View["任务视图：窗口、目标与输入权限"]
+    View --> Train["NIO / ipb：训练、验证与预测"]
+    Train --> Eval["固定协议指标、轨迹与效率"]
+    Eval --> Report["表格、统计、可视化与实验记录"]
+    Report --> Study["路径变短机制与泛化研究"]
 ```
 
-> [!IMPORTANT]
-> `research/methods/` 中的 PostDiffIO 与 ModeMoEIO 当前属于**方法提案**，不代表已经获得可复现的 benchmark 成绩。只有代码、配置、数据划分和结果均可审计的方法，才会进入正式基线。
+## 🛠️ 技术栈与入口
 
-## 🧩 当前组件
+| 技术 / 位置 | 用途 |
+| :--- | :--- |
+| Python ≥ 3.9、NumPy、SciPy、h5py、PyYAML | 存储、重采样、几何计算与配置 |
+| PyTorch ≥ 2.0、pandas、matplotlib | 训练、结果汇总与科学绘图 |
+| [src/inertial_benchmark/](src/inertial_benchmark/) | `cfg`、`data`、`models`、`nn`、`engine`、`metrics` 与 `utils` |
+| [tests/](tests/) · [.github/workflows/ci.yml](.github/workflows/ci.yml) | 解析解、模型/数据契约、引擎与文档检查 |
+| [docs/](docs/README.md) · [research/](research/README.md) | 规范、来源卡、状态与研究证据 |
 
-| 组件 | 状态 | 说明 |
-| --- | --- | --- |
-| IPB v1 数据层 | ✅ 可用 | `Sequence` 读写与校验、200 Hz 重采样、统一转换流水线、分组划分与泄漏检查 |
-| 训练与评测框架 | ✅ 可用 | `ipb` CLI / `NIO` API、配置系统、Trainer / Validator / Predictor、指标与报表 |
-| RoNIN ResNet 基线 | ✅ 可用 | 依据论文与官方仓库独立实现，参数量与官方逐一对齐 |
-| 公开数据集转换器 | 🚧 建设中 | RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData |
-| Inertial Positioning Lab | ✅ 可用 | Android 采集、`.iplab` 归档、数据转换与端侧推理 |
-| Pedestrian Coordinate Frames | 📊 研究记录 | Global frame 与 body frame 的实验分析 |
-| PostDiffIO | 💡 方法提案 | 条件扩散后验细化与不确定性建模 |
-| ModeMoEIO | 💡 方法提案 | 面向不同运动状态的混合专家路由 |
-| PaperFlow IO | 🛠️ 研究工具 | IO 选题、文献复核、可行性评审与实验规划 |
-| FAST-LIVO Setup | 📚 环境文档 | ROS Noetic 下的 FAST-LIVO 历史复现与依赖说明 |
-| 更多基线与排行榜 | 🚧 规划中 | TLIO、RNIN、IMUNet 等基线与版本化结果 |
+完整组件职责见[仓库布局](docs/REPOSITORY_LAYOUT.md)。服务器隔离部署与资源 profile 见 [Ops v1](tools/ops_v1/README.md)。
 
-## 🗂️ 目录结构
+## 🚀 快速上手
 
-```text
-inertial-positioning-benchmark/
-├── src/inertial_benchmark/       # IPB 核心：cfg / data / nn / models / engine / metrics / utils / cli
-├── tests/                        # 核心、集成与文档一致性测试
-├── docs/                         # 数据规范、调研、环境复现与项目约定
-│   └── setup/fast-livo.md         # FAST-LIVO 历史环境复现指南
-├── tools/
-│   ├── inertial-positioning-lab/ # Android 采集与端侧评测工具
-│   └── paperflow-io/             # 仅面向 IO 的科研工作流
-├── research/
-│   ├── methods/                  # 尚未纳入正式基线的方法提案
-│   └── studies/                  # 可追溯的实验研究与资源
-├── .github/workflows/            # 全仓唯一的 CI 与发布流程
-└── pyproject.toml                # Python 项目与依赖配置
-```
-
-| 目录 | 内容入口 |
-| --- | --- |
-| `docs/` | [文档索引](docs/README.md) · [设计宪法](docs/DESIGN.md) · [指标](docs/METRICS.md) · [命令行](docs/CLI.md) · [v0.1 数据格式](docs/FORMAT.md) · [数据集](docs/DATASETS.md) · [v1 数据发布](docs/DATASETS_V1.md) · [论文](docs/PAPERS.md) · [FAST-LIVO 配置](docs/setup/fast-livo.md) |
-| `tools/` | [工具索引](tools/README.md) · [Android 工具](tools/inertial-positioning-lab/) · [PaperFlow IO](tools/paperflow-io/) |
-| `research/` | [研究索引](research/README.md) · [方法提案](research/methods/) · [实验研究](research/studies/) |
-
-目录职责、命名方式和新组件准入条件见[仓库目录规范](docs/REPOSITORY_LAYOUT.md)。
-
-## 🚀 快速开始
-
-### 1. 获取并安装
+### 1. 安装并查看实际注册项
 
 ```bash
-git clone https://github.com/BUG423/inertial-positioning-benchmark.git
-cd inertial-positioning-benchmark
-python -m pip install -e ".[train,test]"   # 只用数据层时：pip install -e .
+git clone --branch dev/v1 https://github.com/BUG423/other-inertial-benchmark.git
+cd other-inertial-benchmark
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e ".[train,test]"
+ipb info
+ipb cfg model=ronin_resnet18 recipe=unified
 ```
 
-项目要求 Python 3.9 或更高版本；核心数据层只依赖 numpy / h5py / scipy / pyyaml，训练与报表需要 `train` 可选依赖（PyTorch、pandas、matplotlib）。
+仅使用数据层时安装 `pip install -e .`；读取 IDOL Feather 原始文件需 `pip install -e ".[idol]"`。PyTorch CPU/CUDA 构建按环境选择。
 
-### 2. 运行测试
+### 2. 转换与检查
+
+先按[RIDI 数据卡](docs/datasets/ridi.md)取得原始文件，并将 `source` 改为实际位置：
 
 ```bash
-pytest -q                 # 全部测试（含约 20 秒的端到端冒烟测试）
-pytest -q -m "not slow"   # 跳过端到端冒烟测试
+export IPB_DATASETS="$PWD/datasets"
+ipb convert dataset=ridi source=raw/ridi workers=1
+ipb check data=ridi full=true hash=true
 ```
 
-测试覆盖数据格式、重采样、转换流水线、任务视图、模型、指标解析解、训练引擎、命令行、Android 工具集成与文档链接，全部使用合成数据。
+输出包含 `sequences/*.h5`、`splits/*.txt`、`dataset.json` 和 `conversion_report.json`。配置在 [cfg/datasets/](src/inertial_benchmark/cfg/datasets/)。官方 seen/unseen 标签可以保留，不强制其他数据集使用同一标签。
 
-### 3. 转换并检查数据集
+### 3. CPU 流程示例
+
+下列配置用于检查数据、训练和结果输出；步长与训练预算仅用于工程检查：
 
 ```bash
-export IPB_DATASETS=~/datasets/ipb
-ipb convert dataset=ronin source=/path/to/raw/ronin workers=8
-ipb check data=ronin full=true
+ipb train model=ronin_resnet18 data=ridi device=cpu epochs=1 batch=2 workers=0 cache=false stride=200 eval_stride=200 project=runs/cpu-smoke name=ridi-ronin
+ipb val model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt data=ridi split=val device=cpu workers=0 cache=false eval_stride=200 project=runs/cpu-smoke
+ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source=datasets/ridi/sequences device=cpu workers=0 eval_stride=200
 ```
 
-转换结果包含 `sequences/*.h5`、`splits/*.txt`、`dataset.json` 与 `conversion_report.json`，格式见 [设计宪法](docs/DESIGN.md) 第 2 节。
-
-### 4. 训练、评测与推理
-
-```bash
-ipb train model=ronin_resnet18 data=ronin epochs=40 device=0
-ipb val   model=runs/train/exp/weights/best.pt data=ronin split=test_unseen
-ipb predict model=runs/train/exp/weights/best.pt source=path/to/sequence.h5
-```
-
-等价的 Python API：
+等价 API：
 
 ```python
-from inertial_benchmark import NIO, load_sequence
+from inertial_benchmark import NIO
 
 model = NIO("ronin_resnet18")
-model.train(data="ronin", epochs=40, device=0)
-result = model.val(data="ronin", split="test")      # RunResult：逐序列与聚合指标
-traj = model.predict("path/to/sequence.h5")          # Trajectory：统一时间轴上的轨迹
-
-seq = load_sequence("path/to/sequence.h5")           # 数据层不依赖 PyTorch；也可读取 v0.1 文件
+model.train(data="ridi", device="cpu", epochs=1, batch=2, workers=0, cache=False)
 ```
 
-### 5. 基准矩阵与报告
+正式 GPU 实验应冻结数据划分、配方与充分训练预算，记录统一/官方配方的差异。CPU 一轮结果用于工程验收，不能作为算法排名或论文精度结论。
+
+### 4. 矩阵与报告
 
 ```bash
-ipb benchmark cfg=main                    # 模型 × 数据集 × 种子（cfg/benchmarks/main.yaml），已完成项自动跳过
-ipb report runs=runs/benchmark/main out=reports/main
+ipb benchmark cfg=main dry_run=true
+ipb report runs=runs/cpu-smoke out=reports/cpu-smoke
+pytest -q -m "not slow"
 ```
 
-报告包含均值/中位数、按 `group_id` 的 bootstrap 置信区间、多种子统计、配对 Wilcoxon 检验、CSV/Markdown/LaTeX 表格和论文图。
-命令与配置键详见 [命令行文档](docs/CLI.md)，指标定义详见 [指标文档](docs/METRICS.md)。
+示例矩阵见 [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml)。正式执行前选择已验收的数据/算法并检查资源预算；完整命令见 [CLI.md](docs/CLI.md)。
 
-### 6. 转换 Android 采集数据
+APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://github.com/BUG423/app-inertial-lab)。旧文件读取兼容与 v1 训练准入不同，限制见[交换契约](docs/TOOLS.md)。
 
-```bash
-python tools/inertial-positioning-lab/tools/convert_dataset.py \
-  recording.iplab \
-  --output datasets/android
-```
+## 🔬 研究与验证状态
 
-生成的 v0.1 文件可直接由 `load_sequence()` 读取（内存中重采样为 v1）。格式详情请参阅 [Inertial Positioning Lab](tools/inertial-positioning-lab/)。
+当前 AutoDL 已将 RIDI、RoNIN 各三条录制转换为原生 v1，并完成代表短段的 CPU NIO 训练、验证、预测与 checkpoint 重载一致性检查（各 1 epoch / 2 updates）。新增 31 份原生 v1 文件已验收；完整测试计数以本轮记录为准，之后开展 GPU 充分训练。2026-09-24 交接中的 **705 项测试**、旧机器成绩及 AMP/dropout 观察属于历史记录，不代表当前服务器复验；本轮以[项目状态](docs/DEV_V1_INTEGRATION.md)和验收记录为准。
 
-### 7. 构建 Android 应用
+路径普遍偏短需要分别检验目标/积分 oracle、时间与长度分辨率、速度幅值/方向、训练和推理模式失配、精度设置与泛化。已有长度分解和模式守卫提供起点，结论须由充分训练的多算法实验支持。
 
-```bash
-cd tools/inertial-positioning-lab
-./gradlew testDebugUnitTest lintDebug assembleDebug
-```
-
-Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
-
-## 🔬 研究内容
-
-- 💡 [PostDiffIO](research/methods/postdiffio/)：条件扩散速度残差细化与不确定性建模提案；
-- 💡 [ModeMoEIO](research/methods/moe-io/)：运动模式感知混合专家提案；
-- 📊 [Pedestrian Coordinate Frames](research/studies/pedestrian-coordinate-frames/)：global-frame 与 body-frame 表征研究；
-- 🧠 [PaperFlow IO](tools/paperflow-io/)：仅包含 IO 选题、文献复核、可行性评审与实验设计技能；
-- 📚 [FAST-LIVO 环境配置](docs/setup/fast-livo.md)：Ubuntu 20.04 与 ROS Noetic 环境下的历史复现说明。
+| 研究入口 | 证据状态 |
+| :--- | :--- |
+| [Pedestrian Coordinate Frames](research/studies/pedestrian-coordinate-frames/) | 历史坐标系研究与资源 |
+| [PostDiffIO](research/methods/postdiffio/) · [ModeMoEIO](research/methods/moe-io/) | 方法提案，尚无本轮可复现 benchmark 成绩 |
+| [PaperFlow IO](tools/paperflow-io/) | IO 选题、文献复核与实验规划 |
+| [FAST-LIVO 环境记录](docs/setup/fast-livo.md) | 历史 ROS Noetic 复现说明 |
 
 ## 🛣️ 路线图
 
-- [x] 定义统一序列结构、坐标系与单位约定
-- [x] 实现 HDF5 I/O、窗口数据集和核心测试
-- [x] 集成 Android 数据采集与端侧评测工具
-- [x] 整合研究方法、坐标系研究和 PaperFlow IO
-- [x] 归档并整合 FAST-LIVO 的 ROS 1 环境复现指南
-- [x] 制定 IPB v1 设计宪法：200 Hz 统一格式、任务视图、推理协议与指标体系
-- [x] 实现统一转换流水线、分组划分与泄漏检查
-- [x] 实现训练/评测框架（`ipb` CLI、`NIO` API、基准矩阵与报表）
-- [x] 集成 RoNIN ResNet 参考基线（参数量与官方实现对齐）
-- [x] 固化轨迹级与窗口级评测指标（[METRICS.md](docs/METRICS.md)）
-- [ ] 接入八个核心公开数据集的转换器并发布划分与指纹
-- [ ] 集成 TLIO、RNIN、IMUNet 等更多可复现基线
-- [ ] 在真实数据上完成基准矩阵并发布版本化结果与排行榜
+| 阶段 | 交付与验收 |
+| :--- | :--- |
+| **已有主干** | v1 序列/任务视图、八个核心转换器、多算法接口、训练/验证/预测、指标与报告 |
+| **当前 CPU 阶段** | EuRoC/Blackbird 原生转换与数据检查已验收；完成当前服务器完整 suite 和执行环境验收 |
+| **评价增量** | 输入权限 track、NA/覆盖、3D 图一致性、超过八模型的分页/分面、六面板与静态 HTML |
+| **GPU 阶段** | 单 seed 验证配方与充分训练，再扩展矩阵；最终关键实验最多三个 seed |
+| **研究交付** | 可审计 benchmark、收缩机制与受控实验、可复现发布；论文目标 ICRA / IEEE RA-L |
 
-## 🤝 贡献与许可
+详细待办见[项目状态](docs/DEV_V1_INTEGRATION.md)。
 
-本仓库只维护 `main`。提交内容前请阅读[贡献规范](CONTRIBUTING.md)，并为数据集、模型和第三方资源记录来源、许可证与再分发限制。
+## 📄 知识产权与开源协议
 
-仓库级统一开源许可证尚未确定。源码公开不自动授予再分发或商业使用权；带独立许可证的组件继续遵循其目录中的条款。
+本项目采用 **[CC BY-NC-ND 4.0](LICENSE)**（署名—非商业性使用—禁止演绎 4.0 国际许可）。按仓库许可证使用、署名与共享；未经许可不得用于商业目的或分发修改后的版本。
+
+数据集、第三方代码、独立工具与权重保留各自来源及条款，仓库许可证不替代第三方授权。复用算法请引用对应论文并记录来源/适配。提交前阅读[贡献规范](CONTRIBUTING.md)。
 
 ---
 
 <div align="center">
 
-如果这个项目对你的研究有帮助，欢迎 ⭐ Star 并关注后续 benchmark 更新。
+如果本项目对你的研究有帮助，欢迎 ⭐ Star，并关注可复现 benchmark 的后续发布。
 
 </div>

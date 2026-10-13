@@ -4,12 +4,12 @@
 
 实验阶段从以下固定位置读取 idea:
 
-```text
-paperflow/
-├── idea-spec-I<n>.md  # 选定 idea 详细说明书, 每个选定 idea 一份 (主推最详细, 详见模板)
-├── references.md      # 结构化相关文献 (详见模板)
-└── ideation.md        # 完整 10 候选清单 + 选定记录 (归档用)
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `paperflow/` | — |
+| `paperflow/idea-spec-I<n>.md` | 选定 idea 详细说明书, 每个选定 idea 一份 (主推最详细, 详见模板) |
+| `paperflow/references.md` | 结构化相关文献 (详见模板) |
+| `paperflow/ideation.md` | 完整 10 候选清单 + 选定记录 (归档用) |
 
 **必须存在的最小集合**: 至少一份 `idea-spec-I<n>.md` (主推那份) + `references.md`。两者缺任一 → 实验阶段拒绝启动，提示"先跑完 ideation 落盘"。选了多个 idea 时会有 `idea-spec-I1.md` / `idea-spec-I2.md` 多份，逐份读，主推那份优先。
 

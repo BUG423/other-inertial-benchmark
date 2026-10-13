@@ -17,13 +17,13 @@
 
 ## 2. 原始文件与字段
 
-```text
-data/
-├── data_train/<k>/SenseINS.csv   241 条
-├── data_val/<k>/SenseINS.csv     51 条
-├── data_test/<k>/SenseINS.csv    9 条
-└── Sense_INS_Data.md             字段说明
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `data/` | — |
+| `data/data_train/<k>/SenseINS.csv` | 241 条 |
+| `data/data_val/<k>/SenseINS.csv` | 51 条 |
+| `data/data_test/<k>/SenseINS.csv` | 9 条 |
+| `data/Sense_INS_Data.md` | 字段说明 |
 
 | 列 | 单位 / 含义（`Sense_INS_Data.md` + 实测） | IPB v1 去向 |
 |---|---|---|

@@ -14,7 +14,8 @@ from types import ModuleType
 from typing import Union
 
 REQUIRED_MEMBERS = ("NAME", "VERSION", "LICENSE", "official_splits", "iter_raw_sequences")
-PLANNED = ("ronin", "ridi", "oxiod", "tlio", "idol", "rnin", "imunet", "pedlocdata", "iplab")
+PLANNED = ("ronin", "ridi", "oxiod", "tlio", "idol", "rnin", "imunet", "pedlocdata",
+           "euroc", "blackbird", "pegasus", "advio", "iplab")
 
 
 class ConverterError(ImportError):

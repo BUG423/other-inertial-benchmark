@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "inertial-positioning-benchmark"
+name = "other-inertial-benchmark"
 dynamic = ["version"]
 description = "IPB: unified data format, training framework and evaluation protocol for inertial positioning"
 readme = "README.md"
@@ -14,6 +14,7 @@ dependencies = ["h5py>=3.8", "numpy>=1.23", "scipy>=1.9", "pyyaml>=6.0", "pandas
 idol = ["pyarrow>=10"]  # IDOL 的 .feather 文件
 train = ["torch>=2.0", "pandas>=1.5", "matplotlib>=3.6"]
 test = ["pytest>=7"]
+ops = ["paramiko>=3"]
 
 [project.scripts]
 ipb = "inertial_benchmark.cli:entrypoint"

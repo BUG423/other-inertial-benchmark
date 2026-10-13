@@ -10,3 +10,15 @@ build/
 *.iplmodel
 .claude/
 runs/
+# Private machine configuration and dataset/model assets.
+.local/
+.env
+.env.*
+!.env.example
+/datasets/
+/external/
+/data/raw/
+*.pt
+*.pth
+*.npz
+.ruff_cache/

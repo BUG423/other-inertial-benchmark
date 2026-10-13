@@ -17,14 +17,14 @@
 
 ## 2. 原始文件与字段
 
-```text
-tlio_golden/
-├── <seq_id>/imu0_resampled.npy               (N,17) float64
-├── <seq_id>/imu0_resampled_description.json  列名、行数、频率、起止时间
-├── <seq_id>/calibration.json                 离线 IMU 标定
-├── <seq_id>/imu_samples_0.csv                约 1 kHz 原始 IMU（仅 212/354 条）
-└── train_list.txt / val_list.txt / test_list.txt / all_ids.txt / spline_metrics.csv
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `tlio_golden/` | — |
+| `tlio_golden/<seq_id>/imu0_resampled.npy` | (N,17) float64 |
+| `tlio_golden/<seq_id>/imu0_resampled_description.json` | 列名、行数、频率、起止时间 |
+| `tlio_golden/<seq_id>/calibration.json` | 离线 IMU 标定 |
+| `tlio_golden/<seq_id>/imu_samples_0.csv` | 约 1 kHz 原始 IMU（仅 212/354 条） |
+| `tlio_golden/train_list.txt / val_list.txt / test_list.txt / all_ids.txt / spline_metrics.csv` | — |
 
 | 列（描述文件原文） | 宽度 | 单位 / 含义 | IPB v1 去向 |
 |---|---:|---|---|

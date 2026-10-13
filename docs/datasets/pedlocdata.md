@@ -18,13 +18,13 @@
 
 ## 2. 原始文件与字段
 
-```text
-<file>.h5
-├── para/mean, para/std        导航系下加速度/陀螺的全数据集均值与标准差（归一化参数；acc 均值 ≈ [0, 0, 9.86]）
-├── train/<name>/{acc, gyr, ts, pos, qua, acc_bias, gyr_bias, mag, motion_qua}
-├── valid/<name>/...
-└── test/<name>/...
-```
+| 路径 | 职责 / 原记录 |
+| :--- | :--- |
+| `<file>.h5` | — |
+| `para/mean, para/std` | 导航系下加速度/陀螺的全数据集均值与标准差（归一化参数；acc 均值 ≈ [0, 0, 9.86]） |
+| `train/<name>/{acc, gyr, ts, pos, qua, acc_bias, gyr_bias, mag, motion_qua}` | — |
+| `valid/<name>/...` | — |
+| `test/<name>/...` | — |
 
 | 数据集 | 形状 | 单位 / 含义（Zenodo 说明 + 实测） | IPB v1 去向 |
 |---|---|---|---|

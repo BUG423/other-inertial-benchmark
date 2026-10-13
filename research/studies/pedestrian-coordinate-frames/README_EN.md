@@ -219,7 +219,7 @@ This repository supports the following conclusions:
   title  = {Global Frame vs Body Frame Representation in Pedestrian Inertial Odometry},
   author = {BUG423},
   year   = {2026},
-  url    = {https://github.com/BUG423/inertial-positioning-benchmark/tree/main/research/studies/pedestrian-coordinate-frames},
+  url    = {https://github.com/BUG423/other-inertial-benchmark/tree/dev/v1/research/studies/pedestrian-coordinate-frames},
   note   = {Experimental study}
 }
 ```
