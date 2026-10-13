@@ -107,7 +107,7 @@ M2EIT/DiffusionIMU公共包四配置于2026-10-13完成70.083s的服务器CPU批
 
 | 数据源 / 资产 | 当前事实 | 可执行下一步与 gate |
 | :--- | :--- | :--- |
-| [PedLocData](datasets/pedlocdata.md) 主包扩展 | Demo 554,702,552 B 已验收并加入同一来源；主包 15,138,253,808 B 仍有限分块续传，未完整验收 | 主包官方 MD5/SHA 完整后另作版本扩展验收；保留已就绪 Demo 的指纹和结果，不新增独立来源计数 |
+| [PedLocData](datasets/pedlocdata.md) 主包扩展 | Demo 554,702,552 B 已验收并加入同一来源；主包有限下载 21:31 UTC 失败，保留 10,236,096,133 / 15,138,253,808 B，未完整验收 | 保留原始错误及 partial；取得可用官方下载线路并验证有界续传后再恢复。完整大小、官方 MD5、SHA 通过后扩展验收；Demo 指纹和结果保持，不新增独立来源计数 |
 | [ADVIO](datasets/advio.md) | 3 官方 ZIP 已取得，审计入口 0 canonical | 需作者证实参考原点、camera→IMU 外参及时间/轴契约；不猜姿态、不伪造 GT |
 | [Pegasus](datasets/pegasus.md) | 7 作者发布资产已取得，审计入口 0 canonical | 官方 loader 的 FRD 转换已定位；reference body/origin/exporter 契约仍待证实后转换 |
 | [TartanIMU](datasets/tartanimu_2025.md) | 18 NPZ、四域混合集合代表部分 | 核各原始来源和与 IDOL/Blackbird/SubT/UZH 的重叠；不通过重新包装增加独立来源数 |
@@ -118,6 +118,8 @@ M2EIT/DiffusionIMU公共包四配置于2026-10-13完成70.083s的服务器CPU批
 完整/代表子集的选择遵服务器容量，下载仅在 AutoDL；已由用户取得的本机原包可按授权补传，但不新下载本地大包。失败 partial 与审计记录保留。无法取得完整 raw 时提供真实 converter/拒收契约，缺参考或姿态的能力明确标 unavailable/mask，不造标签。
 
 ## 💾 新服务器实际存储
+
+最新完整存储审计完成于 **2026-10-13 19:02:16 UTC / 2026-10-14 03:02:16 北京时间**：119 个数据根、8,937 个唯一 inode，0 errors；全部数据资产分配 **84,447,543,296 B（84.447543296 GB / 78.648 GiB）**，13 个正式 native 分配 **4,720,840,704 B**，当时可用 **167,593,484,288 B**。收据 SHA256：`93cf1b27b88c291886177094585ee2727c72c3278b4e502295e708d380633d0a`。这是带时间的分配空间快照，下载和训练输出仍会增长。以下保留 16:52 的历史分层明细，不能与最新总量相加。
 
 快照开始于 **2026-10-13 16:52:38 UTC / 2026-10-14 00:52:38 北京时间**。只读 inode metadata walk 覆盖明确的数据根、历史层、失败 staging 和有 provenance 的工程数据夹具，按 `(st_dev, st_ino)` 全局去重、不跟随 symlink、不重新 hash 全部 H5。扫描耗时 74.76 s，0 errors。后台 raw partial 和 GPU 工程夹具在有界扫描期间可能增长，此后新下载不追溯算入这个快照。
 

@@ -142,13 +142,13 @@ APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://
 
 当前已验收 **13 个独立来源、1,376 条原生序列、114.30638333 小时**：RIDI 94、RoNIN 151、IDOL 130、RNIN 300、TLIO 354、OxIOD 126、IMUNet 113、EuRoC 11、Blackbird 20、GrandTour 1、SubT-MRS 28、UZH-FPV 1、PedLocData Demo 47。八个人体来源加 EuRoC 共九个可训练，827 条 train；Blackbird、GrandTour、SubT-MRS、UZH-FPV 当前只含 test。这是已取得版本或代表子集的验收，不代表所有公开全集已收齐。参考可能来自外部定位、VIO、融合估计或 vision-based pose，逐集保真边界与残余 warnings 见[项目状态](docs/DEV_V1_INTEGRATION.md)。
 
-新服务器存储快照（**2026-10-14 00:52 北京时间 / 2026-10-13 16:52 UTC**）：所有保留的归档、解压 raw、原生、历史副本、工程夹具及 partial 去重占 **82.519 GB**；12 个正式 native 占 **4.602 GB**；当时可用 **174.900 GB**。后续后台下载与输出会改变占盘。正式序列统计不加入 pilot、历史副本、TartanIMU 混合再包装或重叠辅助 test 视图。本机既有原始归档独立记账，不与服务器总量相加。
+新服务器存储快照（**2026-10-14 03:02 北京时间 / 2026-10-13 19:02 UTC**）：所有保留的归档、解压 raw、原生、历史副本、工程夹具及 partial 按 inode 去重占 **84.448 GB / 78.648 GiB**；13 个正式 native 占 **4.721 GB**；当时可用 **167.593 GB**。审计 119 个数据根、8,937 个唯一 inode，0 errors。后续后台下载与实验输出会改变占盘。正式序列统计不加入 pilot、历史副本、TartanIMU 混合再包装或重叠辅助 test 视图。本机既有原始归档独立记账，不与服务器总量相加。
 
 当前 57 份配置均有相应 CPU 准入：**旧 53 与新 4 分别在各自冻结源码验收**；旧 **49/49 神经配置 GPU 生命周期通过**，新 4 CUDA / batch128 待验，包括真实训练更新、验证、预测与 checkpoint 重载；经典或 CPU-only 方法按其真实标定/回归逻辑验收。硬件为 RTX 4090D 24 GiB。短工程截段和少量更新不构成论文精度复现。**统一协议正式 GPU 实验已运行，完整矩阵尚未完成**，已有实际单元完成 train、best checkpoint 和 test。框架目标 49 unique 节点最终通过，原生任务不确定性 25 节点已验；当前冻结源码的锁、来源/seed 身份与 dispatcher 定向节点 8/8 通过，历史 suite 计数分别保留。
 
 旧正式源码的 13 个来源采样资格覆盖 **2,067 行：2,019 通过、48 输入不支持、0 待验**；48 行均是 `mean_speed_heading`/`pdr` 所需设备姿态缺失，保留真实原因，不用参考姿态补齐。正式配方为 **30 epochs、min 15、patience 10、每 5 epoch 验证、batch 128、train stride 200 / eval stride 10、AdamW lr 1e-3**；完整参数与科学例外见[统一协议](docs/protocols/common-benchmark-v1.json)。资格通过不等于训练完成，其他数据来源的计时仍为容量测量投影，不承诺整矩阵完工时间或收敛。
 
-PedLocData 本轮只接入已完整下载和官方 MD5 校验的 Demo：47 接收 / 0 拒收、grouped 32/9/6、录制组 9/2/2 不交叉，full/hash 与全部真实 XYZ/XY B2 通过。主包仍有限续传；公开全集的历史统计不算成本轮已取得范围。
+PedLocData 本轮只接入已完整下载和官方 MD5 校验的 Demo：47 接收 / 0 拒收、grouped 32/9/6、录制组 9/2/2 不交叉，full/hash 与全部真实 XYZ/XY B2 通过。主包的有限下载于 2026-10-13 21:31 UTC 因反复提前断流、部分分块耗尽 40 次尝试而失败，服务器保留 **10,236,096,133 / 15,138,253,808 B**，尚未完整校验或转换；公开全集的历史统计不算成本轮已取得范围。
 
 全矩阵统一使用一次从操作系统随机源抽取的种子 **1735231569、843628571、951150512**。四个 test-only 来源的 checkpoint 选择预注册：Blackbird/UZH-FPV 使用同配置同种子的 EuRoC checkpoint；GrandTour/SubT-MRS 使用 RIDI checkpoint，人体到机器人属于跨域诊断，不进入人体同域训练榜。每个单元保留来源、数据指纹、科学输入契约、配方和 checkpoint 身份。
 
