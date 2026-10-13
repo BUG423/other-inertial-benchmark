@@ -24,7 +24,7 @@
 | :--- | :--- | :--- |
 | **统一数据层** | IPB v1 HDF5、200 Hz 时间轴、单位/坐标系、来源、有效掩码、分组划分与检查 | [设计规范](docs/DESIGN.md) · [数据集目录](docs/DATASETS.md) |
 | **数据接入** | 13 个独立来源的已取得版本/子集通过原生 XYZ 准入，共 1,376 条、114.30638333 小时；9 个有 train/val，4 个仅 test | [数据卡](docs/datasets/) · [转换器](src/inertial_benchmark/data/converters/)；来源、拒收与划分见[本轮状态](docs/DEV_V1_INTEGRATION.md) |
-| **算法库** | 31 个活跃架构、53 份配置；21 个论文方法（19 个已发表、2 个预印本）及 2 个经典定义 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/)；骨干和维度变体不增加独立论文数量 |
+| **算法库** | 33 个活跃架构、57 份配置；23 个论文方法（21 个已发表、2 个预印本）及 2 个经典定义 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/)；骨干和维度变体不增加独立论文数量 |
 | **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；`NIO.export()` / `ipb export` 提供原生科学推理包及已审查的 RoNIN ResNet、IMUNet 张量适配器（TorchScript/ONNX），见[导出说明](docs/EXPORT.md) |
 | **评价与报告** | 56 个默认 XYZ 轨迹/速度指标输出键，同预测 XY 派生；ATE/RTE/RPE、误差分位数、漂移、长度/方向、覆盖与效率；原生任务高斯不确定性 | [指标定义](docs/METRICS.md)；原生任务不确定性 25 节点已通过；无预测姿态或协方差时明确不可用 |
 | **跨域数据** | EuRoC、Blackbird、GrandTour、SubT-MRS、UZH-FPV 已按真实参考契约接入；后三者取得代表子集 | [本轮状态](docs/DEV_V1_INTEGRATION.md) · [数据卡](docs/datasets/)；仅 test 来源采用预注册 checkpoint 迁移，人体到机器人单列诊断 |
@@ -44,6 +44,14 @@ flowchart LR
     Eval --> Report["表格、统计、可视化与实验记录"]
     Report --> Study["路径变短机制与泛化研究"]
 ```
+
+### 新增方法与冻结实验范围
+
+当前代码库为 **33 架构 / 57 配置 / 23 论文方法（21 已发表、2 预印本）+ 2 经典定义**：XYZ 33（32 neural + RIDI3D），XY 24（21 neural + RIDI2D + 2 classics）。新接入 [M2EIT](docs/algorithms/m2eit.md) 与 [DiffusionIMU](docs/algorithms/diffusionimu.md) 各两配置，已在独立 443 文件源码上通过 **31 个科学测试和四份默认宽度配置的真实 CPU / 原生导出闭环**。57 份 CPU 准入是原 53 与新 4 各自 exact-source 收据的组合，不是假称同一批 57 个测试；详见[新方法验收](docs/DEV_V1_INTEGRATION.md#新增两方法实际验收与旧正式范围)。新四配置的 CUDA、GPU batch 128 容量和正式训练仍 pending。
+
+运行中的 [common-benchmark-v1](docs/protocols/common-benchmark-v1.json) 保持 **31 架构 / 53 配置 / 2,067 单元**、旧 source `1897c9cc…0949`、XYZ 31 / XY 22。当前新增库配置没有中途替换其 checkpoint、recipe 或覆盖身份。57×13×3=2,223 只是未来 inventory，尚未冻结或启动新正式矩阵。旧 49 neural CUDA 与旧 53 native export 证明仍保留独立来源，新四 native export 另批验收；TorchScript/ONNX 不自动扩展到新方法。
+
+两个新方法均为公开假设的论文独立重实现，未核验到作者可运行网络源码。M2EIT 的 Haar/embedding/scan 假设、DiffusionIMU 的随机评估和 u 非 σ 边界仍在规格卡保留；CPU/导出通过不等于原论文精度复现。
 
 ## 🛠️ 技术栈与入口
 
@@ -112,9 +120,9 @@ model = NIO("ronin_resnet18_3d", metric_dims=3)
 model.train(data="ridi", device="cpu", epochs=1, batch=2, val_batch=2, workers=0, cache=False)
 ```
 
-统一原生数据保留 **XYZ 三维**。具备真实 XYZ 输出的配置使用 `metric_dims=3`，并从同一预测的 XY 分量派生 `xy_` 指标；原文二维配置留在独立 XY 参考协议。`3d_adapted` 配置明确记录输出头及必要目标适配，不宣称原论文精度或二维 checkpoint 等价。31 个架构覆盖 53 份活跃配置，维度与输入能力逐配置准入；缺少预测 Z 不以补零或参考真值代替。TLIO 当前范围为网络，不含论文 EKF。
+统一原生数据保留 **XYZ 三维**。具备真实 XYZ 输出的配置使用 `metric_dims=3`，并从同一预测的 XY 分量派生 `xy_` 指标；原文二维配置留在独立 XY 参考协议。`3d_adapted` 配置明确记录输出头及必要目标适配，不宣称原论文精度或二维 checkpoint 等价。33 个架构覆盖 57 份活跃配置，维度与输入能力逐配置准入；缺少预测 Z 不以补零或参考真值代替。TLIO 当前范围为网络，不含论文 EKF。
 
-参考姿态或初始状态作为输入时记录 `reference/oracle` 权限，与可部署的传感器输入分 track；同设备 VIO 标签按参考性质解释。AutoDL 的 4090D 已完成全部 49 个神经配置的标准 GPU 工程生命周期，全部 53 个配置的 CPU 流程通过；统一正式配方已冻结并开始 GPU 实验；各模型的科学窗口、目标、损失与阶段保持原定义，完整矩阵仍在运行。
+参考姿态或初始状态作为输入时记录 `reference/oracle` 权限，与可部署的传感器输入分 track；同设备 VIO 标签按参考性质解释。旧正式源的 49 个神经配置已在 4090D 完成 GPU 工程生命周期；当前 57 份配置的 CPU 准入由旧 53 与新 4 独立源码收据组成，新 4 的 GPU 容量待验。旧统一正式配方已冻结并开始 GPU 实验；各模型的科学窗口、目标、损失与阶段保持原定义，完整矩阵仍在运行。
 
 ### 4. 矩阵与报告
 
@@ -126,7 +134,7 @@ ipb report runs=runs/cpu-smoke out=reports/cpu-smoke
 pytest -q -m "not slow"
 ```
 
-上面的 [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml) 是 CLI 配置示例。正式矩阵由 [full_matrix.py](tools/ops_v1/full_matrix.py) 从活跃配置、已验收数据 registry 和一次抽取的三随机种子动态构建：当前 53 × 13 × 3 = **2,067 个覆盖单元**。不适用、待 checkpoint 与失败都有明确状态；矩阵枚举不代表已经训练。完整命令见 [CLI.md](docs/CLI.md) 和 [Ops v1](tools/ops_v1/README.md)。
+上面的 [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml) 是 CLI 配置示例。正式矩阵由 [full_matrix.py](tools/ops_v1/full_matrix.py) 从活跃配置、已验收数据 registry 和一次抽取的三随机种子动态构建：运行中的冻结源码仍为 53 × 13 × 3 = **2,067 个覆盖单元**；当前库 57 份配置的 2,223 行 inventory 仅为后续候选。不适用、待 checkpoint 与失败都有明确状态；矩阵枚举不代表已经训练。完整命令见 [CLI.md](docs/CLI.md) 和 [Ops v1](tools/ops_v1/README.md)。
 
 APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://github.com/BUG423/app-inertial-lab)。旧文件读取兼容与 v1 训练准入不同，限制见[交换契约](docs/TOOLS.md)。
 
@@ -136,15 +144,15 @@ APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://
 
 新服务器存储快照（**2026-10-14 00:52 北京时间 / 2026-10-13 16:52 UTC**）：所有保留的归档、解压 raw、原生、历史副本、工程夹具及 partial 去重占 **82.519 GB**；12 个正式 native 占 **4.602 GB**；当时可用 **174.900 GB**。后续后台下载与输出会改变占盘。正式序列统计不加入 pilot、历史副本、TartanIMU 混合再包装或重叠辅助 test 视图。本机既有原始归档独立记账，不与服务器总量相加。
 
-当前 **53/53 个配置 CPU 工程检查、49/49 个神经配置标准 GPU 生命周期通过**，包括真实训练更新、验证、预测与 checkpoint 重载；经典或 CPU-only 方法按其真实标定/回归逻辑验收。硬件为 RTX 4090D 24 GiB。短工程截段和少量更新不构成论文精度复现。**统一协议正式 GPU 实验已运行，完整矩阵尚未完成**，已有实际单元完成 train、best checkpoint 和 test。框架目标 49 unique 节点最终通过，原生任务不确定性 25 节点已验；当前冻结源码的锁、来源/seed 身份与 dispatcher 定向节点 8/8 通过，历史 suite 计数分别保留。
+当前 57 份配置均有相应 CPU 准入：**旧 53 与新 4 分别在各自冻结源码验收**；旧 **49/49 神经配置 GPU 生命周期通过**，新 4 CUDA / batch128 待验，包括真实训练更新、验证、预测与 checkpoint 重载；经典或 CPU-only 方法按其真实标定/回归逻辑验收。硬件为 RTX 4090D 24 GiB。短工程截段和少量更新不构成论文精度复现。**统一协议正式 GPU 实验已运行，完整矩阵尚未完成**，已有实际单元完成 train、best checkpoint 和 test。框架目标 49 unique 节点最终通过，原生任务不确定性 25 节点已验；当前冻结源码的锁、来源/seed 身份与 dispatcher 定向节点 8/8 通过，历史 suite 计数分别保留。
 
-13 个来源的完整采样资格覆盖 **2,067 行：2,019 通过、48 输入不支持、0 待验**；48 行均是 `mean_speed_heading`/`pdr` 所需设备姿态缺失，保留真实原因，不用参考姿态补齐。正式配方为 **30 epochs、min 15、patience 10、每 5 epoch 验证、batch 128、train stride 200 / eval stride 10、AdamW lr 1e-3**；完整参数与科学例外见[统一协议](docs/protocols/common-benchmark-v1.json)。资格通过不等于训练完成，其他数据来源的计时仍为容量测量投影，不承诺整矩阵完工时间或收敛。
+旧正式源码的 13 个来源采样资格覆盖 **2,067 行：2,019 通过、48 输入不支持、0 待验**；48 行均是 `mean_speed_heading`/`pdr` 所需设备姿态缺失，保留真实原因，不用参考姿态补齐。正式配方为 **30 epochs、min 15、patience 10、每 5 epoch 验证、batch 128、train stride 200 / eval stride 10、AdamW lr 1e-3**；完整参数与科学例外见[统一协议](docs/protocols/common-benchmark-v1.json)。资格通过不等于训练完成，其他数据来源的计时仍为容量测量投影，不承诺整矩阵完工时间或收敛。
 
 PedLocData 本轮只接入已完整下载和官方 MD5 校验的 Demo：47 接收 / 0 拒收、grouped 32/9/6、录制组 9/2/2 不交叉，full/hash 与全部真实 XYZ/XY B2 通过。主包仍有限续传；公开全集的历史统计不算成本轮已取得范围。
 
 全矩阵统一使用一次从操作系统随机源抽取的种子 **1735231569、843628571、951150512**。四个 test-only 来源的 checkpoint 选择预注册：Blackbird/UZH-FPV 使用同配置同种子的 EuRoC checkpoint；GrandTour/SubT-MRS 使用 RIDI checkpoint，人体到机器人属于跨域诊断，不进入人体同域训练榜。每个单元保留来源、数据指纹、科学输入契约、配方和 checkpoint 身份。
 
-算法计数分层报告：**31 架构 / 53 配置 / 21 论文方法（19 已发表 + 2 预印本）/ 2 经典定义**。16 个官方仓库已取得固定提交的参考源码，其中 CTIN、iMoT、MEIO 属 `source_partial`，独立适配与论文重实现各自标注。按仓库拥有者的作者排除规则，张珊珊（Shanshan Zhang）相关被排除方法不进入活跃队列，见[排除记录](docs/models/excluded-methods.json)。开源代码存在、接口通过和原论文精度复现是分别记录的证据。
+算法计数分层报告：**33 架构 / 57 配置 / 23 论文方法（21 已发表 + 2 预印本）/ 2 经典定义**。16 个官方仓库已取得固定提交的参考源码，其中 CTIN、iMoT、MEIO 属 `source_partial`，独立适配与论文重实现各自标注。按仓库拥有者的作者排除规则，张珊珊（Shanshan Zhang）相关被排除方法不进入活跃队列，见[排除记录](docs/models/excluded-methods.json)。开源代码存在、接口通过和原论文精度复现是分别记录的证据。
 
 路径普遍偏短需要检验目标/积分 oracle、时间与长度分辨率、速度幅值/方向、训练和推理模式、精度设置与泛化。已准备统一诊断，结论须由完整多算法实验支持。
 
@@ -160,7 +168,7 @@ PedLocData 本轮只接入已完整下载和官方 MD5 校验的 Demo：47 接�
 | 阶段 | 交付与验收 |
 | :--- | :--- |
 | **数据准入** | 当前 13 独立来源通过原生 XYZ、完整性与科学契约检查；持续扩展真实数据源，缺参考/坐标契约明确阻碍项 |
-| **全部算法准备** | 31 架构 / 53 配置完成 CPU 工程检查，49 神经配置完成 GPU 生命周期；保留原生目标、布局和损失 |
+| **全部算法准备** | 33 架构 / 57 配置各有 source 绑定 CPU 准入（旧 53 + 新 4）；旧 49 神经配置通过 GPU，新 4 GPU 待验；保留原生目标、布局和损失 |
 | **正式矩阵执行** | 统一配方已冻结、2,067 行采样资格已核验；正式 GPU 单元正在运行，持续保存实际覆盖/失败/依赖与成本 |
 | **评价与研究** | 同预测 XYZ/XY、长度收缩分解、覆盖/NA、参考权限和跨域 track，充分训练后形成主表和受控消融 |
 | **研究交付** | 可审计 benchmark、可复现发布和收缩机制证据；目标 ICRA / IEEE RA-L |

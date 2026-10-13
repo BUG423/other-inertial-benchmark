@@ -1,0 +1,9 @@
+# M2EIT implementation contract
+
+Independent reconstruction of [M2EIT, ICCV 2025](https://openaccess.thecvf.com/content/ICCV2025/papers/Li_M2EIT_Multi-Domain_Mixture_of_Experts_for_Robust_Neural_Inertial_Tracking_ICCV_2025_paper.pdf) and its [supplement](https://openaccess.thecvf.com/content/ICCV2025/supplemental/Li_M2EIT_Multi-Domain_Mixture_ICCV_2025_supplemental.pdf). No official method network source was verified; this package does not claim original-paper accuracy or parameter equivalence.
+
+The original planar reference is `m2eit`; `m2eit_3d` is the explicit learned XYZ adaptation. Both retain the 200-sample six-axis gravity-world average-velocity task, six spatial BasicBlocks, two bidirectional selective-state layers, two Haar frequency layers, two attention translations and a learned three-expert router. The objective remains squared vector error. The benchmark keeps gyro-first native channels and reorders them inside the model. Its reference orientation is privileged input, rather than a reproduction of the paper's orientation selector.
+
+Declared reconstruction choices: spatial widths 64/128/256 and stage strides; separate 256-channel sequence embedding; Haar sum/difference convention and time-axis band concatenation to reconcile the underspecified residual; Mamba expansion two and independent differentiable selective recurrence; head hidden width 128. The recurrence is a mathematical CPU reference, without a compiled Mamba-kernel equivalence or GPU-throughput claim.
+
+The historical reconstruction and scientific evidence live under `research/staging/algorithm_ports/m2eit`. Registration, individual runtime admission and formal experiment admission are separate. New package availability does not insert runs into an already frozen experimental matrix. XYZ-derived XY evaluation uses the same prediction; the planar reference is a separately identified run.

@@ -1,6 +1,6 @@
 # 🧭 本轮状态 / Project Status
 
-> 更新：2026-10-14（北京时间）。主线为 `dev/v1`；新 AutoDL 已有 RTX 4090D 24 GiB、16 CPU 和约 62 GiB RAM。当前 13 个独立来源完成已取得版本/子集的原生准入，53 个模型配置完成 CPU 工程检查、49 个神经配置完成标准 GPU 生命周期。完整覆盖为 2,067 个单元，统一正式配方已冻结，GPU 实验正在运行，已有单元完成 train/best/test；完整矩阵尚未完成。
+> 更新：2026-10-14（北京时间）。主线为 `dev/v1`；新 AutoDL 已有 RTX 4090D 24 GiB、16 CPU 和约 62 GiB RAM。当前 13 个独立来源完成已取得版本/子集的原生准入，当前57份配置具有对应CPU准入（旧53与新4独立源码批），旧49神经配置完成GPU生命周期，新4GPU待验。运行中的旧正式覆盖仍为2,067个单元，统一正式配方已冻结，GPU 实验正在运行，已有单元完成 train/best/test；完整矩阵尚未完成。
 
 ## 🎯 交付与执行状态
 
@@ -9,11 +9,11 @@
 | 层次 | 当前事实 | 证据边界 |
 | :--- | :--- | :--- |
 | 数据 | 13 独立来源，1,376 条、114.30638333 h；9 个有 train/val，4 个仅 test | 已取得版本或代表子集；不是公开全集全部取得 |
-| 算法 | 31 架构、53 活跃配置；21 论文方法（19 已发表、2 预印本）及 2 经典定义 | 骨干/维度变体不增加论文数；实现与精度复现分别记录 |
+| 算法 | 33 架构、57 活跃配置；23 论文方法（21 已发表、2 预印本）及 2 经典定义 | 骨干/维度变体不增加论文数；实现与精度复现分别记录 |
 | 官方参考源码 | 16 官方仓库固定提交，CTIN/iMoT/MEIO 为 `source_partial` | 源码存在不证明训练、许可或忠实性问题全部解决 |
-| CPU 工程 | 53/53 配置实际通过标准框架流程 | 神经模型真实短训练；CPU-only 方法按其真实标定/回归逻辑，不伪造 optimizer updates |
-| GPU 工程 | 49/49 神经配置实际通过标准生命周期和容量检查 | 4090D 上真实 train/val/predict/checkpoint 重载；工程截段不构成论文主结果 |
-| 完整矩阵 | 53 配置 × 13 来源 × 3 种子 = 2,067 覆盖单元 | 能力不适用、待 checkpoint、pending/failed 都保留，不等于已完成 2,067 次训练 |
+| CPU 工程 | 57份配置各有CPU证明：旧53+新4独立source收据 | 神经模型真实短训练；CPU-only 方法按其真实标定/回归逻辑，不伪造 optimizer updates |
+| GPU 工程 | 旧49/49神经配置实际通过；新4CUDA/GPU batch128待验 | 4090D 上真实 train/val/predict/checkpoint 重载；工程截段不构成论文主结果 |
+| 冻结正式矩阵 | 旧53 配置 × 13 来源 × 3 种子 = 2,067 覆盖单元 | 能力不适用、待 checkpoint、pending/failed 都保留，不等于已完成 2,067 次训练 |
 | 评价增量 | 默认 56 个 XYZ 轨迹/速度输出键、同预测 XY 和原生任务不确定性 | 原生任务不确定性 25 节点通过；框架 49 unique 节点最终通过；当前冻结源码锁/身份/dispatcher 8 定向节点通过 |
 | 正式训练 | 统一正式配方已冻结、GPU 单元运行中 | 真实 train/best/test 已有完成单元；不是全矩阵完成，也不是论文主结果全部复现 |
 
@@ -77,6 +77,31 @@ PedLocData Demo 于 **2026-10-13 17:33:31 UTC** 完成 89.85 s 的 CPU 验收；
 | SubT-MRS | RIDI | 人体→轮式机器人跨域诊断，不进入人体同域训练榜 |
 
 这是预注册选择，不声明目标本域训练。额外 checkpoint 来源属于后续独立协议，不增加当前主单元数量。预注册 receipt SHA256 为 `bc3ab673c0af355f2da671392010edad09313ff88c1fc910fe38bbde86130b31`。
+
+## 新增两方法实际验收与旧正式范围
+
+M2EIT/DiffusionIMU公共包四配置于2026-10-13完成70.083s的服务器CPU批：实际collect31，JUnit31passed/0failed/0skipped；每配置使用原默认完整宽度、200@200Hz、B2，标准NIO进行两次真实AdamW更新、train/val/test三份不同已准入RIDI截段、验证/预测/checkpoint重载及原生export/import/predict。raw输出、轨迹和指标精确重放；DiffusionIMU保留评估噪声并重放相同RNG。没有CUDA模型/吞吐/显存测试，也没有重训旧53配置。
+
+| 口径 | 当前库/已验收范围 | 正式实验边界 |
+|---|---|---|
+| 架构/配置/论文 | 33架构、57配置、23论文（21发表+2预印本）+2经典 | 新增2方法各XY/XYZ，不重复算论文；CPU57=旧53收据+新4独立source收据 |
+| 维度 | XYZ33=32neural+RIDI3D；XY24=21neural+RIDI2D+2classics | 旧source1897正式范围仍XYZ31/XY22 |
+| GPU | 旧49神经配置GPU生命周期/容量已验 | 新4CUDA/GPU batch128仍pending，不写53神经GPU全通过 |
+| 导出 | 旧53native与新4native均有独立实际export/import/predict通过记录 | RoNIN/IMUNet张量adapter范围不变；新方法TorchScript/ONNX未审查支持 |
+| 正式矩阵 | source1897/425files、31arch/53profiles/2,067单元继续运行 | 当前库57×13×3=2,223仅futureinventory；新formal未冻结/未启动，不中途替换旧protocol/recipe/checkpoint身份 |
+
+新批source manifest SHA256：`b639c69773b92ea11c6e999e9d7c5f88702c5bd9df140adc5ce67f95779f6b79`（443managedfiles）。Parent receipt：`ee3f064e0f8377e9d5299b8da081b8064b6206b83bb8fedb7e667a698e10f66b`；真实JUnit：`ff4d30cc48cfca2d31c9aed74c9155562f57b213b7a891058148e92e8b05e293`。工程收据scope为 `.local/reports/model-integration-cpu-b639/`，原科学与runtime字节保留，新文档不改受测13源码、8export文件或历史staging15。
+
+| 新profile | dims | 真updates | 分配置receipt SHA256 |
+|---|---:|---:|---|
+| m2eit | 2 | 2 | `2f0827a4f188d7c0d8ec190e159d88986a7604beb21a4320c1b45d16c914ac2d` |
+| m2eit_3d | 3 | 2 | `fe68751c954241f096960be451a22b5db9afd11b50d76fd7fb1a14d7aaa12abd` |
+| diffusionimu | 2 | 2 | `fbd3bec6a836b68c5f20be414d8936dc3cf88f44cc83eff1a5aac1819a3d1087` |
+| diffusionimu_3d | 3 | 2 | `091aa57b9a6e81bbedb884304f7d67baaabad8ace9a09edb99f2c189ac4ae050` |
+
+[M2EIT卡](algorithms/m2eit.md)和[DiffusionIMU卡](algorithms/diffusionimu.md)公开原配方、统一配方差异、姿态权限、Haar/拓扑假设、真实Z适配、随机推理以及u非σ。CPU/原生导出通过不证明原论文精度或未公开网络拓扑已恢复。
+
+存储、重叠和初期长度快照各保自身时间点。19:02UTC存储与19:13UTC138-completed长度证据是历史快照，不是这次模型验收后的实时进展；不能用早期混域PLR归纳人类baseline普遍缩短或因果。
 
 ## 🚧 其他资产与阻碍项
 
@@ -152,7 +177,7 @@ receipt：`.local/reports/cross-dataset-input-overlap-newserver.json`，SHA256 `
 
 ## 🧪 全配置准备与正式实验边界
 
-所有测试、转换和模型工程运行均在 AutoDL。53 个配置分批完成真实 CPU 工程流程，49 个神经配置在 4090D 上完成标准 NIO/Trainer 训练、验证、预测、真实参数更新、默认模式诊断及 checkpoint 重载。各自 receipt 保存实际 source manifest、配置、输入和过程；短截段只用于工程，不加入正式数据统计或精度榜。
+所有测试、转换和模型工程运行均在 AutoDL。原53份配置与新增4份分别在各自source完成CPU工程流程，共57份配置有对应证明；旧49神经配置在4090D完成GPU标准生命周期，新4CUDA/GPU batch128未测。各自 receipt 保存实际 source manifest、配置、输入和过程；短截段只用于工程，不加入正式数据统计或精度榜。
 
 当前默认 `train_eval_gap` 按统一配置实测；历史 1,024 窗口整批诊断与有限工程预算分别记录，不能把改变 batch 组成的分块称为无损替代。本轮统一正式配方已按 49 配置实际容量与批准的源码桥冻结：30 epochs / min 15 / patience 10 / val interval 5 / batch 与 val batch 128 / stride 200 / eval stride 10 / AdamW lr 1e-3。cosine、weight decay 1e-4、AMP=false、cache=true、workers=2、gap_windows=128 等完整参数见[公开协议](protocols/common-benchmark-v1.json)；保留每模型窗口、history、损失与训练阶段，非梯度经典算法不伪造 AdamW 训练。其他数据来源计时仍以测得的 RIDI pipeline 投影，不把预算预测称为整矩阵实测。
 
@@ -172,7 +197,7 @@ receipt：`.local/reports/cross-dataset-input-overlap-newserver.json`，SHA256 `
 
 ## 🛣️ 完整矩阵与研究路径
 
-三个种子 **1735231569 / 843628571 / 951150512** 由操作系统随机源一次抽取，所有合格配置/来源共享，记录摘要和逐单元 override；工程测试自己的 seed 不冒充正式三 seed 实验。动态枚举 53×13×3 的 2,067 个覆盖单元，能力不适用和 checkpoint 依赖完整保留；不以一次 dry-run 或一轮 GPU smoke 宣称 coverage completed。
+三个种子 **1735231569 / 843628571 / 951150512** 由操作系统随机源一次抽取，所有合格配置/来源共享，记录摘要和逐单元 override；工程测试自己的 seed 不冒充正式三 seed 实验。运行中的旧冻结源动态枚举53×13×3的2,067个覆盖单元，能力不适用和 checkpoint 依赖完整保留；不以一次 dry-run 或一轮 GPU smoke 宣称 coverage completed。
 
 | 顺序 | 工作 | 必需验收 |
 | :--- | :--- | :--- |

@@ -8,15 +8,15 @@
 
 当前接入以 `dev/v1` 的 [模型接口](../src/inertial_benchmark/nn/base.py)、[注册器](../src/inertial_benchmark/nn/registry.py)和 [模型配置](../src/inertial_benchmark/cfg/models/)为准；现有实现与本轮服务器验收见 [当前状态](DEV_V1_INTEGRATION.md)。下表的“可移植”等标签保留规格基线含义，算法实现、形状夹具核对与论文精度复现分别记录。
 
-当前实现为 **31 个活跃注册架构、53 份活跃模型配置、21 个独立论文方法与 2 个仓库经典定义**。论文方法中 **19 个已发表、2 个仅预印本**（GNIO、VeloBins）；RoNIN 的骨干深度、IMUNet 的骨干变体、EqNIO/NIO 的两个网络分支及二维/三维配置均不重复增加论文方法数。因此当前没有“31 个独立论文算法”的声明。
+当前实现为 **33 个活跃注册架构、57 份活跃模型配置、23 个独立论文方法与 2 个仓库经典定义**。论文方法中 **21 个已发表、2 个仅预印本**（GNIO、VeloBins）；RoNIN 的骨干深度、IMUNet 的骨干变体、EqNIO/NIO 的两个网络分支及二维/三维配置均不重复增加论文方法数。因此不能把33个架构宣称为33篇独立论文。
 
-53 份配置包括 **49 份神经网络配置、2 份 RIDI 非梯度标定配置、2 份经典序列配置**。迁移后的 AutoDL 已完成全部 **53 份配置的有限 CPU 工程闭环**，49 份神经网络配置已完成实际 CUDA 工程探测；这些证明包含模型/目标/损失、预测和保存重载，不能当作所有数据集充分训练、所有共同 batch 容量通过或论文精度复现。新增训练/不确定性/性能补丁仍按其新源码单独验收，不把历史通过自动转成新快照通过。服务器操作和源码绑定见 [操作说明](../tools/ops_v1/README.md)。
+57 份配置包括 **53 份神经网络配置、2 份 RIDI 非梯度标定配置、2 份经典序列配置**。CPU准入覆盖旧53与新4各自 source 的真实工程收据；新4完整宽度200样本、B2、两次真实更新、验证、预测、checkpoint与原生导出已通过，不能称为同一批57测试。旧49神经配置完成CUDA工程验收，新4CUDA和GPU batch128容量未测。科学合同、接口通过与充分训练/论文精度分别记录。所有新增补丁需按实际源码独立验收，见[操作说明](../tools/ops_v1/README.md)。
 
-主 benchmark 使用真实三维预测，二维辅助指标从同一 XYZ 预测的 XY 派生；原文二维配置和参数夹具作为独立参考轨保留。当前 31 份 XYZ 配置含 30 份神经网络配置和 `ridi_3d`；22 份二维配置含 19 份神经网络配置、`ridi` 和两个经典参考。原生 XYZ、显式 `3d_adapted`、二维参考以及姿态/初始速度输入权限分别报告，不能以补零 Z 混入三维主榜。
+主 benchmark 使用真实三维预测，二维辅助指标从同一 XYZ 预测的 XY 派生；原文二维配置和参数夹具作为独立参考轨保留。当前33份XYZ配置含32份神经网络配置和 `ridi_3d`；24份二维配置含21份神经网络配置、`ridi` 和两个经典参考。运行中旧正式源仍为31XYZ/22XY。原生 XYZ、显式 `3d_adapted`、二维参考以及姿态/初始速度输入权限分别报告，不能以补零 Z 混入三维主榜。
 
-IONext 已按仓库拥有者指定的作者排除规则从注册器、活跃配置和目录移除；一手作者证据及历史源码/夹具留存见 [排除记录](models/excluded-methods.json)。TinyIO、CKANIO、StarIO 同样命中 Shanshan Zhang 提出方法的排除规则，不作为活跃候选。21 个当前论文方法均已逐项核对一手完整作者；不把 MEIO 的 Xuanxuan Zhang 或 RNIN 的 Guofeng Zhang 当作同一作者。
+IONext 已按仓库拥有者指定的作者排除规则从注册器、活跃配置和目录移除；一手作者证据及历史源码/夹具留存见 [排除记录](models/excluded-methods.json)。TinyIO、CKANIO、StarIO 同样命中 Shanshan Zhang 提出方法的排除规则，不作为活跃候选。23 个当前论文方法均已逐项核对一手完整作者；不把 MEIO 的 Xuanxuan Zhang 或 RNIN 的 Guofeng Zhang 当作同一作者。
 
-下表列出三维语义的代表，完整主配置覆盖上述 31 份，并不只交付四个模型：
+下表列出三维语义的代表，完整主配置覆盖上述 33 份，并不只交付四个模型：
 
 | 三维主协议配置示例 | 已有架构 / 目标 | 忠实性边界 |
 |---|---|---|
@@ -40,6 +40,19 @@ IONext 已按仓库拥有者指定的作者排除规则从注册器、活跃配�
 | [MEIO-Net，IoT Journal 2026](https://ieeexplore.ieee.org/document/11251007) | [`meio`](algorithms/meio.md)：多出口 XYZ 位移、各向同性不确定性、联合分阶段损失和实际早退 | 官方 [GPLv3 仓库](https://github.com/SunXuehang/MEIO-Net)有训练包装但缺 `NeuralNetwork/EarlyExit/EarlyExitDense.py`；当前是 `paper-core partial`，不是完整官方网络迁移 |
 
 参考姿态或真值初始速度须与设备姿态/纯传感器输入分轨。TLIO/DIVE 的纯网络预测不包含其原 EKF；NIO-LieEvents 当前采用每窗参考初速度，未复现 RoNIN 原有状态递归推理；RIO 的 A-TTT 未作为完整原测试协议复现；VeloBins 是去执行器支路的 IMU-only 结构适配。统一接口和 CPU/CUDA 通过不消除这些科学差别。
+
+## 新增两方法：已完成 CPU / 原生导出验收
+
+M2EIT（ICCV2025）与 DiffusionIMU（IJCAI2025）增加两个独立已发表论文方法，各自 XY/XYZ 配置不增加论文数。公共包四配置已在独立 b639/443 文件 source 通过31科学节点和默认完整宽度 CPU/原生 export/import/predict；新四 CUDA、GPU batch128 容量和正式训练仍 pending。
+
+| 方法 / 一手来源 | 当前配置与输出 | fidelity 与验收边界 |
+|---|---|---|
+| [M2EIT](algorithms/m2eit.md) | `m2eit` / `m2eit_3d`：三专家、两 cross-domain attention、soft router，平均速度 XY / XYZ | `paper-only`；Haar、widths、selective scan、姿态选择器假设保留；两配置 CPU/native export passed，GPU pending |
+| [DiffusionIMU](algorithms/diffusionimu.md) | `diffusionimu` / `diffusionimu_3d`：attention encoder、feature noise、alignment、三步 refinement，平均速度 XY / XYZ | `paper-only`；输出维数/eval policy假设公开；u非σ，NLL/NEES/coverage不可用；同RNG重载 passed，GPU pending |
+
+CPU57由旧53与新4的 exact-source 独立收据组成，不伪称同一批57。新4测试 parent receipt为 `ee3f064e0f8377e9d5299b8da081b8064b6206b83bb8fedb7e667a698e10f66b`；完整source、JUnit与分配置收据见[状态](DEV_V1_INTEGRATION.md#新增两方法实际验收与旧正式范围)。历史staging15源码原字节保留。
+
+运行中 common-benchmark-v1仍为source1897、31架构/53配置/2,067正式单元、XYZ31/XY22，不由本轮新包替换。57×13×3=2,223是未来inventory，新正式协议尚未冻结或启动。旧49CUDA、旧53native export及新4native export是不同收据范围，TorchScript/ONNX不自动支持新方法。
 
 ## 1. 约定
 
@@ -167,7 +180,7 @@ DESIGN §3/§4 原本规定模型只接收 `(B, 6, T)` 并返回窗口级 `vel`�
 | <https://github.com/higerra/ridi_imu> | `ce5d772a1ef8ce590121f0f0b254910bc07a2949` | MIT | 当前服务器已取得官方 SVM/SVR 与预处理/双积分来源 |
 | <https://github.com/SunXuehang/MEIO-Net> | `e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e` | GPL-3.0 | 当前服务器已取得训练包装/配置；官方核心网络缺失 |
 
-IONet、L-IONet、RIO、GNIO、VeloBins 没有核实到可运行官方网络源码（RIO 的 CVPR 论文链接到华为云 AI Gallery 页面，源码未核实；VeloBins 摘要称“录用后发布”；GNIO 未提供代码链接）。这五项加仅占位的 CTIN/iMoT 共七个 paper-only 方法。MEIO 单列 partial，不把包装文件等同完整网络；已排除的 IONext 不再作为待迁移算法。
+IONet、L-IONet、RIO、GNIO、VeloBins 没有核实到可运行官方网络源码（RIO 的 CVPR 论文链接到华为云 AI Gallery 页面，源码未核实；VeloBins 摘要称“录用后发布”；GNIO 未提供代码链接）。这五项加仅占位的 CTIN/iMoT、未核验作者网络代码的 M2EIT/DiffusionIMU 共九个 paper-only 方法。MEIO 单列 partial，不把包装文件等同完整网络；已排除的 IONext 不再作为待迁移算法。
 
 **许可策略**：
 - GPL/AGPL 仓库：只依据规格卡独立实现，不得复制代码，否则衍生文件受 copyleft 约束。
@@ -208,4 +221,4 @@ IONet、L-IONet、RIO、GNIO、VeloBins 没有核实到可运行官方网络源�
 - **GNIO**：注意力维度/头数与特征池化方式未给出，推导参数量 4,934,153（论文 4.90 M）依赖 §4.3 的假设；增强、权重衰减、划分未写明，按 TLIO 补齐并标注。
 - **VeloBins**：编码器沿用 AI-IO 且未复述细节，只有 6,848 参数的分箱解码器可精确复现；箱中心是否均匀、速度目标取窗口哪个时刻、越界速度如何处理均未规定。
 - **MEIO**：官方核心网络缺失，早退规则、头位置和布局仍有声明假设。后阶段 NLL 的 head 训练证据、实际选中出口及原始任务不确定性必须单列，不能把 epoch-one smoke 当作全部科学阶段验证。
-- **范围继续扩充**：当前 21 个论文方法未达 30 个独立论文方法；新增方法先核完整作者、发表状态、官方源码与真实输入契约，再按现有 dev/v1 接口独立实现。已有数据集名字（例如 IDOL）不代表对应算法已实现。
+- **范围继续扩充**：当前23个论文方法仍未达30个独立论文方法；新增方法先核完整作者、发表状态、官方源码与真实输入契约，再按现有 dev/v1 接口独立实现。已有数据集名字（例如 IDOL）不代表对应算法已实现。

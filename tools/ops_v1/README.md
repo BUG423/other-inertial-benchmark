@@ -14,8 +14,8 @@ path. Learned GPU execution additionally requires actual CUDA and the explicit
 `--gpu-authorized` flag; it has no automatic CPU fallback. These flags represent
 an operator's authorized action, not a claim that a campaign has already run.
 
-The current source inventory has **31 registered architectures, 53 profiles and
-21 independent paper-method sources**, plus two repository-defined physical
+The current source inventory has **33 registered architectures, 57 profiles and
+23 independent paper-method sources (21 published + 2 preprints)**, plus two repository-defined physical
 classics. Architecture, backbone/profile and paper-method counts are different.
 The accepted-native registry currently lists 13 independent sources, with 1,376
 accepted sequences and 114.306383333 hours; raw partials
@@ -23,6 +23,39 @@ and engineering excerpts do not count. Both inventories are dynamic. See
 [algorithm provenance](../../docs/models/provenance.json) for exclusions, authors,
 source versions and implementation fidelity. This procedure does not certify
 that every profile has passed CPU/GPU acceptance or completed formal training.
+
+## New library methods and the unchanged formal campaign
+
+The active 2026 common-benchmark-v1 campaign remains bound to manifest
+`1897c9ccfa959199ef3f8dbf8c7863dd40d5472d4da9b5551154366458650949`,
+425 managed files,31 architectures / 53 profiles,XYZ 31 / XY 22 and 2,067 cells. Do not
+regenerate or overwrite its coverage/runstates from a changed live registry.
+
+Current HEAD adds M2EIT/DiffusionIMU with four XY/XYZ profiles, giving 33
+architectures, 57 profiles, 23 paper methods (21 published + 2 preprints) + 2 classics;
+53 profiles are neural. XYZ 33 = 32 neural + RIDI3D; XY 24 = 21 neural + RIDI2D + 2 classics.
+CPU admission combines old 53 receipts with a separately source-bound new 4
+batch; it is not a single 57-profile acceptance batch.
+
+The new batch ran 31 scientific nodes (all passed, zero failed/skipped) and all
+four default-width, T200 @ 200Hz, B2 NIO lifecycles with two actual updates,
+distinct accepted RIDI train/val/test excerpts,checkpoint/native-export
+roundtrip and RNG replay in 70.083 s. Its 443-file manifest is
+`b639c69773b92ea11c6e999e9d7c5f88702c5bd9df140adc5ce67f95779f6b79`;
+parent receipt is `ee3f064e0f8377e9d5299b8da081b8064b6206b83bb8fedb7e667a698e10f66b`
+and JUnit is `ff4d30cc48cfca2d31c9aed74c9155562f57b213b7a891058148e92e8b05e293`.
+
+Old 49 neural CUDA acceptance and old 53 native-export proofs retain their scope.
+New 4 native export/import/predict passed independently; new 4 CUDA and GPU batch 128
+capacity remain pending. DiffusionIMU retains Gaussian evaluation noise and
+requires the same RNG/batching/timestep policy; its auxiliary u is not sigma,
+logstd or calibrated covariance. Neither method currently has a reviewed
+TorchScript/ONNX adapter. Reconstruction assumptions remain in the method cards.
+
+A potential 57 × 13 × 3 = 2,223-cell inventory needs a separately accepted source,
+capacity/taskview/policy/output scope. It is not a started formal matrix and
+must not append profiles to the running 2,067-cell queue. Full-paper accuracy
+is not established by this finite engineering acceptance.
 
 ## Connection and source deployment
 
