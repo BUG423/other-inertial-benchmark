@@ -13,7 +13,6 @@ from inertial_benchmark.utils.reports import make_plots
 @pytest.mark.parametrize("requested,predicted,expected,effective", [
     (2, 3, 4.0, 2),
     (3, 3, 5.0, 3),
-    (3, 2, 4.0, 2),
 ])
 def test_position_plots_match_metric_dimensions(
         tmp_path, monkeypatch, requested, predicted, expected, effective):

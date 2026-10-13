@@ -23,7 +23,7 @@ from inertial_benchmark.utils.reports import (  # noqa: E402
 
 ATE = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 # 完整的评测协议（report 会核对它在各 run 之间一致）
-PROTOCOL = dict(load_default(), seed=0)
+PROTOCOL = dict(load_default(), seed=0, metric_dims=2)
 
 
 def write_run(root, model, seed, offset, dataset="syn", split="test", **cfg):

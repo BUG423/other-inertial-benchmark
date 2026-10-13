@@ -8,11 +8,19 @@
 
 | 阶段 | 现状与证据 |
 | :--- | :--- |
-| v1 代码 | 29 个注册架构、31 份模型配置、21 个算法包、八个核心转换器与 train/val/predict/report 主干；导出 API 尚缺 |
+| v1 代码 | 29 个注册架构、34 份模型配置（含三份三维适配）、21 个算法包、八个核心转换器与 train/val/predict/report 主干；导出 API 尚缺 |
 | 历史结果 | HANDOFF 的 705 tests、旧机器成绩和 AMP/dropout 观察为 2026-09-24 历史，不等于当前 AutoDL 复验 |
 | 当前 AutoDL | RIDI/RoNIN/IDOL 完整转换得到 375 份原生 HDF5，full/hash 零 errors，三者 train_ready=true；此前短 CPU NIO 闭环已完成；原冻结 719 节点覆盖为 665 passed / 52 skipped / 2 resource_unverified；`6d44573` 独立目标验收 81 passed |
 | 旧候选评价 | 另一接口的服务器检查与代表预测，不计入 v1 当前测试或排行榜 |
 | GPU 阶段 | CPU 准入、预算/配方冻结后开展充分训练，目前不发布正式算法排名 |
+
+## 三维主协议增量
+
+主 benchmark 使用真实预测 XYZ，以三维指标为主，并从同一预测的 XY 派生二维辅助指标。首批为 `ronin_resnet18_3d`、`ronin_lstm_3d`、`imunet_3d`（均标 `3d_adapted`）和原生三维 `tlio`；前三者共用原架构，保留必要的目标布局和损失，扩展可学习三维输出，不宣称原文二维 checkpoint 或论文精度等价。原二维配置/夹具作为独立参考保留。
+
+三维请求不得静默退成 XY，也不能以真值或零填充替代未预测的 Z；PDR 和常速航向的平面变体拒绝 `dims=3`，IONet/EqNIO-RoNIN 当前仍为二维专用。首批私有候选矩阵为四模型 × RIDI/RoNIN/IDOL × seed 0，仅验证集，未 armed；旧混合二维计划已退役。CTIN 独立资源准入，不进入首批队列。
+
+本次三维头/目标/损失/重载、严格评价与 XY 派生需要在 AutoDL 做独立 CPU 验收；下列旧 719/81 项证据不代替新增三维协议的测试。GPU 阶段先执行有时间上限的单模型容量测量，再冻结训练预算，当前不声称完成 GPU 训练或三维精度复现。
 
 ## 数据接入
 

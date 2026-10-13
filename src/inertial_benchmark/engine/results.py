@@ -62,6 +62,7 @@ ARRAYS = ("t", "pos_pred", "pos_gt", "pos_oracle", "valid_pose", "t_window", "st
           "vel_pred", "vel_target", "window_valid", "window_valid_input",
           "window_valid_target", "logstd")
 OUTPUT_PREFIX = "out_"  # 其他逐窗口模型输出在 .npz 中的键前缀
+DIMENSION_FIELDS = ("metric_dims_requested", "metric_dims_effective", "predicted_axes")
 
 
 @dataclass
@@ -93,6 +94,10 @@ class SequenceResult:
     loss: Optional[float] = None
     skipped: Optional[str] = None
     metrics: dict = field(default_factory=dict)
+    # 只在成功计算指标后写入；旧 NPZ 缺少这些字段时保持未知，不推断历史计算维度。
+    metric_dims_requested: Optional[int] = None
+    metric_dims_effective: Optional[int] = None
+    predicted_axes: Optional[list] = None
 
     @property
     def trajectory(self) -> Trajectory:
@@ -104,12 +109,34 @@ class SequenceResult:
 
     @property
     def distance(self) -> float:
-        return path_length(self.pos_gt, self.valid_pose, self.rate) if len(self.t) else 0.0
+        dims = self.metric_dims_effective or 2
+        return path_length(self.pos_gt, self.valid_pose, self.rate, dims=dims) \
+            if len(self.t) else 0.0
 
     def position_error(self, dims: int = 2) -> np.ndarray:
         """按所选维度计算逐帧位置误差（无效参考处为 NaN）。"""
+        self._check_dimensions(dims)
         err = np.linalg.norm(self.pos_pred[:, :dims] - self.pos_gt[:, :dims], axis=1)
         return np.where(self.valid_pose, err, np.nan)
+
+    def _check_dimensions(self, dims: int, include_velocity: bool = False) -> None:
+        if isinstance(dims, bool) or not isinstance(dims, (int, np.integer)) or dims not in (2, 3):
+            raise ValueError(f"metric_dims must be 2 or 3, got {dims!r}")
+        arrays = {"pos_pred": self.pos_pred, "pos_gt": self.pos_gt}
+        if include_velocity:
+            arrays.update({name: getattr(self, name) for name in
+                           ("pos_oracle", "vel_pred", "vel_target")
+                           if getattr(self, name) is not None and np.size(getattr(self, name))})
+        for name, values in arrays.items():
+            shape = np.shape(values)
+            if len(shape) != 2 or shape[1] not in (2, 3) or shape[1] < dims:
+                raise ValueError(
+                    f"{self.sequence_id}: metric_dims={dims} requires {name} with at least "
+                    f"{dims} position/velocity axes, got shape {shape}; "
+                    "use metric_dims=2 for a model with only XY outputs (2D reference protocol)")
+
+    def dimension_metadata(self) -> dict:
+        return {key: getattr(self, key) for key in DIMENSION_FIELDS}
 
     def compute_metrics(self, dims: int = 2, rte_delta: float = 60.0,
                         t_rte: Iterable[float] = (1.0, 10.0),
@@ -117,11 +144,24 @@ class SequenceResult:
         if self.skipped:
             self.metrics = {}
             return self.metrics
-        dims = min(dims, self.pos_pred.shape[1])
+        self._check_dimensions(dims, include_velocity=True)
+        # Materialize optional iterables once: XYZ and XY use the same requested windows.
+        t_rte, d_rte = tuple(t_rte), tuple(d_rte)
         self.metrics = sequence_metrics(
             self.pos_pred, self.pos_gt, self.valid_pose, self.vel_pred, self.vel_target,
             self.window_valid, rate=self.rate, pos_oracle=self.pos_oracle, dims=dims,
             rte_delta=rte_delta, t_rte=t_rte, d_rte_distance=d_rte, min_speed=min_speed)
+        if dims == 3:
+            xy = sequence_metrics(
+                self.pos_pred[:, :2], self.pos_gt[:, :2], self.valid_pose,
+                self.vel_pred[:, :2], self.vel_target[:, :2], self.window_valid,
+                rate=self.rate,
+                pos_oracle=self.pos_oracle[:, :2] if self.pos_oracle is not None else None,
+                dims=2, rte_delta=rte_delta, t_rte=t_rte, d_rte_distance=d_rte,
+                min_speed=min_speed)
+            self.metrics.update({f"xy_{key}": value for key, value in xy.items()})
+        self.metric_dims_requested = self.metric_dims_effective = int(dims)
+        self.predicted_axes = list("xyz"[:self.pos_pred.shape[1]])
         if self.loss is not None:
             self.metrics["loss"] = self.loss
         return self.metrics
@@ -131,6 +171,8 @@ class SequenceResult:
         row = {"sequence_id": self.sequence_id, "group_id": self.group_id,
                "duration_s": self.duration, "distance_m": self.distance,
                "skipped": self.skipped or ""}
+        row.update(self.dimension_metadata())
+        row["predicted_axes"] = ",".join(self.predicted_axes) if self.predicted_axes else ""
         row.update(self.metrics)
         return row
 
@@ -143,6 +185,7 @@ class SequenceResult:
         meta = {"sequence_id": self.sequence_id, "dataset": self.dataset,
                 "group_id": self.group_id, "frame": self.frame, "rate": self.rate,
                 "loss": self.loss, "skipped": self.skipped, "metrics": self.metrics}
+        meta.update(self.dimension_metadata())
         np.savez_compressed(path, meta=np.array(json.dumps(to_builtin(meta))), **arrays)
         return path
 
@@ -242,6 +285,21 @@ class RunResult:
         used = self.cfg.get("extra_inputs") or ()
         return [name for name in used if name in PRIVILEGED_INPUTS]
 
+    def dimension_metadata(self) -> dict:
+        """Dimensions actually evaluated; historical metric evidence is never inferred."""
+        metadata = [s.dimension_metadata() for s in self.evaluated]
+        if not metadata or all(all(value is None for value in m.values()) for m in metadata):
+            return dict.fromkeys(DIMENSION_FIELDS)
+        first = metadata[0]
+        if any(any(value is None for value in m.values()) or m != first for m in metadata):
+            raise ValueError("run contains inconsistent or missing evaluation dimensions; "
+                             "re-evaluate all sequences with one metric_dims protocol")
+        requested = self.cfg.get("metric_dims")
+        if requested is not None and requested != first["metric_dims_requested"]:
+            raise ValueError("run metric_dims differs from the dimensions actually evaluated; "
+                             "re-evaluate before saving results")
+        return first
+
     def to_dict(self) -> dict:
         from ..cfg import protocol_from_cfg
 
@@ -258,6 +316,7 @@ class RunResult:
             "dataset_fingerprint": (self.env.get("dataset") or {}).get("fingerprint"),
             "git": (self.env.get("git") or {}).get("commit"),
             "protocol": protocol_from_cfg(cfg),
+            **self.dimension_metadata(),
             # 特权输入（如来自参考真值的初速度）必须显式标记，报表中单列、不与纯 IMU 方法混排
             "privileged_inputs": self.privileged_inputs,
             "num_sequences": len(self.evaluated),
@@ -308,14 +367,12 @@ class RunResult:
 
         out = Path(out)
         seqs = sorted(self.evaluated, key=lambda s: s.sequence_id)
-        requested_dims = int(self.cfg.get("metric_dims") or 2)
-        effective_dims = {min(requested_dims, s.pos_pred.shape[1]) for s in seqs}
-        if len(effective_dims) != 1:
-            raise ValueError("error plots require one effective position dimension per run")
-        dims = effective_dims.pop()
-        if dims != requested_dims:
-            LOGGER.warning(f"error plots use effective {dims}D positions "
-                           f"(metric_dims requested {requested_dims}D)")
+        evidence = self.dimension_metadata()
+        dims = int(self.cfg.get("metric_dims") or evidence["metric_dims_requested"] or 2)
+        for s in seqs:
+            s._check_dimensions(dims)
+        if not seqs:
+            return []
         error_label = f"{dims}D position error (m)"
         files = []
         for s in seqs[:max_plots]:

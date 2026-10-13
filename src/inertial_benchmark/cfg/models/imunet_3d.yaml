@@ -1,0 +1,23 @@
+# IPB 三维适配：保留 IMUNet 的 6×200 噪声层/骨干，速度头输出可学习 XYZ。
+# 原论文和参数夹具是 2D；本配置不声明原论文精度或 2D checkpoint 等价。
+name: imunet_3d
+arch: imunet
+paper: https://arxiv.org/abs/2208.00068
+code: https://github.com/BehnamZeinali/IMUNet
+license: none (no LICENSE in the official repo); this implementation is written from the spec card
+commit: c57f14d0f4f5bbb8e29d836dabacc8718ca825e1
+fidelity: 3d_adapted (learned XYZ velocity head; original protocol predicts XY)
+args:
+  base_plane: 64
+  kernel_size: 3
+  trans_planes: 400
+  trans_kernel: 2
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+recipes:
+  unified: {}

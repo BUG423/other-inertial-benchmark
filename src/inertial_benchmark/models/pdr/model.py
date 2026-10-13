@@ -86,6 +86,9 @@ class PDR(SequenceModel):
         if input_spec.frame != "gravity_world":
             raise ValueError("pdr needs frame=gravity_world (the step signal and the heading are "
                              "defined in the gravity-aligned world frame)")
+        if input_spec.dims != 2:
+            raise ValueError("pdr is a planar baseline and needs dims=2; it does not predict "
+                             "vertical velocity")
         if input_spec.output_layout != "window":
             raise ValueError("pdr outputs one average velocity per window "
                              "(target=avg_velocity / displacement / velocity_at_end)")

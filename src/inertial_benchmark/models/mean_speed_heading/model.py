@@ -56,6 +56,9 @@ class MeanSpeedHeading(SequenceModel):
             raise ValueError(f"variant={variant!r} not in {VARIANTS}")
         if input_spec.frame != "gravity_world":
             raise ValueError("mean_speed_heading needs frame=gravity_world")
+        if input_spec.dims != 2 and variant in ("constant", "gated"):
+            raise ValueError(f"mean_speed_heading variant={variant!r} is planar and needs "
+                             "dims=2; it does not predict vertical velocity")
         if input_spec.output_layout != "window":
             raise ValueError("mean_speed_heading outputs one average velocity per window")
         self.variant = variant

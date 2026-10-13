@@ -119,18 +119,18 @@ ipb benchmark cfg=benchmarks/my.yaml device=0            # 自定义 YAML；其�
 ```
 
 `cfg` 为 YAML 路径；路径不存在时按文件名在 `cfg/benchmarks/` 中查找（`cfg=main` 即内置主基准：
-`ronin_resnet18` × 八个核心数据集 × 种子 0/1/2；`cfg=batchA` 见下）。
+`ronin_resnet18_3d` × 八个数据模板 × 首轮种子 0，主指标 `metric_dims=3`；模板不表示已下载，关键结论最多三个种子。`cfg=batchA` 见下）。
 
 ```yaml
-name: main
+name: custom_xyz                    # 自定义三维示例；不是已准入的 GPU 执行队列
 project: runs/benchmark            # 输出 <project>/<name>/<label>/<dataset>/seed<k>/{train,<split>}/
 models:
-  - ronin_resnet18                   # 名称 / 模型 YAML / checkpoint（checkpoint 不再训练）
-  - {label: ronin_official, model: ronin_resnet18, overrides: {recipe: official, epochs: 100}}
+  - ronin_resnet18_3d                # 独立标注的三维适配版
+  - tlio                            # 原生三维位移 + logstd；窗口/损失按模型定义保留
 datasets: [ronin, ridi, {data: /data/ipb/oxiod, overrides: {batch: 256}}]
-seeds: [0, 1, 2]
+seeds: [0]                         # 广覆盖先一个；关键结论独立计划最多三个种子
 splits:                            # 缺省为数据集 YAML 的 test_splits；[val] = 只评 val
-overrides: {train_windows_budget: 3.2e+7, device: 0}
+overrides: {train_windows_budget: 3.2e+7, device: 0, metric_dims: 3}
 report: true                       # 结束后汇总到 <project>/<name>/report
 continue_on_error: false           # true 时单项失败只记录进 benchmark.json 并继续
 ```

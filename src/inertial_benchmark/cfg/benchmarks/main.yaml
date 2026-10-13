@@ -1,13 +1,16 @@
-# IPB v1 主基准：参考基线 × 八个核心数据集 × 3 个种子（统一配方）。
+# IPB v1 三维主基准：3D 适配参考模型 × 八个数据模板 × 首轮 seed=0。
+# 这八个模板不表示原始数据均已下载。执行前检查本机的数据和 GPU 资源准入。
+# 关键结论另行固定 seeds=[0,1,2]，最多三个；2D 原法使用独立参考协议。
 # 用法：ipb benchmark cfg=main device=0；输出 runs/benchmark/main/<model>/<dataset>/seed<k>/
 name: main
 project: runs/benchmark
 models:
-  - ronin_resnet18
+  - ronin_resnet18_3d
 datasets: [ronin, ridi, oxiod, tlio, idol, rnin, imunet, pedlocdata]
-seeds: [0, 1, 2]
+seeds: [0]
 splits:                 # 缺省使用各数据集 YAML 的 test_splits
 overrides:
   recipe: unified
   epochs: 100
+  metric_dims: 3
 report: true

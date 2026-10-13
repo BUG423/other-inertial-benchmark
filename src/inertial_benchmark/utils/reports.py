@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import csv
 import math
 from itertools import combinations
 from pathlib import Path
@@ -17,6 +18,7 @@ from . import LOGGER, json_load, json_save
 
 PathLike = Union[str, Path]
 KEYS = ("dataset", "split", "model")
+DIMENSION_FIELDS = ("metric_dims_requested", "metric_dims_effective", "predicted_axes")
 
 
 def _pd():
@@ -43,6 +45,43 @@ class ProtocolMismatch(ConfigError):
     """同一份报表中的 run 使用了不同的评测协议，指标不可比（CLI 以退出码 2 报错）。"""
 
 
+def _check_dimension_evidence(run: PathLike, meta: dict) -> None:
+    requested = (meta.get("protocol") or {}).get("metric_dims")
+    evidence = [meta.get(key) for key in DIMENSION_FIELDS]
+    if all(value is None for value in evidence):
+        if requested == 3:
+            raise ProtocolMismatch(f"{run}: metric_dims=3 has no actual dimension evidence; "
+                                   "re-evaluate saved XYZ predictions before reporting")
+        return  # Historical 2D results never used the 3D-to-2D fallback.
+    req, effective, axes = evidence
+    if (any(value is None for value in evidence) or req != requested or effective != requested
+            or axes not in (["x", "y"], ["x", "y", "z"]) or len(axes) < requested):
+        raise ProtocolMismatch(f"{run}: actual evaluation dimensions disagree with metric_dims "
+                               f"or predicted_axes; re-evaluate with metric_dims={requested}")
+    # JSON evidence alone is insufficient: every evaluated CSV row must agree with it.
+    with open(Path(run) / "sequences.csv", newline="", encoding="utf-8") as stream:
+        rows = csv.DictReader(stream)
+        if not set(DIMENSION_FIELDS) <= set(rows.fieldnames or ()):
+            raise ProtocolMismatch(f"{run}: sequences.csv lacks actual dimension evidence; "
+                                   "re-evaluate all sequences before reporting")
+        count = 0
+        for row in rows:
+            if row.get("skipped"):
+                continue
+            try:
+                dims = [float(row[key]) for key in DIMENSION_FIELDS[:2]]
+            except (ValueError, TypeError) as exc:
+                raise ProtocolMismatch(f"{run}: missing sequence dimension evidence for "
+                                       f"{row.get('sequence_id')}") from exc
+            if dims != [requested, requested] or row["predicted_axes"] != ",".join(axes):
+                raise ProtocolMismatch(f"{run}: sequence {row.get('sequence_id')} has "
+                                       "inconsistent evaluation dimensions or predicted_axes; "
+                                       "re-evaluate before reporting")
+            count += 1
+    if meta.get("num_sequences") is not None and count != meta["num_sequences"]:
+        raise ProtocolMismatch(f"{run}: dimension evidence sequence count differs from JSON")
+
+
 def check_protocols(runs: Iterable[PathLike]) -> dict:
     """核对各 run 的评测协议是否一致，不一致时抛出 :class:`ProtocolMismatch`。
 
@@ -51,6 +90,7 @@ def check_protocols(runs: Iterable[PathLike]) -> dict:
     只记录不比较。缺少 ``protocol`` 的旧结果视为未知，直接报错（宁可让人重跑也不混表）。
     """
     seen: dict = {}
+    metadata = []
     for run in runs:
         meta = json_load(Path(run) / "metrics.json")
         protocol = meta.get("protocol")
@@ -60,6 +100,7 @@ def check_protocols(runs: Iterable[PathLike]) -> dict:
         missing = [k for k in EVAL_PROTOCOL_KEYS if protocol.get(k) is None]
         if missing:
             raise ProtocolMismatch(f"{run}: evaluation protocol is incomplete, missing {missing}")
+        metadata.append((run, meta))
         for key in EVAL_PROTOCOL_KEYS:
             value = protocol[key]
             value = tuple(value) if isinstance(value, list) else value
@@ -69,6 +110,8 @@ def check_protocols(runs: Iterable[PathLike]) -> dict:
                     f"evaluation protocol differs between runs: {key}={first!r} in {first_run} "
                     f"but {key}={value!r} in {run}. Re-evaluate both with the same protocol "
                     "(eval keys come from default.yaml / the benchmark config / the CLI).")
+    for run, meta in metadata:
+        _check_dimension_evidence(run, meta)
     return {key: value for key, (_, value) in seen.items()}
 
 
@@ -78,6 +121,7 @@ def load_runs(root: PathLike):
     frames = []
     for run in find_runs(root):
         meta = json_load(run / "metrics.json")
+        _check_dimension_evidence(run, meta)
         df = pd.read_csv(run / "sequences.csv")
         if "skipped" in df:
             df = df[df["skipped"].isna() | (df["skipped"] == "")]
@@ -312,7 +356,7 @@ def build_report(runs: PathLike, out: PathLike, metrics: Sequence[str] = MAIN_ME
                                 f"under {runs}")
     # 所有浮点列都是逐序列指标（含 duration_s / distance_m），效率指标单独处理
     all_metrics = [c for c in df.columns
-                   if df[c].dtype.kind == "f" and c not in ("params", "flops")]
+                   if df[c].dtype.kind == "f" and c not in ("params", "flops", *DIMENSION_FIELDS)]
     summary = summarize(df, all_metrics, n_boot=n_boot)
     tests = all_pairwise_tests(df, [m for m in ("ate", "rte") if m in df.columns])
     df.to_csv(out / "per_sequence.csv", index=False)

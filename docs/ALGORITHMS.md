@@ -7,6 +7,17 @@
 
 当前接入以 `dev/v1` 的 [模型接口](../src/inertial_benchmark/nn/base.py)、[注册器](../src/inertial_benchmark/nn/registry.py)和 [模型配置](../src/inertial_benchmark/cfg/models/)为准；现有实现与本轮服务器验收见 [当前状态](DEV_V1_INTEGRATION.md)。下表的“可移植”等标签保留规格基线含义，算法实现、形状夹具核对与论文精度复现分别记录。
 
+当前实现为 **29 个注册架构、34 份模型配置、21 个算法包**；三份新增三维配置共用已有架构，不计作三个新方法。主 benchmark 使用三维预测，二维指标从同一预测的 XY 派生；原文二维配置与参数夹具仍作为独立参考。
+
+| 三维主协议配置 | 已有架构 / 目标 | 忠实性边界 |
+|---|---|---|
+| `ronin_resnet18_3d` | `ronin_resnet` / XYZ 平均速度 | `3d_adapted`：原二维输出头扩为可学习三维，窗口和 MSE 保留 |
+| `ronin_lstm_3d` | `ronin_lstm` / 逐帧 XYZ 速度 | `3d_adapted`：两个输出线性层随三维扩展，GlobalPosLoss 保留 |
+| `imunet_3d` | `imunet` / XYZ 平均速度 | `3d_adapted`：噪声层与骨干不变，输出头新增可学习 Z |
+| `tlio` | `tlio` / XYZ 位移与 logstd | 原生三维网络；不包含论文 EKF |
+
+三维适配配置只提供统一配方，不能以 `recipe=official` 宣称原文二维复现；旧二维 checkpoint 也不能直接改 `dims` 重载。IONet 与 EqNIO-RoNIN 当前为二维专用。PDR、`mean_speed_heading` 的 `constant` / `gated` 变体拒绝 `dims=3`；显式 `zero_velocity` 可定义三维零向量，`train_mean_velocity` 可定义训练集 XYZ 均值，但这两种常量基线不属于航向估计三维扩展。三维主排序不纳入缺少预测 Z 的配置。
+
 ## 1. 约定
 
 - **fidelity**

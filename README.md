@@ -24,7 +24,7 @@
 | :--- | :--- | :--- |
 | **统一数据层** | IPB v1 HDF5、200 Hz 时间轴、单位/坐标系、来源、有效掩码、分组划分与检查 | [设计规范](docs/DESIGN.md) · [数据集目录](docs/DATASETS.md) |
 | **核心转换器** | 已有 RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 八个转换器；RIDI/RoNIN/IDOL 完整数据已验收，可训练 | [数据卡](docs/datasets/) · [代码](src/inertial_benchmark/data/converters/)；划分、拒收与指纹见[本轮状态](docs/DEV_V1_INTEGRATION.md) |
-| **算法库** | 29 个注册架构、31 份模型配置、21 个算法包；含 RoNIN、TLIO、RNIN、IMUNet、EqNIO、AirIO、DIVE 和经典基线 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/) |
+| **算法库** | 29 个注册架构、34 份模型配置（含三份 `3d_adapted`）、21 个算法包；含 RoNIN、TLIO、RNIN、IMUNet、EqNIO、AirIO、DIVE 和经典基线 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/) |
 | **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；导出 API 尚待建设 |
 | **评价与报告** | ATE、独立对齐诊断、时间/距离 RTE、终点漂移、长度比、速度/方向、效率；CSV/Markdown/LaTeX、统计与图表 | [指标定义](docs/METRICS.md)；短序列换算、oracle、对齐诊断按各自定义解释 |
 | **新增数据接入** | EuRoC 11、Blackbird 20 个发布片段已转换为原生 v1，full/hash 检查通过；Pegasus/ADVIO 审计拒收；TartanIMU 2025 来源卡 | [本轮状态](docs/DEV_V1_INTEGRATION.md) · [数据卡](docs/datasets/)；Blackbird 按 route 分组、仅 test 审计，不作训练/验证集 |
@@ -68,7 +68,7 @@ python -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[train,test]"
 ipb info
-ipb cfg model=ronin_resnet18 recipe=unified
+ipb cfg model=ronin_resnet18_3d metric_dims=3 recipe=unified
 ```
 
 仅使用数据层时安装 `pip install -e .`；读取 IDOL Feather 原始文件需 `pip install -e ".[idol]"`。PyTorch CPU/CUDA 构建按环境选择。
@@ -90,7 +90,7 @@ ipb check data=ridi full=true hash=true
 ```bash
 export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"
 ipb check data=ridi full=true hash=true
-ipb cfg model=ronin_resnet18 data=ridi recipe=unified
+ipb cfg model=ronin_resnet18_3d data=ridi metric_dims=3 recipe=unified
 ```
 
 ### 3. CPU 流程示例
@@ -98,9 +98,9 @@ ipb cfg model=ronin_resnet18 data=ridi recipe=unified
 下列配置用于检查数据、训练和结果输出；步长与训练预算仅用于工程检查：
 
 ```bash
-ipb train model=ronin_resnet18 data=ridi device=cpu epochs=1 batch=2 workers=0 cache=false stride=200 eval_stride=200 project=runs/cpu-smoke name=ridi-ronin
-ipb val model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt data=ridi split=val device=cpu workers=0 cache=false eval_stride=200 project=runs/cpu-smoke
-ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source="$IPB_DATASETS/ridi/sequences" device=cpu workers=0 eval_stride=200
+ipb train model=ronin_resnet18_3d data=ridi metric_dims=3 device=cpu epochs=1 batch=2 val_batch=2 workers=0 cache=false stride=200 eval_stride=200 project=runs/cpu-smoke name=ridi-ronin
+ipb val model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt data=ridi split=val metric_dims=3 device=cpu val_batch=2 workers=0 cache=false eval_stride=200 project=runs/cpu-smoke
+ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source="$IPB_DATASETS/ridi/sequences" metric_dims=3 device=cpu val_batch=2 workers=0 eval_stride=200
 ```
 
 等价 API：
@@ -108,9 +108,11 @@ ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source="$IPB_D
 ```python
 from inertial_benchmark import NIO
 
-model = NIO("ronin_resnet18")
-model.train(data="ridi", device="cpu", epochs=1, batch=2, workers=0, cache=False)
+model = NIO("ronin_resnet18_3d", metric_dims=3)
+model.train(data="ridi", device="cpu", epochs=1, batch=2, val_batch=2, workers=0, cache=False)
 ```
+
+主 benchmark 保存可学习的 **XYZ 三维预测**，以 `metric_dims=3` 计算三维主指标，并从同一预测的 XY 分量派生 `xy_` 二维指标。`ronin_resnet18_3d`、`ronin_lstm_3d`、`imunet_3d` 明确标注 `3d_adapted`；它们扩展原二维输出头，不声明原论文精度或旧二维 checkpoint 等价。TLIO 保留原生三维输出。原二维配置留在独立参考协议（`metric_dims=2`）；PDR 和常速航向的平面变体拒绝三维请求，不以补零或参考真值充当预测 Z。
 
 正式 GPU 实验应冻结数据划分、配方与充分训练预算，记录统一/官方配方的差异。CPU 一轮结果用于工程验收，不能作为算法排名或论文精度结论。
 
@@ -122,7 +124,7 @@ ipb report runs=runs/cpu-smoke out=reports/cpu-smoke
 pytest -q -m "not slow"
 ```
 
-示例矩阵见 [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml)。正式执行前选择已验收的数据/算法并检查资源预算；完整命令见 [CLI.md](docs/CLI.md)。
+示例矩阵见 [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml)：`ronin_resnet18_3d` × 八个数据模板 × seed 0；模板不代表数据已下载。正式执行前选择已验收的数据/算法并检查资源预算；完整命令见 [CLI.md](docs/CLI.md)。
 
 APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://github.com/BUG423/app-inertial-lab)。旧文件读取兼容与 v1 训练准入不同，限制见[交换契约](docs/TOOLS.md)。
 

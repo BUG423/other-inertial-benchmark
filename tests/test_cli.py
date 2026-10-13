@@ -64,8 +64,9 @@ def test_builtin_benchmark_plan(tmp_path, monkeypatch):
 
     monkeypatch.chdir(tmp_path)
     plan = load_plan("main")
-    assert len(plan) == 8 * 3 and plan[0].label == "ronin_resnet18"
-    assert plan[0].run_dir == Path("runs/benchmark/main/ronin_resnet18/ronin/seed0")
+    assert len(plan) == 8 and plan[0].label == "ronin_resnet18_3d"
+    assert plan[0].run_dir == Path("runs/benchmark/main/ronin_resnet18_3d/ronin/seed0")
+    assert all(item.overrides["metric_dims"] == 3 and item.seed == 0 for item in plan)
     assert entrypoint(["benchmark", "cfg=main", "dry_run=true"]) == 0
     assert not (tmp_path / "runs").exists()
     assert entrypoint(["benchmark", "cfg=missing_plan"]) == 2

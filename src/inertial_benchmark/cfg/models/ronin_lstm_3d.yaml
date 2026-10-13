@@ -1,0 +1,28 @@
+# IPB 三维适配：保留 bilinear + 单向 LSTM 与 GlobalPosLoss，逐帧可学习 XYZ。
+# 原论文是 2D；输出相关的两个线性层按三维扩展，不复用原 2D checkpoint。
+name: ronin_lstm_3d
+arch: ronin_lstm
+paper: https://arxiv.org/abs/1905.12853
+code: https://github.com/Sachini/ronin
+license: GPL-3.0 (official code); this implementation is written from the spec card
+commit: 805b7f0f28bb164ce89ada9ac05a9470dbe3d715
+fidelity: 3d_adapted (learned XYZ frame velocity; original protocol predicts XY)
+args:
+  lstm_size: 100
+  lstm_layers: 3
+  dropout: 0.0
+  mix_size: 24
+input:
+  window: 400
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: frame_velocity
+  dims: 3
+  overlap: mean
+loss: ronin_global_pos
+loss_kwargs:
+  mode: full
+recipes:
+  unified:
+    augment: [random_yaw, time_shift]

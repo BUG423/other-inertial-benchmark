@@ -24,7 +24,7 @@ The deliverable is an extensible benchmark: dataset-specific converters produce 
 | :--- | :--- | :--- |
 | **Data layer** | IPB v1 HDF5, 200 Hz, units/frames, provenance, masks, grouped splits and checks | [Design](docs/DESIGN.md) · [Dataset catalog](docs/DATASETS.md) |
 | **Core converters** | Eight existing converters: RoNIN, RIDI, OxIOD, TLIO, IDOL, RNIN, IMUNet and PedLocData; full RIDI/RoNIN/IDOL data accepted and ready for training | [Cards](docs/datasets/) · [Code](src/inertial_benchmark/data/converters/); splits, rejections and fingerprints in [current status](docs/DEV_V1_INTEGRATION.md) |
-| **Algorithms** | 29 registered architectures, 31 model configurations and 21 packages; RoNIN, TLIO, RNIN, IMUNet, EqNIO, AirIO, DIVE and classical baselines | [Specifications/fidelity](docs/ALGORITHMS.md) · [Configurations](src/inertial_benchmark/cfg/models/) |
+| **Algorithms** | 29 registered architectures, 34 model configurations (including three `3d_adapted` profiles) and 21 packages; RoNIN, TLIO, RNIN, IMUNet, EqNIO, AirIO, DIVE and classical baselines | [Specifications/fidelity](docs/ALGORITHMS.md) · [Configurations](src/inertial_benchmark/cfg/models/) |
 | **Training/prediction** | `NIO` / `ipb`, shared Trainer/Validator/Predictor; window/frame/multi-step/sequence interfaces | [Commands](docs/CLI.md); retain required layouts and losses; an export API is still pending |
 | **Evaluation/reports** | ATE, separate aligned diagnostics, time/distance RTE, endpoint drift, length ratios, velocity/direction, efficiency; CSV/Markdown/LaTeX, statistics and plots | [Definitions](docs/METRICS.md); scaling, oracle and aligned diagnostics have distinct meanings |
 | **New data intake** | EuRoC 11 recordings and Blackbird 20 published segments converted to native v1 and passed full/hash checks; Pegasus/ADVIO audited and rejected; a TartanIMU 2025 source card added | [Current status](docs/DEV_V1_INTEGRATION.md) · [Cards](docs/datasets/); Blackbird uses route groups and a test-only audit list |
@@ -68,7 +68,7 @@ python -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[train,test]"
 ipb info
-ipb cfg model=ronin_resnet18 recipe=unified
+ipb cfg model=ronin_resnet18_3d metric_dims=3 recipe=unified
 ```
 
 Use `pip install -e .` for data only. IDOL Feather sources require `pip install -e ".[idol]"`. Select the appropriate PyTorch CPU/CUDA build.
@@ -90,7 +90,7 @@ The AutoDL checkout accepted in this round contains full RIDI/RoNIN/IDOL under `
 ```bash
 export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"
 ipb check data=ridi full=true hash=true
-ipb cfg model=ronin_resnet18 data=ridi recipe=unified
+ipb cfg model=ronin_resnet18_3d data=ridi metric_dims=3 recipe=unified
 ```
 
 ### 3. CPU workflow example
@@ -98,9 +98,9 @@ ipb cfg model=ronin_resnet18 data=ridi recipe=unified
 These strides and training budgets are for engineering checks:
 
 ```bash
-ipb train model=ronin_resnet18 data=ridi device=cpu epochs=1 batch=2 workers=0 cache=false stride=200 eval_stride=200 project=runs/cpu-smoke name=ridi-ronin
-ipb val model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt data=ridi split=val device=cpu workers=0 cache=false eval_stride=200 project=runs/cpu-smoke
-ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source="$IPB_DATASETS/ridi/sequences" device=cpu workers=0 eval_stride=200
+ipb train model=ronin_resnet18_3d data=ridi metric_dims=3 device=cpu epochs=1 batch=2 val_batch=2 workers=0 cache=false stride=200 eval_stride=200 project=runs/cpu-smoke name=ridi-ronin
+ipb val model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt data=ridi split=val metric_dims=3 device=cpu val_batch=2 workers=0 cache=false eval_stride=200 project=runs/cpu-smoke
+ipb predict model=runs/cpu-smoke/train/ridi-ronin/weights/best.pt source="$IPB_DATASETS/ridi/sequences" metric_dims=3 device=cpu val_batch=2 workers=0 eval_stride=200
 ```
 
 Equivalent API:
@@ -108,9 +108,11 @@ Equivalent API:
 ```python
 from inertial_benchmark import NIO
 
-model = NIO("ronin_resnet18")
-model.train(data="ridi", device="cpu", epochs=1, batch=2, workers=0, cache=False)
+model = NIO("ronin_resnet18_3d", metric_dims=3)
+model.train(data="ridi", device="cpu", epochs=1, batch=2, val_batch=2, workers=0, cache=False)
 ```
+
+The main benchmark saves **learned XYZ predictions**, uses `metric_dims=3` for primary 3D metrics and derives `xy_` metrics from the same predicted XY coordinates. `ronin_resnet18_3d`, `ronin_lstm_3d` and `imunet_3d` are labeled `3d_adapted`: their output heads extend the original 2D methods, without claiming original-paper accuracy or 2D checkpoint equivalence. TLIO retains native 3D output. Original 2D configurations remain a separate reference protocol (`metric_dims=2`); PDR and planar constant-heading variants reject 3D requests rather than supplying fabricated Z predictions.
 
 Full GPU experiments require frozen splits, documented recipes and sufficient training. Record unified/official recipe differences. A one-epoch CPU check does not establish rankings or paper accuracy.
 
@@ -122,7 +124,7 @@ ipb report runs=runs/cpu-smoke out=reports/cpu-smoke
 pytest -q -m "not slow"
 ```
 
-See the example [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml). Select accepted data/models and check resource budgets before execution. Complete commands are in [CLI.md](docs/CLI.md).
+The example [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml) uses `ronin_resnet18_3d` × eight dataset templates × seed 0; templates do not establish that data was downloaded. Select accepted data/models and check resource budgets before execution. Complete commands are in [CLI.md](docs/CLI.md).
 
 APP source, APKs, `.iplab` conversion and builds belong to [app-inertial-lab](https://github.com/BUG423/app-inertial-lab). Legacy readability and v1 training admission are separate; see [exchange limitations](docs/TOOLS.md).
 
