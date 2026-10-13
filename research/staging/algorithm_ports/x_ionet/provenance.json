@@ -1,0 +1,152 @@
+{
+  "schema": "ib.staging.xionet.implementation-design.v1",
+  "created_utc": "2026-10-13T21:25:37.697185+00:00",
+  "method": "x_ionet",
+  "state": "primary_fulltext_and_figure_reviewed_design_only_no_model_implementation",
+  "publication": {
+    "title": "X-IONet: Cross-Platform Inertial Odometry Network for Pedestrian and Legged Robot",
+    "authors": [
+      "Dehan Shen",
+      "Changhao Chen"
+    ],
+    "venue": "IEEE Robotics and Automation Letters",
+    "year": 2026,
+    "doi": "10.1109/LRA.2026.3692056",
+    "arxiv": "2511.08277v2",
+    "arxiv_v2_date": "2026-04-22",
+    "excluded_author": "Shanshan Zhang",
+    "excluded_author_match": false,
+    "authors_primary_verified": true,
+    "same_v1_and_v2_method": true,
+    "primary_html": "https://arxiv.org/html/2511.08277v2",
+    "primary_pdf": "https://arxiv.org/pdf/2511.08277v2",
+    "author_publication_page": "https://changhao-chen.github.io/"
+  },
+  "prior_primary_contract_sha256": "7cc06d25901fa2c6fc36454e661e1b085e621682299d44001fce9c0c44da915f",
+  "primary_assets_server_acquired": [
+    {
+      "name": "paper-v2.html",
+      "url": "https://arxiv.org/html/2511.08277v2",
+      "bytes": 232776,
+      "sha256": "e4b91e555b51cc42029a0907392b79c75658b681fd7770488cb88f9afa145c43",
+      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/paper-v2.html"
+    },
+    {
+      "name": "classifier-v2.png",
+      "url": "https://arxiv.org/html/2511.08277v2/figures/classifier.png",
+      "bytes": 1227280,
+      "sha256": "0e8ddb73fca16f7f903db46d53d07c39640ef193aa61e26f1166a90e77d3a2bf",
+      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/classifier-v2.png"
+    },
+    {
+      "name": "paper-v2.pdf",
+      "url": "https://arxiv.org/pdf/2511.08277v2",
+      "bytes": 5416626,
+      "sha256": "1a5fba159b6bf8d6f3807dbd1da28ecbef6139b7bb4e122e81f234c57d633bda",
+      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/paper-v2.pdf"
+    }
+  ],
+  "paper_pdf_downloaded_to_local": false,
+  "small_figure_receipt_mirror_only": true,
+  "official_author_network_source_verified": false,
+  "original_source_license": null,
+  "classifier_figure_actual_review": {
+    "url": "https://arxiv.org/html/2511.08277v2/figures/classifier.png",
+    "figure": "3",
+    "conv_layers": 3,
+    "figure_fc_layers": 2,
+    "figure_between_fc_activation": "ReLU",
+    "conv_channel_widths": null,
+    "conv_kernel_stride_padding": null,
+    "maxpool_parameters": null,
+    "hidden_fc_width": null,
+    "text_vs_figure": "text names classifier FC; figure explicitly has FC1-ReLU-FC2; numerical dimensions not supplied"
+  },
+  "expert_recovered": {
+    "input_channels": 6,
+    "samples": 200,
+    "rate_hz": 200,
+    "segment_size": 10,
+    "segment_count": 20,
+    "embedding_dim": 256,
+    "attention_order": [
+      "temporal",
+      "inter_axis"
+    ],
+    "independent_platform_experts": true,
+    "router": true,
+    "hierarchical_pair_merge": true,
+    "multiscale_decoder": true,
+    "output_displacement_dim": 3,
+    "output_covariance_shape": [
+      3,
+      3
+    ],
+    "loss_huber_delta": 0.005,
+    "gaussian_weight": 0.0001
+  },
+  "expert_missing": {
+    "heads": null,
+    "encoder_depth": null,
+    "decoder_depth": null,
+    "router_width": null,
+    "mlp_width": null,
+    "dropout": null,
+    "odd_merge_padding": null,
+    "final_readout": null,
+    "covariance_parameterization": null,
+    "note": "segment_count20 is not an encoder_depth20 specification"
+  },
+  "filter_contract": {
+    "current_error_dimension": 15,
+    "clone_error_dimension": 6,
+    "state_dimension": "15+6*n",
+    "number_of_clones_specified": false,
+    "rotation_error": "left: log(R_true R_est^-1)",
+    "augmentation_covariance": "J_aug P J_aug.T with retained cross-correlations",
+    "state_covariance": "PSD; deterministic clone duplication may be singular",
+    "measurement_and_innovation_covariance": "SPD",
+    "original_transition_noise_reset_initialization_provided": false,
+    "eq17_printed_innovation": "K*(h(S)-dhat)",
+    "sign_resolution": "unresolved original; under ordinary plus injection and H=derivative(h), printed sign increases position error",
+    "independent_sign_counterexample": {
+      "predicted": 1.0,
+      "measured": 0.0,
+      "P": 1.0,
+      "Sigma": 1.0,
+      "K": 0.5,
+      "printed_updated": 1.5,
+      "consistent_updated": 0.5
+    },
+    "proposed_operational_reconstruction": "explicit left-error K*(d-h) plus Joseph and derived manifold reset, pending approval",
+    "local_rotation_R_in_eq15": "unresolved anchor/current/fullbody/yawlocal distinction; exact original full-loop gate",
+    "network_input_attitude": "estimated EKF attitude in original; GT reference is a privileged adaptation"
+  },
+  "reliably_implementable_proposals": [
+    "independent SO3/retraction/Jacobian tests with explicit left convention",
+    "dynamic15+6n pose-clone covariance augmentation/marginalization and PSD preservation",
+    "declared fullSPD Cholesky6 head helper/triangular Gaussian loss (parameterization/floor/reduction assumptions)",
+    "isolated sign diagnostic versus consistent-error reconstruction, no silent paperexact claim"
+  ],
+  "no_guessed_numeric_network_defaults": true,
+  "proposal_code_not_written": true,
+  "data_blockers": [
+    "original GrandTour CPT7+odometry train24/val6/test6 screening unavailable as current accepted ADIS/prism one-mission asset",
+    "real robot train data and platform/extrinsic contracts before selector/expert claims",
+    "initial yaw/attitude/bias/P0, timestamps and clone schedule unspecified"
+  ],
+  "future_tracks": [
+    "network_only_reference_attitude_assisted_ablation",
+    "original_estimated_attitude_closed_loop_reconstruction"
+  ],
+  "acceptance": {
+    "implemented": false,
+    "actual_cpu_tests": false,
+    "GPU_used": false,
+    "registered": false,
+    "active_count_increment": 0,
+    "formal_2067_changed": false,
+    "source_or_engine_modified": false
+  },
+  "scientific_analysis_is_our_derivation": true
+}
