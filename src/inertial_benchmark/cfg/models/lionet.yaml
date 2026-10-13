@@ -1,0 +1,19 @@
+# Paper-only WaveNet; relative polar motion is explicitly adapted to world velocity.
+name: lionet
+arch: lionet
+paper: https://arxiv.org/abs/2001.04061
+code: none (official architecture code not publicly located)
+license: independent paper implementation
+fidelity: paper-only; gravity_world polar-velocity adaptation; declared kernel/pooling assumptions
+args: {filters: 32, layers: 8, kernel_size: 2, decimation: 2}
+input:
+  window: 400
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 2
+loss: ionet_polar
+loss_kwargs: {kappa: 1.0, min_speed: 0.1}
+recipes:
+  unified: {augment: []}

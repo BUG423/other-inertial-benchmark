@@ -39,14 +39,157 @@ def load_model(cfg: Any, device: Optional[torch.device] = None):
         ckpt = load_checkpoint(cfg.model)
         model = build_model(cfg, InputSpec.from_dict(ckpt["input_spec"]), ckpt["model_cfg"])
         model.load_state_dict(ckpt["model"])
+        # Runtime evidence only; no parameters/state_dict entries are added. An epoch
+        # argument alone cannot certify that a fresh uncertainty head was trained.
+        if type(ckpt.get("epoch")) is int and ckpt["epoch"] >= 0:
+            model._ipb_checkpoint_epoch = ckpt["epoch"]
+            model._ipb_checkpoint_source = str(cfg.model)
+            model._ipb_uncertainty_checkpoint_evidence = dict(ckpt.get("training_evidence") or {})
+            saved_cfg = ckpt.get("model_cfg") or {}
+            model._ipb_uncertainty_checkpoint_loss = {
+                "loss": saved_cfg.get("loss"),
+                "loss_kwargs": dict(saved_cfg.get("loss_kwargs") or {})}
     else:
         model = build_model(cfg)
     if getattr(cfg, "pretrained", None):
         ckpt = load_checkpoint(cfg.pretrained)
         missing, unexpected = model.load_state_dict(ckpt["model"], strict=False)
+        # Non-strict transfer does not certify the destination covariance head.
+        model._ipb_checkpoint_epoch = None
+        model._ipb_uncertainty_checkpoint_evidence = {}
+        model._ipb_uncertainty_checkpoint_loss = {}
         LOGGER.info(f"loaded pretrained weights from {cfg.pretrained} "
                     f"(missing {len(missing)}, unexpected {len(unexpected)})")
     return model.to(device) if device is not None else model
+
+
+def uncertainty_contract(model: Any, cfg: ViewConfig, epoch: int) -> dict:
+    """Explicit raw-task Gaussian contracts; unsupported heads remain unavailable.
+
+    These contracts describe the independently implemented network/loss, not the
+    complete paper's filtering system. EqNIO's world covariance is not diagonal:
+    its likelihood is evaluated using the canonical mean/target/logstd instead.
+    New models must extend this reviewed table or provide an explicit callable
+    ``raw_uncertainty_contract(epoch)`` returning the same contract fields.
+    """
+    cls = f"{type(model).__module__}.{type(model).__name__}"
+    ordinary = {
+        "inertial_benchmark.models.tlio.model.TLIOResNet",
+        "inertial_benchmark.models.llio.model.LLIONet",
+        "inertial_benchmark.models.dive.model.DIVE",
+        "inertial_benchmark.models.meio.model.MEIONet",
+    }
+    canonical = cls == "inertial_benchmark.models.eqnio.tlio.EqNIOTLIO"
+    loss_name = getattr(model, "loss_name", None)
+    kwargs = dict(getattr(model, "loss_kwargs", {}) or {})
+    contract = {"schema": "ib.uncertainty.raw-task.v1", "supported": False,
+                "head_trained": False, "reason": "unsupported_model_contract",
+                "model_class": cls, "loss_name": loss_name, "evaluation_epoch": int(epoch),
+                "frame": cfg.frame, "target": cfg.target, "layout": cfg.output_layout,
+                "dims": int(cfg.dims),
+                "unit": "m" if cfg.target in ("displacement", "multi_displacement") else "m/s",
+                "overlap_policy": "raw_outputs_before_world_conversion_and_merge",
+                "mean_key": "vel", "logstd_key": "logstd", "canonical": False,
+                "logstd_offset": 0.0, "min_logstd": None, "max_logstd": None}
+    hook = getattr(model, "raw_uncertainty_contract", None)
+    if callable(hook):
+        declared = dict(hook(epoch))
+        for key in ("frame", "target", "layout", "unit", "mean_key", "logstd_key",
+                    "training_start_epoch"):
+            if key not in declared:
+                raise ValueError(f"raw_uncertainty_contract is missing {key}")
+        if (declared["target"] != cfg.target or declared["layout"] != cfg.output_layout
+                or declared.get("canonical", False)):
+            raise ValueError("custom raw uncertainty hook must match the task layout/target; "
+                             "canonical transforms require an explicitly implemented adapter")
+        if declared["frame"] != cfg.frame:
+            raise ValueError("custom raw uncertainty hook must declare the same task frame")
+        if declared["unit"] != contract["unit"]:
+            raise ValueError("custom raw uncertainty hook has inconsistent task units")
+        contract.update(declared, supported=True, contract_source="model_explicit_hook")
+        start = declared["training_start_epoch"]
+    elif cls in ordinary or canonical:
+        accepted = {"gaussian_nll", "mse_then_nll", "nll_detach_then_nll"}
+        if cls.endswith(".DIVE"):
+            accepted.add("dive_mse_then_nll")
+        if cls.endswith(".MEIONet"):
+            accepted.add("meio_multiexit")
+        if canonical:
+            # out['logstd'] is only a world-frame marginal report. It cannot be
+            # paired with a diagonal world Gaussian, even under a loss override.
+            accepted = {"eqnio_canonical_nll"}
+        if loss_name not in accepted:
+            contract["reason"] = "unsupported_or_nonprobabilistic_scientific_loss"
+            return contract
+        contract.update(supported=True, contract_source="reviewed_network_and_loss")
+        start = 0 if loss_name == "gaussian_nll" else kwargs.get(
+            "switch_epoch", 9 if canonical else 10)
+        if loss_name == "meio_multiexit":
+            # At the first blend epoch alpha=1, so the sigma branch still has
+            # zero NLL weight. The next epoch is the first trained sigma phase.
+            start += int(int(kwargs.get("warmup_epochs", 0)) > 0)
+        if loss_name == "dive_mse_then_nll":
+            contract["logstd_offset"] = float(kwargs.get("offset", 1e-7))
+        if loss_name in ("gaussian_nll", "mse_then_nll", "nll_detach_then_nll",
+                         "eqnio_canonical_nll"):
+            contract["min_logstd"] = kwargs.get("min_logstd", float(np.log(1e-3)))
+            contract["max_logstd"] = kwargs.get(
+                "max_logstd", float(np.log(1e3)) if loss_name in (
+                    "gaussian_nll", "mse_then_nll") else None)
+        elif loss_name == "dive_mse_then_nll":
+            contract.update(min_logstd=kwargs.get("min_logstd"),
+                            max_logstd=kwargs.get("max_logstd"))
+        if canonical:
+            contract.update(mean_key="disp_canonical", logstd_key="logstd_canonical",
+                            canonical=True, frame=f"o2_canonical_per_window:{cfg.frame}")
+    else:
+        return contract
+    if type(start) is not int or start < 0:
+        raise ValueError("uncertainty training_start_epoch must be a nonnegative integer")
+    contract["training_start_epoch"] = start
+    trained = getattr(model, "_ipb_trained_epoch", None)
+    updates = getattr(model, "_ipb_epoch_optimizer_updates", None)
+    total = getattr(model, "_ipb_optimizer_updates", None)
+    checkpoint = getattr(model, "_ipb_checkpoint_epoch", None)
+    proof = dict(getattr(model, "_ipb_uncertainty_checkpoint_evidence", {}) or {})
+    valid_updates = lambda count, all_count: (
+        type(count) is int and count > 0 and type(all_count) is int and all_count >= count)
+    if type(trained) is int and trained >= 0 and valid_updates(updates, total):
+        evidence, source = trained, "completed_optimizer_epoch"
+    elif (type(checkpoint) is int and checkpoint >= 0
+          and type(proof.get("completed_epoch")) is int
+          and proof["completed_epoch"] == checkpoint
+          and valid_updates(proof.get("epoch_optimizer_updates"),
+                            proof.get("total_optimizer_updates"))):
+        evidence, source = checkpoint, "checkpoint_epoch"
+        updates, total = proof["epoch_optimizer_updates"], proof["total_optimizer_updates"]
+    else:
+        evidence, source = None, "none"
+    contract.update(training_evidence_epoch=evidence, training_evidence_source=source,
+                    training_epoch_optimizer_updates=updates if evidence is not None else 0,
+                    training_total_optimizer_updates=total if evidence is not None else 0)
+    saved_loss = dict(getattr(model, "_ipb_uncertainty_checkpoint_loss", {}) or {})
+    if source == "checkpoint_epoch":
+        contract.update(checkpoint_loss_name=saved_loss.get("loss"),
+                        checkpoint_loss_kwargs=saved_loss.get("loss_kwargs"))
+        if saved_loss.get("loss") is None:
+            contract["reason"] = "missing_checkpoint_scientific_loss_identity"
+            return contract
+        if (saved_loss["loss"] != loss_name
+                or dict(saved_loss.get("loss_kwargs") or {}) != kwargs):
+            # Loading weights does not retrain sigma under an evaluation override.
+            # A genuine subsequent optimizer epoch uses live evidence above instead.
+            contract["reason"] = "checkpoint_scientific_loss_contract_overridden"
+            return contract
+    if epoch < start:
+        contract["reason"] = "uncertainty_head_before_training_phase"
+    elif evidence is None:
+        contract["reason"] = "missing_completed_optimizer_training_evidence"
+    elif evidence < epoch or evidence < start:
+        contract["reason"] = "training_evidence_does_not_cover_evaluation_phase"
+    else:
+        contract.update(head_trained=True, reason="available")
+    return contract
 
 
 def spec_to_view(spec: Any) -> ViewConfig:
@@ -162,6 +305,8 @@ class Predictor:
         needs_extra = bool(self.view_cfg.extra_inputs)
         outs: dict = {}
         extras: dict = {}
+        contract = uncertainty_contract(model, self.view_cfg, epoch)
+        raw: dict = {}
         loss_sum, loss_n = 0.0, 0
         batch = int(self.args.val_batch)
         for i in range(0, len(starts), batch):
@@ -172,6 +317,30 @@ class Predictor:
             with torch.autocast(self.device.type, enabled=self.amp):
                 out = model(x, extra) if needs_extra else model(x)
             out = {k: v.float() for k, v in out.items() if torch.is_tensor(v)}
+            if contract["supported"]:
+                mean_key, sigma_key = contract["mean_key"], contract["logstd_key"]
+                if mean_key not in out or sigma_key not in out:
+                    contract.update(head_trained=False, reason="missing_model_gaussian_output")
+                else:
+                    mean, sigma = out[mean_key].cpu().numpy(), out[sigma_key].cpu().numpy()
+                    target = view.targets(s)
+                    if contract["canonical"]:
+                        if "frame_columns" not in out:
+                            raise ValueError("EqNIO canonical Gaussian needs frame_columns")
+                        basis = out["frame_columns"].cpu().numpy()
+                        target = np.concatenate([
+                            np.einsum("bji,bj->bi", basis, target[:, :2]), target[:, 2:]], -1)
+                        raw.setdefault("basis", []).append(basis)
+                    expected = (len(s),) + self.view_cfg.output_shape
+                    if mean.shape != expected or target.shape != expected:
+                        raise ValueError("raw uncertainty mean/target must match InputSpec output_shape")
+                    if sigma.shape not in (expected, expected[:-1] + (1,)):
+                        raise ValueError("raw uncertainty logstd must match mean layout or be isotropic")
+                    mask = view.target_mask(s) & valid_input[i:i + batch, None]
+                    raw.setdefault("mean", []).append(mean)
+                    raw.setdefault("target", []).append(target)
+                    raw.setdefault("logstd", []).append(sigma)
+                    raw.setdefault("valid", []).append(mask)
             for k, v in out.items():
                 if k in ("vel", "logstd"):
                     outs.setdefault(k, []).append(v.cpu().numpy())
@@ -199,6 +368,8 @@ class Predictor:
             result[k] = np.concatenate(outs[k]) if k in outs else (
                 np.zeros(empty) if k == "vel" else None)
         result["outputs"] = {k: np.concatenate(v) for k, v in extras.items()}
+        result["uncertainty"] = contract
+        result["uncertainty_raw"] = {k: np.concatenate(v) for k, v in raw.items()}
         return result
 
     def infer_sequence(self, view: SequenceView) -> dict:
@@ -225,7 +396,10 @@ class Predictor:
                 "outputs": outputs, "loss_sum": 0.0, "loss_n": 0}
 
     def predict_view(self, view: SequenceView, collect_loss: bool = False,
-                     epoch: int = 0) -> SequenceResult:
+                     epoch: Optional[int] = None) -> SequenceResult:
+        if epoch is None:
+            epoch = getattr(self.model, "_ipb_checkpoint_epoch", None)
+            epoch = int(epoch) if type(epoch) is int else 0
         seq = view.seq
         res = SequenceResult(sequence_id=seq.sequence_id, dataset=seq.dataset,
                              group_id=seq.group_id, frame=self.view_cfg.frame,
@@ -240,6 +414,11 @@ class Predictor:
         sequence_model = isinstance(self.model, SequenceModel)
         out = (self.infer_sequence(view) if sequence_model
                else self.infer(view, collect_loss, epoch))
+        res.uncertainty = out.get("uncertainty", {
+            "schema": "ib.uncertainty.raw-task.v1", "supported": False,
+            "head_trained": False, "reason": "sequence_model_without_gaussian_contract"})
+        for key, values in out.get("uncertainty_raw", {}).items():
+            setattr(res, f"uncertainty_{key}_raw", values)
         starts = out["starts"]
         w_input, w_target = out["window_valid_input"], out["window_valid_target"]
         anchors = np.flatnonzero(seq.valid_pose)
@@ -276,7 +455,7 @@ class Predictor:
         return res
 
     def predict_sequence(self, seq: Union[Sequence, PathLike], collect_loss: bool = False,
-                         epoch: int = 0) -> SequenceResult:
+                         epoch: Optional[int] = None) -> SequenceResult:
         if not isinstance(seq, Sequence):
             seq = load_sequence(seq)
         return self.predict_view(SequenceView(seq, self.view_cfg), collect_loss, epoch)

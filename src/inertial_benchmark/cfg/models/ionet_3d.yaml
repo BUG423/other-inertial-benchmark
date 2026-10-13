@@ -1,0 +1,31 @@
+# IPB XYZ adaptation of ionet. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: ionet_3d
+arch: ionet
+paper: https://arxiv.org/abs/1802.02209
+code: none (no public repository)
+license: paper-only re-implementation (no official code exists)
+commit: n/a
+fidelity: '3d_adapted (horizontal polar speed/heading with independently learned vertical
+  velocity; original source fidelity: paper-only)'
+args:
+  hidden: 96
+  dropout: 0.25
+  decimation: 2
+  permute_channels: true
+input:
+  window: 400
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: ionet_polar
+loss_kwargs:
+  kappa: 1.0
+  min_speed: 0.1
+  vertical_weight: 1.0
+recipes:
+  unified:
+    augment: []

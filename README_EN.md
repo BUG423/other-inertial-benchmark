@@ -23,11 +23,11 @@ The deliverable is an extensible benchmark: dataset-specific converters produce 
 | Component | Current capability | Entry and scope |
 | :--- | :--- | :--- |
 | **Data layer** | IPB v1 HDF5, 200 Hz, units/frames, provenance, masks, grouped splits and checks | [Design](docs/DESIGN.md) · [Dataset catalog](docs/DATASETS.md) |
-| **Core converters** | Eight existing converters: RoNIN, RIDI, OxIOD, TLIO, IDOL, RNIN, IMUNet and PedLocData; full RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD/IMUNet data accepted: seven human core datasets ready for training | [Cards](docs/datasets/) · [Code](src/inertial_benchmark/data/converters/); splits, rejections and fingerprints in [current status](docs/DEV_V1_INTEGRATION.md) |
-| **Algorithms** | 29 registered architectures, 34 model configurations (including three `3d_adapted` profiles) and 21 packages; 20 official-code/specification ports, 7 paper-based reimplementations and 2 classical baselines | [Specifications/fidelity](docs/ALGORITHMS.md) · [Configurations](src/inertial_benchmark/cfg/models/) |
+| **Data intake** | Acquired versions/subsets from 13 independent sources accepted as native XYZ: 1,376 sequences, 114.30638333 hours; 9 with train/val and 4 test-only | [Cards](docs/datasets/) · [Converters](src/inertial_benchmark/data/converters/); provenance, rejections and splits in [current status](docs/DEV_V1_INTEGRATION.md) |
+| **Algorithms** | 31 active architectures and 53 profiles; 21 paper methods (19 published, 2 preprints) plus 2 classical definitions | [Specifications/fidelity](docs/ALGORITHMS.md) · [Profiles](src/inertial_benchmark/cfg/models/); backbone and dimension variants do not increase paper count |
 | **Training/prediction** | `NIO` / `ipb`, shared Trainer/Validator/Predictor; window/frame/multi-step/sequence interfaces | [Commands](docs/CLI.md); retain required layouts and losses; an export API is still pending |
-| **Evaluation/reports** | ATE, separate aligned diagnostics, time/distance RTE, endpoint drift, length ratios, velocity/direction, efficiency; CSV/Markdown/LaTeX, statistics and plots | [Definitions](docs/METRICS.md); scaling, oracle and aligned diagnostics have distinct meanings |
-| **New data intake** | EuRoC 11 recordings and Blackbird 20 published segments converted to native v1 and passed full/hash checks; Pegasus/ADVIO audited and rejected; a TartanIMU 2025 source card added | [Current status](docs/DEV_V1_INTEGRATION.md) · [Cards](docs/datasets/); Blackbird uses route groups and a test-only audit list |
+| **Evaluation/reports** | 56 default XYZ trajectory/velocity output keys plus XY from the same prediction; ATE/RTE/RPE, error quantiles, drift, length/direction, coverage and efficiency; native-task Gaussian uncertainty | [Definitions](docs/METRICS.md); 25 native-task uncertainty nodes passed server tests; absent predicted attitude/covariance is unavailable |
+| **Cross-domain data** | EuRoC, Blackbird, GrandTour, SubT-MRS and UZH-FPV accepted under their actual reference contracts; the latter three are representative subsets | [Current status](docs/DEV_V1_INTEGRATION.md) · [Cards](docs/datasets/); test-only sources use preregistered checkpoint transfer; human-to-robot results remain a separate diagnostic track |
 | **Independent APP** | Android capture and on-device evaluation | [BUG423/app-inertial-lab](https://github.com/BUG423/app-inertial-lab) · [Exchange contract](docs/TOOLS.md); ARCore is a VIO reference |
 | **Research/provenance** | Trajectory shrinkage, frame studies, proposals and IO research tools | [Research](research/README.md) · [Tools](tools/README.md); proposals and validated experiments are distinct |
 
@@ -66,12 +66,12 @@ git clone --branch dev/v1 https://github.com/BUG423/other-inertial-benchmark.git
 cd other-inertial-benchmark
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install -e ".[train,test]"
+python -m pip install -e ".[train,test,ridi,grandtour,idol]"
 ipb info
 ipb cfg model=ronin_resnet18_3d metric_dims=3 recipe=unified
 ```
 
-Use `pip install -e .` for data only. IDOL Feather sources require `pip install -e ".[idol]"`. Select the appropriate PyTorch CPU/CUDA build.
+The command includes full-benchmark extras: `ridi` supplies scikit-learn, `grandtour` supplies numcodecs and `idol` enables Feather/Arrow reading. Use `pip install -e .` for the base data layer and choose extras following each data card. Select the appropriate PyTorch CPU/CUDA build.
 
 ### 2. Convert and check
 
@@ -85,7 +85,7 @@ ipb check data=ridi full=true hash=true
 
 Outputs include `sequences/*.h5`, `splits/*.txt`, `dataset.json` and `conversion_report.json`. Configuration lives in [cfg/datasets/](src/inertial_benchmark/cfg/datasets/). Retain official seen/unseen labels without imposing them on every dataset.
 
-The AutoDL checkout accepted in this round contains full RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD/IMUNet under `datasets/ipb-v1/full-core/`. From that server checkout root, use:
+The AutoDL checkout accepted in this round contains the accepted RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD/IMUNet versions under `datasets/ipb-v1/full-core/`. From that server checkout root, use:
 
 ```bash
 export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"
@@ -112,11 +112,13 @@ model = NIO("ronin_resnet18_3d", metric_dims=3)
 model.train(data="ridi", device="cpu", epochs=1, batch=2, val_batch=2, workers=0, cache=False)
 ```
 
-The main benchmark saves **learned XYZ predictions**, uses `metric_dims=3` for primary 3D metrics and derives `xy_` metrics from the same predicted XY coordinates. `ronin_resnet18_3d`, `ronin_lstm_3d` and `imunet_3d` are labeled `3d_adapted`: their output heads extend the original 2D methods, without claiming original-paper accuracy or 2D checkpoint equivalence. TLIO retains native 3D network output; the paper's EKF is not implemented. Original 2D configurations remain a separate reference protocol (`metric_dims=2`); PDR and planar constant-heading variants reject 3D requests rather than supplying fabricated Z predictions.
+Native data retain **XYZ in three dimensions**. Profiles with actual XYZ output use `metric_dims=3`, with `xy_` metrics derived from the same predictions; original 2D profiles remain a separate XY reference protocol. Each `3d_adapted` profile records its output-head and required target adaptations without claiming paper accuracy or 2D checkpoint equivalence. Capability checks cover all 31 architectures / 53 profiles. Missing predicted Z is never replaced by zeros or reference values. TLIO currently covers the network, without the paper's EKF.
 
-Reference attitude supplied to a model belongs to a `reference/oracle` input track, separate from deployable sensor-only inputs. Same-device VIO labels retain their reference classification. GPU experiments first measure memory, throughput and the default full-batch `train_eval_gap`, then freeze batch/lr/epochs/early stopping and a sufficient training budget. One-epoch CPU checks establish engineering behavior only.
+Reference attitude or initial state as input carries `reference/oracle` permission and is separated from deployable sensor tracks; same-device VIO labels retain their reference classification. AutoDL's 4090D has completed standard GPU engineering lifecycles for all 49 neural profiles and CPU workflows for all 53 profiles. Sufficient-training budgets, common sampling and full-matrix cost are still being validated before freezing.
 
 ### 4. Matrix and reports
+
+`cfg=main` is the full-matrix entry after AutoDL deployment acceptance and formal recipe freezing. It requires a generated data registry, seed record, frozen policy and resource admission. A fresh clone must establish these first; the current formal policy is still pending freeze. Use the single-model workflow above to check installation and data interfaces.
 
 ```bash
 ipb benchmark cfg=main dry_run=true
@@ -124,21 +126,25 @@ ipb report runs=runs/cpu-smoke out=reports/cpu-smoke
 pytest -q -m "not slow"
 ```
 
-The example [main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml) uses `ronin_resnet18_3d` × eight dataset templates × seed 0; templates do not establish that data was downloaded. Select accepted data/models and check resource budgets before execution. Complete commands are in [CLI.md](docs/CLI.md).
+[main.yaml](src/inertial_benchmark/cfg/benchmarks/main.yaml) above is a CLI example. The formal [full_matrix.py](tools/ops_v1/full_matrix.py) builds coverage from all active profiles, the accepted data registry and the three once-sampled seeds: currently 53 × 13 × 3 = **2,067 cells**. Unsupported capabilities, pending checkpoints and failures remain explicit. Enumeration is not completed training. See [CLI](docs/CLI.md) and [Ops v1](tools/ops_v1/README.md).
 
 APP source, APKs, `.iplab` conversion and builds belong to [app-inertial-lab](https://github.com/BUG423/app-inertial-lab). Legacy readability and v1 training admission are separate; see [exchange limitations](docs/TOOLS.md).
 
 ## 🔬 Research and Validation Status
 
-The current AutoDL server has accepted **94 RIDI / 151 RoNIN / 130 IDOL / 300 RNIN / 354 TLIO / 126 OxIOD / 113 IMUNet** sequences: seven human core datasets with **1,268 sequences, 107.31900694 hours and 790 training sequences**. Full/hash checks report zero errors and all seven have `train_ready=true`. The user-uploaded IMUNet raw archive passed complete verification: 113 of 126 candidates accepted, 13 rejected, with 65 train / 16 val / 32 test. Rejections retain 11 Xiaomi acceleration-scale anomalies, one tilted reference world frame and one exact cross-split duplicate; no silent calibration was applied. RNIN has 75 sequences referenced by VICON or other external positioning systems and 225 by BVIO, including all nine test sequences. TLIO and IMUNet use same-device VIO references; OxIOD uses external Vicon. EuRoC contributes 11 cross-domain UAV recordings (5/1/5); Blackbird contributes 20 test-only segments in 10 route groups. Both are counted separately from the seven human core datasets. See [project status](docs/DEV_V1_INTEGRATION.md) for sources, splits and retained warnings.
+The accepted scope is **13 independent sources, 1,376 native sequences and 114.30638333 hours**: RIDI 94, RoNIN 151, IDOL 130, RNIN 300, TLIO 354, OxIOD 126, IMUNet 113, EuRoC 11, Blackbird 20, GrandTour 1, SubT-MRS 28, UZH-FPV 1 and PedLocData Demo 47. The eight human sources plus EuRoC are trainable, with 827 train sequences; Blackbird, GrandTour, SubT-MRS and UZH-FPV are currently test-only. Acceptance covers acquired versions or representative subsets, not every public release in full. External positioning, VIO, fused estimation and vision-based pose references retain their separate fidelity limits and warnings in [current status](docs/DEV_V1_INTEGRATION.md).
 
-The latest server storage inventory (**22:28 Beijing time, 2026-10-13**) deduplicates acquired archives, extracted raw data, formal native outputs, historical copies and partial files: **80.096964608 GB (74.5961113 GiB)** in total, with **4.483162112 GB** in current native storage layers, including metadata in empty rejected-dataset directories. Nine nonempty formal native datasets contain **1,299 sequences, 107.90444861 hours and 795 training sequences**; eight support training, while Blackbird is test-only. Sequence counts exclude pilots, historical copies, engineering fixtures and overlapping auxiliary test subsets. Sizes describe acquired versions or subsets. The four local original archives total **8,465,048,858 B (8.465048858 GB)** separately; the IMUNet hardlink alias is counted once and local totals are excluded from server totals. Fifteen datasets have allocated assets; HelmetPoser has no raw files. All 1,299 valid manifest IMU hashes are distinct, with zero unknown hashes; this metadata audit does not establish route or label independence. See [project status](docs/DEV_V1_INTEGRATION.md) for storage layers, dataset sizes and cross-input overlap auditing.
+New-server storage snapshot (**2026-10-13 16:52 UTC / 2026-10-14 00:52 Beijing**): all retained archives, extracted raw data, native data, historical copies, engineering fixtures and partials occupy **82.519 GB** after deduplication; the 12 formal native datasets occupy **4.602 GB**, with **174.900 GB** free at that time. Subsequent downloads and outputs change usage. Formal sequence counts exclude pilots, historical copies, the TartanIMU mixed-source repackaging and overlapping auxiliary test views. Existing local source archives are accounted separately from server totals.
 
-Current IMUNet intake and first-wave real XYZ CPU lifecycles bind to `dev/v1@fc6ce90`. IMUNet passed **12 real B=2 XYZ batches** across four models and train/val/test, plus **4 CLI dry-runs**; XY targets are slices of the same XYZ targets. Existing converter/raw tests passed **14 / 0 skipped / 0 failed**. RoNIN ResNet3D/LSTM3D/TLIO on RIDI and `imunet_3d` on IMUNet each completed one epoch, two real optimizer updates, val/predict and checkpoint reload with consistent XYZ outputs on AutoDL. Genuine cropped fixtures are excluded from formal dataset counts and do not establish trained accuracy. The historical **144 unique passed / 0 skipped / 0 failed** remain bound to `2c1f57f` and its original source manifest; the 14 current tests may overlap that history and are not added. GPU startup checks are prepared, with no GPU connected yet; actual capacity measurements and formal budget freezing follow connection, and the training queue remains unarmed.
+**53/53 profiles passed CPU engineering workflows and 49/49 neural profiles passed standard GPU lifecycles**, including actual updates, validation, prediction and checkpoint reload. Classical or CPU-only methods use their actual calibration/regression workflows. Hardware is an RTX 4090D with 24 GiB. Short fixtures and a few updates do not reproduce paper accuracy; **sufficient-training formal benchmark runs have not started**. All 49 unique targeted framework nodes ultimately passed; the 25 native-task uncertainty nodes also have passing server evidence. Sampling/scheduler/NIO performance increments and the formal recipe remain under targeted validation; counts are not added to historical suites.
 
-Earlier short RIDI/RoNIN CPU NIO runs completed the engineering loop (one epoch / two updates each); full training and rankings await the GPU stage. Unique coverage of the 719 frozen test nodes is **665 passed / 52 skipped / 2 resource_unverified**; the two unverified cases are CTIN end-to-end train/validation tests. Separate targeted acceptance of `6d44573` passed **all 81 tests**, including five tests for dimension-consistent time/CDF plots and paging beyond eight models; this count is not added to the original 719. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results.
+PedLocData currently includes only the complete, official-MD5-verified Demo: 47 accepted / 0 rejected, grouped 32/9/6 with disjoint 9/2/2 recording groups, full/hash and actual XYZ/XY B2 checks passed. The main file continues its bounded download; historical full-release counts are not this acquired scope.
 
-Shrinkage should be tested through target/integration oracles, time/length resolution, speed/direction, train/eval mode differences, precision and generalization. Existing length decomposition and mode guards provide a starting point; conclusions require sufficiently trained algorithms and controlled experiments.
+Every formal cell uses the same once-sampled OS-random seeds: **1735231569, 843628571, 951150512**. Preregistered test-only transfer uses matching-profile/seed EuRoC checkpoints for Blackbird and UZH-FPV, and RIDI checkpoints for GrandTour and SubT-MRS. Human-to-robot evaluation is a cross-domain diagnostic outside the human in-domain training leaderboard. Cells preserve source, fingerprints, scientific input contracts, recipe and checkpoint identity.
+
+Counts distinguish **31 architectures / 53 profiles / 21 paper methods (19 published + 2 preprints) / 2 classical definitions**. Pinned reference source is available from 16 official repositories; CTIN, iMoT and MEIO are `source_partial`. Independent adaptations and paper reimplementations are labeled separately. The repository owner's author exclusion policy keeps excluded Shanshan Zhang methods outside the active queue; see the [exclusion record](docs/models/excluded-methods.json). Source availability, interface acceptance and paper-accuracy reproduction are separate evidence.
+
+Trajectory shrinkage requires target/integration-oracle checks, temporal and length resolution, speed magnitude/direction, train/inference modes, precision and generalization tests. Shared diagnostics are prepared; conclusions require full multi-method experiments.
 
 | Research entry | Evidence status |
 | :--- | :--- |
@@ -151,11 +157,11 @@ Shrinkage should be tested through target/integration oracles, time/length resol
 
 | Stage | Deliverable and acceptance |
 | :--- | :--- |
-| **Existing foundation** | v1 sequences/views, eight core converters, algorithm interfaces, train/validate/predict, metrics and reports |
-| **Current CPU stage** | Seven human core datasets pass full/hash admission; the first four XYZ configurations pass real CPU lifecycles; EuRoC and Blackbird retain cross-domain/test-only scope |
-| **Evaluation increments** | Dimension-consistent time/CDF plots and model paging accepted; continue permission tracks, NA/coverage, 3D trajectories, six panels and static HTML |
-| **GPU stage** | Measure capacity/default full-batch gap, then freeze recipes; four models × seven human core datasets form 28 admission candidates; seed 0 for broad coverage and at most seeds 0/1/2 for key conclusions |
-| **Research delivery** | Auditable benchmark, shrinkage mechanisms and controlled experiments, reproducible release; ICRA / IEEE RA-L target |
+| **Data admission** | 13 independent sources accepted with native XYZ, integrity and scientific contract checks; extend actual sources and record missing reference/frame contracts |
+| **All-algorithm preparation** | 31 architectures / 53 profiles passed CPU engineering checks; 49 neural profiles passed GPU lifecycles; retain native targets, layouts and losses |
+| **Formal protocol freeze** | Validate all-data task views, common sampling, fair budgets, capacity and the full 2,067-cell cost; then freeze the recipe and execute |
+| **Evaluation/research** | Same-prediction XYZ/XY, shrinkage decomposition, coverage/NA, reference permissions and domain tracks; produce main tables and controlled ablations after sufficient training |
+| **Research delivery** | Auditable benchmark, reproducible release and shrinkage-mechanism evidence; target ICRA / IEEE RA-L |
 
 See [project status](docs/DEV_V1_INTEGRATION.md) for outstanding work.
 

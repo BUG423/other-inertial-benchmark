@@ -1,6 +1,3 @@
-# IPB v1 algorithm index (machine-readable companion of docs/ALGORITHMS.md).
-# params.official: official released configuration; params.benchmark: IPB-adapted configuration
-# locked by tests/fixtures/algorithms/<name>.json (null for paper-only specs and baselines).
 schema_version: 1
 generated: '2026-09-17'
 description: Machine-readable index of IPB v1 algorithm specification cards (see docs/ALGORITHMS.md).
@@ -1295,56 +1292,6 @@ algorithms:
   - Test-time training is transductive and must be reported separately and reset per sequence.
   notes: Backbone = RoNIN ResNet18 with all 21 BatchNorm1d replaced by GroupNorm; params equal ronin_resnet18 (4,634,882 measured
     by instantiating official RoNIN ResNet1D with BN->GN). A-TTT uses a 3-model deep ensemble (3x params at test time).
-- name: ionext
-  display_name: IONext
-  priority: paper-only
-  family: ionext
-  card: docs/algorithms/ionext.md
-  fixture: null
-  fidelity: paper-only
-  paper:
-    title: 'IONext: Unlocking the Next Era of Inertial Odometry'
-    venue: arXiv preprint (under review)
-    year: 2025
-    url: https://arxiv.org/abs/2507.17089
-  repo:
-    url: null
-    commit: null
-    license: n/a (code promised after peer review; not released as of 2026-09-17)
-    framework: none
-  input:
-    rate_hz: 200
-    window: 200
-    stride: null
-    frame: gravity_world
-    orientation: reference
-    remove_gravity: false
-    channels: '[acc, gyro] per paper wording (order irrelevant: full-channel stem conv)'
-    extra: []
-  output:
-    quantity: avg_velocity
-    dims: 2
-    uncertainty: none
-  params:
-    official: null
-    benchmark: 10641506
-  requires_orientation: true
-  official_datasets:
-  - IMUNet
-  - RoNIN
-  - RIDI
-  - OxIOD
-  - RNIN
-  - TLIO
-  status: spec-partial
-  pitfalls:
-  - No code; v1 (DADM/STGU) and v2 (ADM/AGU) disagree on gating axis and per-wing BN; card follows v2 (only v2 gating matches
-    the reported 1.1e7 params).
-  - Stem/downsample normalisation, head, AGU value-branch kernel and softmax axis are unspecified; card fills them with marked
-    assumptions.
-  - Paper re-splits all datasets randomly 8:1:1 and reports length-normalised metrics x100; not comparable with IPB.
-  notes: 'Spec model: stem Conv(6,96,k4,s4)+BN, stages [2,2,6,2] x [96,192,384,768] ADE blocks (4.5C^2+35C params each), BN+Conv(k2,s2)
-    downsampling, BN+GAP+Linear head; 10,641,506 params (D=2) vs reported 1.1e7; 35.6M MACs at T=200 vs reported 7.3e7 FLOPs.'
 - name: gnio
   display_name: GNIO (Motion Bank + Gated Prediction Head)
   priority: paper-only
@@ -1541,6 +1488,158 @@ algorithms:
   - Shares heading definition and offset calibration with pdr; needs per-sample attitude input.
   notes: v_k = s_bar * [cos psi_k, sin psi_k]; s_bar = mean ||avg_velocity|| over valid train windows; variants gated (acc-norm
     std > 0.5 m/s^2), zero_velocity and train_mean_velocity (sanity only).
+- name: lionet
+  display_name: L-IONet
+  family: lionet
+  priority: P1
+  card: docs/algorithms/lionet.md
+  fixture: null
+  fidelity: paper-core; unified polar task and XYZ adapted; declared architecture assumptions
+  paper:
+    title: 'Deep Learning based Pedestrian Inertial Navigation: Methods, Dataset and On-Device Inference'
+    venue: IEEE IoT Journal
+    year: 2020
+    url: https://arxiv.org/html/2001.04061v1
+    authors:
+    - Changhao Chen
+    - Peijun Zhao
+    - Chris Xiaoxuan Lu
+    - Wei Wang
+    - Andrew Markham
+    - Niki Trigoni
+    source_version: arXiv:2001.04061v1
+  repo: null
+  input:
+    rate_hz: 200
+    window: 400
+    stride: 10
+    frame: gravity_world
+    orientation: reference
+    remove_gravity: false
+    channels: '[gyro, acc]'
+    extra: []
+  output:
+    quantity: avg_velocity
+    dims: 2
+    uncertainty: none
+  params:
+    official: null
+    benchmark: null
+  requires_orientation: true
+  official_datasets:
+  - OxIOD
+  status: implemented-cpu-pending
+  profiles:
+  - lionet
+  - lionet_3d
+  pitfalls:
+  - Kernel size, residual/skip projections and pooling are explicit assumptions; no official parameter fixture.
+  - Relative polar increments adapted to world-frame velocity; XYZ adds learned Z.
+- name: ridi
+  display_name: RIDI
+  family: ridi
+  priority: P1
+  card: docs/algorithms/ridi.md
+  fixture: null
+  fidelity: paper core; train-only RBF SVM/SVR and device-frame acceleration bias LS; bounded offline schedule; XYZ adapted
+  paper:
+    title: 'RIDI: Robust IMU Double Integration'
+    venue: ECCV
+    year: 2018
+    url: https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html
+    authors:
+    - Hang Yan
+    - Qi Shan
+    - Yasutaka Furukawa
+    source_version: ECCV 2018 proceedings, section 4/equation 1
+  repo:
+    url: https://github.com/higerra/ridi_imu
+    commit: ce5d772a1ef8ce590121f0f0b254910bc07a2949
+    license: MIT
+    framework: libsvm; independent sklearn fitting and tensor-only runtime
+  input:
+    rate_hz: 200
+    window: 200
+    stride: 10
+    frame: gravity_world
+    orientation: reference
+    remove_gravity: true
+    channels: '[gyro, acc]'
+    extra: []
+  output:
+    quantity: velocity_at_end
+    dims: 2
+    uncertainty: none
+  params:
+    official: null
+    benchmark: null
+  requires_orientation: true
+  official_datasets:
+  - RIDI
+  status: implemented-cpu-pending
+  profiles:
+  - ridi
+  - ridi_3d
+  pitfalls:
+  - Fixed unified C/epsilon replace per-placement cross-validation.
+  - Unknown placement is explicitly separate, not fabricated.
+  - Sampling cap and bounded non-overlap offline correction differ from original asynchronous overlap; inference orientation
+    protocol is declared.
+- name: meio
+  display_name: MEIO-Net
+  family: meio
+  priority: P1
+  card: docs/algorithms/meio.md
+  fixture: null
+  fidelity: paper-core partial; official multi-exit training-spec; absent network reconstructed with assumptions
+  paper:
+    title: 'MEIO-Net: A Motion-Aware Early-Exit Inertial Odometry Network for Efficient Pedestrian Dead Reckoning (PDR)'
+    venue: IEEE IoT Journal
+    year: 2026
+    url: https://ieeexplore.ieee.org/document/11251007
+    doi: 10.1109/JIOT.2025.3633690
+    authors:
+    - Xuehang Sun
+    - You Li
+    - Yan Wang
+    - Hongji Yan
+    - Xuanxuan Zhang
+    - Sikang Liu
+    - Xueli Guo
+    - Zhichao Wen
+    author_primary: https://api.crossref.org/works/10.1109/JIOT.2025.3633690
+  repo:
+    url: https://github.com/SunXuehang/MEIO-Net
+    commit: e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e
+    license: GPL-3.0
+    framework: pytorch training wrappers; actual network absent
+  input:
+    rate_hz: 200
+    window: 200
+    stride: 10
+    frame: gravity_world
+    orientation: reference
+    remove_gravity: false
+    channels: '[gyro, acc]'
+    extra: []
+  output:
+    quantity: displacement
+    dims: 3
+    uncertainty: isotropic_logstd
+  params:
+    official: null
+    benchmark: null
+  requires_orientation: true
+  official_datasets:
+  - PedLocData
+  status: implemented-cpu-pending
+  profiles:
+  - meio
+  pitfalls:
+  - 'Official repository lacks EarlyExitDense network: head placement/sharing and variance exit rule are declared assumptions.'
+  - README 100-frame/128-width example differs from wrapper 200-frame/512-width example; follows wrapper.
+  - Zero warmup instant-switch fix; test all-exit loss and post-switch covariance gradients explicitly.
+  - Per-axis variance threshold from released noise_variance needs validation-only calibration.
 excluded:
 - name: RepViT
   reason: Vision backbone (mobile ViT-style CNN for images); no inertial odometry model, task or protocol to reproduce.

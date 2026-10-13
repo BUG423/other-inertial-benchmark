@@ -1,0 +1,35 @@
+# IPB XYZ adaptation of imot. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: imot_3d
+arch: imot
+paper: https://arxiv.org/abs/2412.12190
+code: https://github.com/Minh-Son-Nguyen/iMoT (placeholder only; no code published)
+license: MIT (the official repo's LICENSE); paper-only re-implementation
+commit: 7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: paper-only)'
+args:
+  encoder_layers: 2
+  decoder_layers: 2
+  particles: 128
+  heads: 8
+  feedforward: 0
+  dropout: 0.1
+  psd_kernels:
+  - 9
+  - 3
+  asc_kernel: 3
+  particle_scale: 6.283185307179586
+  particle_temperature: 10000.0
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse_sum
+recipes:
+  unified:
+    augment: []

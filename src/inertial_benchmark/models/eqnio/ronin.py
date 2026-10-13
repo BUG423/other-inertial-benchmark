@@ -60,7 +60,11 @@ from ..ronin.model import RoNINResNet
 
 @register_model("eqnio_ronin")
 class EqNIORoNIN(BaseModel):
-    """EqNIO O(2) 规范帧网络 + RoNIN-ResNet18 骨干（``forward`` 另给出 ``aux.frame``）。"""
+    """O(2) 规范帧 + RoNIN 骨干；XYZ 适配的 Z 是可学习不变标量。
+
+    原论文的平面输出与参数夹具由 dims=2 保留；XYZ 仍为水平 O(2)
+    次等变适配，不声明完整 SO(3) 等变性。
+    """
 
     default_loss = "mse"
 
@@ -80,11 +84,11 @@ class EqNIORoNIN(BaseModel):
         super().__init__(input_spec)
         if input_spec.frame == "body":
             raise ValueError("eqnio_ronin needs a gravity-aligned frame (frame=gravity_world)")
-        if input_spec.dims != 2:
-            raise ValueError("eqnio_ronin canonicalises the horizontal plane and needs dims=2")
+        if input_spec.dims not in (2, 3):
+            raise ValueError("eqnio_ronin supports dims=2 or dims=3")
         self.frame_net = O2FrameNet(vec_in=3, sca_in=9, hidden=hidden, depth=depth,
                                     kernel_size=frame_kernel, out_vectors=2)
-        self.ronin = RoNINResNet(replace(input_spec, dims=2), group_sizes, base_plane,
+        self.ronin = RoNINResNet(replace(input_spec, dims=input_spec.dims), group_sizes, base_plane,
                                  kernel_size, fc_dim, trans_planes, dropout)
         self.feature_length = self.ronin.feature_length
 
@@ -97,6 +101,10 @@ class EqNIORoNIN(BaseModel):
     def forward(self, imu: torch.Tensor) -> dict:
         frame, canonical = self.frame(imu)
         vel_c = self.ronin(canonical)["vel"]
-        vel = torch.einsum("bij,bj->bi", frame, vel_c)
+        vel = torch.einsum("bij,bj->bi", frame, vel_c[:, :2])
+        # Horizontal O(2) acts as diag(Q, 1) on XYZ: the learned vertical
+        # component is an invariant scalar, never a padded zero.
+        if self.input_spec.dims == 3:
+            vel = torch.cat([vel, vel_c[:, 2:3]], dim=-1)
         # aux.frame 为官方返回的 Fᵀ（每行是一个规范基向量），便于等变性测试与诊断
         return {"vel": vel, "aux": {"frame": frame.transpose(1, 2)}}

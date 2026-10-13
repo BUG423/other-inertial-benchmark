@@ -31,6 +31,7 @@ grad_clip: 0.0         # 梯度范数裁剪阈值，0 表示关闭
 loss:                  # 覆盖模型默认损失：mse / mse_sum / mse_l1 / gaussian_nll / mse_then_nll / nll_detach_then_nll
 loss_switch_epoch: 10  # mse_then_nll / nll_detach_then_nll 切换到完整 NLL 的轮次（0 起）
 patience: 30           # 早停：fitness 连续多少个 epoch 无改善即停止，0 表示关闭
+min_epochs: 0          # 早停最少完成轮数；统一主协议应覆盖全部科学损失阶段
 seed: 0
 deterministic: true
 device:                # 空 = 自动（优先 CUDA）；cpu / 0 / cuda:0
@@ -42,6 +43,7 @@ fitness: ate           # 模型选择指标（越小越好），只在 val 上�
 fitness_stat: mean     # fitness 的跨序列聚合统计量：mean / median（val 小且偏斜时用 median）
 save_period: 0         # 每多少个 epoch 额外保存 epoch<k>.pt，0 表示关闭
 val_batch: 512         # 推理批大小
+gap_windows: 1024      # 四模式诊断采样预算；不改变训练窗口、科学损失或 optimizer
 
 # ---------------------------------------------------------------- 任务视图（DESIGN 第 3 节）
 window: 200            # 窗口样本数（200 Hz）

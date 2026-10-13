@@ -1,0 +1,39 @@
+# IPB XYZ adaptation of ronin_tcn. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: ronin_tcn_3d
+arch: ronin_tcn
+paper: https://arxiv.org/abs/1905.12853
+code: https://github.com/Sachini/ronin
+license: GPL-3.0 (official code; source/tcn.py adapted from locuslab/TCN, MIT); written
+  from the spec card
+commit: 805b7f0f28bb164ce89ada9ac05a9470dbe3d715
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: official-code (network, loss and recipe))'
+args:
+  kernel_size: 3
+  layer_channels:
+  - 32
+  - 64
+  - 128
+  - 256
+  - 72
+  - 36
+  dropout: 0.2
+input:
+  window: 400
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: frame_velocity
+  dims: 3
+  overlap: mean
+loss: ronin_global_pos
+loss_kwargs:
+  mode: part
+  history: 253
+recipes:
+  unified:
+    augment:
+    - random_yaw
+    - time_shift

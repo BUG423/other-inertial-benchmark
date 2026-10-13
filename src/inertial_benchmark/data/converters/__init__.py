@@ -15,7 +15,8 @@ from typing import Union
 
 REQUIRED_MEMBERS = ("NAME", "VERSION", "LICENSE", "official_splits", "iter_raw_sequences")
 PLANNED = ("ronin", "ridi", "oxiod", "tlio", "idol", "rnin", "imunet", "pedlocdata",
-           "euroc", "blackbird", "pegasus", "advio", "iplab")
+           "euroc", "blackbird", "pegasus", "advio", "grandtour", "tartanimu_2025",
+           "aqualoc", "iplab")
 
 
 class ConverterError(ImportError):

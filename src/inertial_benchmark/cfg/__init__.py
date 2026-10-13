@@ -200,7 +200,7 @@ def check_cfg(cfg: dict, defaults: Mapping[str, Any]) -> dict:
         if key in out and out[key] not in allowed:
             raise ConfigError(f"{key}={out[key]!r} not in {allowed}")
     for key in ("epochs", "batch", "window", "stride", "eval_stride", "val_interval", "val_batch",
-                "budget_max_epochs"):
+                "budget_max_epochs", "gap_windows"):
         if key in out and out[key] is not None and out[key] < 1:
             raise ConfigError(f"{key} must be >= 1, got {out[key]}")
     if "train_windows_budget" in out and out["train_windows_budget"] is not None \
@@ -209,7 +209,7 @@ def check_cfg(cfg: dict, defaults: Mapping[str, Any]) -> dict:
                           f"budget), got {out['train_windows_budget']}")
     if out.get("frame") == "body" and out.get("dims") != 3:
         raise ConfigError("frame=body requires dims=3 (targets are expressed in the device frame)")
-    for key in ("output_steps", "history", "history_stride"):
+    for key in ("output_steps", "history", "history_stride", "min_epochs"):
         if key in out and out[key] is not None and out[key] < 0:
             raise ConfigError(f"{key} must be >= 0, got {out[key]}")
     _check_view(out, defaults)

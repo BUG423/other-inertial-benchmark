@@ -256,9 +256,22 @@ def lie_events(gyro_world: torch.Tensor, acc_world: torch.Tensor, rotation: torc
     first_measurement = torch.cat([gyro_world[:, 0], acc_world[:, 0]], dim=-1)
     last_measurement = torch.cat([gyro_world[:, -1], acc_world[:, -1]], dim=-1)
     last_time = (steps - 1) * dt
+    # Selection and the first sort use Python scalars.  Read their metadata in
+    # one transfer instead of synchronising CUDA for every mask/time scalar.
+    # A mask contains only 0/1, exactly representable in the time tensor's
+    # dtype; measurement/polarity tensors and their arithmetic stay untouched.
+    # Preserve row order here: Python's stable real-event sort and the later
+    # generate_event_stack argsort still receive precisely the same inputs.
+    if rows:
+        masks = torch.stack([mask for mask, _, _, _ in rows]).to(dtype)
+        times = torch.stack([t for _, t, _, _ in rows])
+        host_masks, host_times = torch.stack([masks, times]).detach().cpu().tolist()
+    else:
+        host_masks, host_times = [], []
     stacks = []
     for b in range(batch):
-        selected = [(float(t[b]), m[b], p[b]) for mask, t, m, p in rows if bool(mask[b])]
+        selected = [(host_times[k][b], m[b], p[b])
+                    for k, (_, _, m, p) in enumerate(rows) if host_masks[k][b]]
         selected.sort(key=lambda item: item[0])
         first_polarity = selected[0][2] if selected else fallback[b]
         last_polarity = selected[-1][2] if selected else fallback[b]

@@ -1,0 +1,43 @@
+# IPB XYZ adaptation of rio. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: rio_3d
+arch: rio
+paper: https://arxiv.org/abs/2111.11676
+code: none (no public repository found)
+license: paper-only re-implementation; the RoNIN backbone is re-implemented in IPB
+  (GPL-3.0 upstream)
+commit: n/a
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: paper-only)'
+args:
+  group_sizes:
+  - 2
+  - 2
+  - 2
+  - 2
+  base_plane: 64
+  kernel_size: 3
+  fc_dim: 512
+  trans_planes: 128
+  dropout: 0.5
+  gn_groups: 32
+  conjugate: true
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: rio_joint
+loss_kwargs:
+  ssl_weight: 1.0
+  speed_gate: 0.5
+  gate_on: pred
+  stop_grad: false
+recipes:
+  unified:
+    augment:
+    - random_yaw
+    - time_shift

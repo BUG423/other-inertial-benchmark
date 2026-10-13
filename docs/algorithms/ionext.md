@@ -1,3 +1,5 @@
+> **Excluded from the active benchmark.** The official paper identifies Shanshan Zhang as an author proposing IONext. The user explicitly excluded methods proposed in that author’s papers. Historical specification and fixtures are retained for provenance; this method has no active registry entry or model profile. Evidence: https://arxiv.org/abs/2507.17089
+
 # IONext：自适应动态卷积惯性里程计骨干（`ionext`）
 
 > 规格卡版本：v1（2026-09-17）· fidelity：`paper-only` · 夹具：无（参数量由本卡的解析计数锁定，见第 4、8 节）

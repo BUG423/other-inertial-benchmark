@@ -1,0 +1,36 @@
+# IPB XYZ adaptation of deepils. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: deepils_3d
+arch: deepils
+paper: https://doi.org/10.1109/JIOT.2025.3538938
+code: https://github.com/OmerTariq-KAIST/DeepILS-IoT-Journal-2025
+license: none (no LICENSE, headers say All Rights Reserved); written from the spec
+  card
+commit: 4fd65aa9564075810dab494d43610857dc3e1d01
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: official-code)'
+args:
+  group_sizes:
+  - 2
+  - 2
+  - 2
+  - 2
+  base_plane: 64
+  kernel_size: 3
+  input_kernel: 5
+  input_padding: 3
+  fc_dim: 512
+  trans_planes: 128
+  dropout: 0.5
+  feature_length: 7
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse_l1
+recipes:
+  unified: {}

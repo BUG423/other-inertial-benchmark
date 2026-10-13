@@ -136,9 +136,13 @@ class ADEBlock(nn.Module):
         return x + self.agu(self.norm2(x))
 
 
-@register_model("ionext")
 class IONext(BaseModel):
     """IONext 骨干：``stem → 4 个 ADE 阶段（含下采样）→ BN + GAP + 线性头``。"""
+
+    # Historical implementation retained for audit only.  This method is
+    # excluded from the active benchmark by the user-specified author rule.
+    benchmark_excluded = True
+    benchmark_exclusion_source = "https://arxiv.org/abs/2507.17089"
 
     default_loss = "mse"
 

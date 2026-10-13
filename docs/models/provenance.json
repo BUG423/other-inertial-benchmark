@@ -1,0 +1,2097 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-13T16:04:38.595783+00:00",
+  "policy": "Exclude methods proposed by papers with Shanshan Zhang; other Zhang authors are not conflated. Paper methods, architectures and profiles counted separately.",
+  "counts": {
+    "independent_paper_methods": 21,
+    "published_paper_methods": 19,
+    "preprint_only_methods": 2,
+    "repository_classic_definitions": 2,
+    "registered_architectures": 31,
+    "active_profiles": 53,
+    "paper_only_methods": 7,
+    "partial_official_network_missing_methods": 1
+  },
+  "methods": [
+    {
+      "method": "ronin",
+      "registered_architectures": [
+        "ronin_resnet",
+        "ronin_lstm",
+        "ronin_tcn"
+      ],
+      "profiles": [
+        {
+          "name": "ronin_lstm",
+          "arch": "ronin_lstm",
+          "dims": 2,
+          "fidelity": "official-code (network, loss and recipe)",
+          "sha256": "5c72093a1ef0ceb8a6d0dc35c0198c387496ed3a4892406c089a7d386b18ec34"
+        },
+        {
+          "name": "ronin_lstm_3d",
+          "arch": "ronin_lstm",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ frame velocity; original protocol predicts XY)",
+          "sha256": "35d80705d54f88d2fd457cbb00cabaf5d0198307c53509169ea92d4bc773edd4"
+        },
+        {
+          "name": "ronin_resnet101",
+          "arch": "ronin_resnet",
+          "dims": 2,
+          "fidelity": null,
+          "sha256": "ab9b35e221c5184610f6611f916c3114e693f134b1bdbefa1854b06ced81fab3"
+        },
+        {
+          "name": "ronin_resnet101_3d",
+          "arch": "ronin_resnet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-source/spec migrated independent implementation)",
+          "sha256": "0d38b7bd5d1d7625c4cfaa60a1246892b8d3a1daf4e8b609660bf0897f5160df"
+        },
+        {
+          "name": "ronin_resnet18",
+          "arch": "ronin_resnet",
+          "dims": 2,
+          "fidelity": null,
+          "sha256": "007bc23b57480fa70c6a31d30ea65a3fa23652c8d67fc3c914ecdec07ff51be0"
+        },
+        {
+          "name": "ronin_resnet18_3d",
+          "arch": "ronin_resnet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ velocity head; original protocol predicts XY)",
+          "sha256": "b2f2157b12ea9b293ed26110e143fb7df636a5d07a92179de032f15890ec405e"
+        },
+        {
+          "name": "ronin_resnet50",
+          "arch": "ronin_resnet",
+          "dims": 2,
+          "fidelity": null,
+          "sha256": "b0cf891149ca76ab578e0f8d436fb065d144f708afb752e12bba3470c7579686"
+        },
+        {
+          "name": "ronin_resnet50_3d",
+          "arch": "ronin_resnet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-source/spec migrated independent implementation)",
+          "sha256": "2a49ee96e858152e2ddb020553f313fd30632899bb312685676ca44b733e3543"
+        },
+        {
+          "name": "ronin_tcn",
+          "arch": "ronin_tcn",
+          "dims": 2,
+          "fidelity": "official-code (network, loss and recipe)",
+          "sha256": "753192c6090208c5ca0bda372187b2897b43cfd07d1c8ad21fa9f2dee52590b4"
+        },
+        {
+          "name": "ronin_tcn_3d",
+          "arch": "ronin_tcn",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code (network, loss and recipe))",
+          "sha256": "f8455276b06c859113a1fd2e14ba47d7156ae33ae83758dd6b6c2c5e164d5040"
+        }
+      ],
+      "full_authors": [
+        "Hang Yan",
+        "Sachini Herath",
+        "Yasutaka Furukawa"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/1905.12853",
+      "primary_evidence": {
+        "name": "ronin",
+        "primary": "https://arxiv.org/abs/1905.12853",
+        "http": 200,
+        "sha256": "a2eb23bd2e260aee8e9b353c8128900b5427d18f72c2fb73db76680430b87daf",
+        "title": [
+          "RoNIN: Robust Neural Inertial Navigation in the Wild: Benchmark, Evaluations, and New Methods"
+        ],
+        "authors": [
+          "Yan, Hang",
+          "Herath, Sachini",
+          "Furukawa, Yasutaka"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "RoNIN: Robust Neural Inertial Navigation in the Wild: Benchmark, Evaluations, & New Methods",
+        "venue": "ICRA",
+        "year": 2020,
+        "url": "https://arxiv.org/abs/1905.12853"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/Sachini/ronin",
+        "commit": "805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
+        "license": "GPL-3.0",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/Sachini/ronin",
+        "commit": "805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
+        "head": "805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 28,
+        "source_bytes": 222986,
+        "python_files": 21,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 35149,
+            "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "tlio",
+      "registered_architectures": [
+        "tlio"
+      ],
+      "profiles": [
+        {
+          "name": "tlio",
+          "arch": "tlio",
+          "dims": 3,
+          "fidelity": "official-code (network); EKF not implemented",
+          "sha256": "240493b6acada263c504818568b011516dd0e1389f7f9d59b2884c085d65f385"
+        }
+      ],
+      "full_authors": [
+        "Wenxin Liu",
+        "David Caruso",
+        "Eddy Ilg",
+        "Jing Dong",
+        "Anastasios I. Mourikis",
+        "Kostas Daniilidis",
+        "Vijay Kumar",
+        "Jakob Engel"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2007.01867",
+      "primary_evidence": {
+        "name": "tlio",
+        "primary": "https://arxiv.org/abs/2007.01867",
+        "http": 200,
+        "sha256": "ea790c8d61dff61646f8878d40c1757aa883b9f0f6638da77c1381dfef489834",
+        "title": [
+          "TLIO: Tight Learned Inertial Odometry"
+        ],
+        "authors": [
+          "Liu, Wenxin",
+          "Caruso, David",
+          "Ilg, Eddy",
+          "Dong, Jing",
+          "Mourikis, Anastasios I.",
+          "Daniilidis, Kostas",
+          "Kumar, Vijay",
+          "Engel, Jakob"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "TLIO: Tight Learned Inertial Odometry",
+        "venue": "IEEE RA-L",
+        "year": 2020,
+        "url": "https://arxiv.org/abs/2007.01867"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/CathIAS/TLIO",
+        "commit": "d7051c4ff14834b93931984b75b40f894e39654d",
+        "license": "BSD-3-Clause",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/CathIAS/TLIO",
+        "commit": "d7051c4ff14834b93931984b75b40f894e39654d",
+        "head": "d7051c4ff14834b93931984b75b40f894e39654d",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 66,
+        "source_bytes": 414984,
+        "python_files": 50,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1553,
+            "sha256": "c670b92821e9bd4fa9a71494301bda1113b7f06b403334a87967bfb34e272d42"
+          },
+          {
+            "path": "docs/node_modules/bulma/LICENSE",
+            "bytes": 1080,
+            "sha256": "b3dbcb1b5f4c70b4217713cf6ab0cb2971db63dd05116de92723b6810ed13ab2"
+          },
+          {
+            "path": "docs/node_modules/bulma-block-list/LICENSE.txt",
+            "bytes": 1066,
+            "sha256": "06d69145c89aa8a52f1ad6e5c0631f1490761633d05daa67e84c537c52ea745f"
+          },
+          {
+            "path": "src/dataloader/LICENSE",
+            "bytes": 1520,
+            "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "rnin",
+      "registered_architectures": [
+        "rnin"
+      ],
+      "profiles": [
+        {
+          "name": "rnin",
+          "arch": "rnin",
+          "dims": 3,
+          "fidelity": "official-code (network, loss and recipe); the RNIN-VIO filter fusion is not public",
+          "sha256": "283d9cb5e6f16cacb6d946323ca6991933dfa02709b1c3318033764aaf5b3591"
+        }
+      ],
+      "full_authors": [
+        "Danpeng Chen",
+        "Nan Wang",
+        "Runsen Xu",
+        "Weijian Xie",
+        "Hujun Bao",
+        "Guofeng Zhang"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/ISMAR52148.2021.00043",
+      "primary_evidence": {
+        "name": "rnin",
+        "primary": "https://api.crossref.org/works/10.1109/ISMAR52148.2021.00043",
+        "http": 200,
+        "sha256": "ee6e833f9932b07749572d3843fa29e3912d0b1f5099f17aaf9f4e1c7fe83f8b",
+        "title": [
+          "RNIN-VIO: Robust Neural Inertial Navigation Aided Visual-Inertial Odometry in Challenging Scenes"
+        ],
+        "authors": [
+          "Danpeng Chen",
+          "Nan Wang",
+          "Runsen Xu",
+          "Weijian Xie",
+          "Hujun Bao",
+          "Guofeng Zhang"
+        ],
+        "publisher": "IEEE",
+        "doi": "10.1109/ismar52148.2021.00043",
+        "published": {
+          "date-parts": [
+            [
+              2021,
+              10
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "RNIN-VIO: Robust Neural Inertial Navigation Aided Visual-Inertial Odometry in Challenging Scenes",
+        "venue": "ISMAR",
+        "year": 2021,
+        "url": "http://www.cad.zju.edu.cn/home/gfzhang/papers/rnin_vio.pdf"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/zju3dv/rnin-vio",
+        "commit": "b030ecc94f151159973a9086c8ba76e22bdbc56e",
+        "license": "Apache-2.0",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/zju3dv/rnin-vio",
+        "commit": "b030ecc94f151159973a9086c8ba76e22bdbc56e",
+        "head": "b030ecc94f151159973a9086c8ba76e22bdbc56e",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 48,
+        "source_bytes": 328235,
+        "python_files": 36,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 11358,
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+          },
+          {
+            "path": "ronin_3d/LICENSE",
+            "bytes": 35149,
+            "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "imunet",
+      "registered_architectures": [
+        "imunet",
+        "imunet_mobilenet",
+        "imunet_mobilenetv2",
+        "imunet_mnasnet",
+        "imunet_efficientnetb0"
+      ],
+      "profiles": [
+        {
+          "name": "imunet",
+          "arch": "imunet",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "89c0d5faa0f4958aa6f03256cb201ee69a2f27e8951d819c7219d48c089d0640"
+        },
+        {
+          "name": "imunet_3d",
+          "arch": "imunet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ velocity head; original protocol predicts XY)",
+          "sha256": "3de6defaf08379f2ebc37213354cd07b0d9e2f80984e5870e38c372d9b676762"
+        },
+        {
+          "name": "imunet_efficientnetb0",
+          "arch": "imunet_efficientnetb0",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "0796ff3a369f6d8b5775bb939ad35aef40d8d3395890df61a39fe9e43cf5dece"
+        },
+        {
+          "name": "imunet_efficientnetb0_3d",
+          "arch": "imunet_efficientnetb0",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code)",
+          "sha256": "f5bd0a56bb21d8c910839a1fff2d7324ea9551a9db76f883db1f023b624fcb75"
+        },
+        {
+          "name": "imunet_mnasnet",
+          "arch": "imunet_mnasnet",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "ecf91b0f7a5d7832fd03b62e2373533180c1e3482ad484cab72957050ca635f3"
+        },
+        {
+          "name": "imunet_mnasnet_3d",
+          "arch": "imunet_mnasnet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code)",
+          "sha256": "98d3e4b6acb0943d8ec334130daf7c140b33c2d8826961bc96cf4c5664761e49"
+        },
+        {
+          "name": "imunet_mobilenet",
+          "arch": "imunet_mobilenet",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "e361ba82a0d43e37e8acabea289603433738028cce93af423ef902def05e63e2"
+        },
+        {
+          "name": "imunet_mobilenet_3d",
+          "arch": "imunet_mobilenet",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code)",
+          "sha256": "42f95d20cecbbd1d13e247798e7b48c82f674880e3d090632843f6313c2a04a9"
+        },
+        {
+          "name": "imunet_mobilenetv2",
+          "arch": "imunet_mobilenetv2",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "ad389fd75df1cf62ec7f6baf573af9d4d5d10b0cde0c7f9f37a0b5f01cc7ce35"
+        },
+        {
+          "name": "imunet_mobilenetv2_3d",
+          "arch": "imunet_mobilenetv2",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code)",
+          "sha256": "07055bcc20557119d67f3a387246822701f80add97084cfc962d0bf3268b7383"
+        }
+      ],
+      "full_authors": [
+        "Behnam Zeinali",
+        "Hadi Zandizari",
+        "J. Morris Chang"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2208.00068",
+      "primary_evidence": {
+        "name": "imunet",
+        "primary": "https://arxiv.org/abs/2208.00068",
+        "http": 200,
+        "sha256": "fe84af9ce4f41b2b07ecd536c1549a82a26fd1939ce5939de083a9f234c29086",
+        "title": [
+          "IMUNet: Efficient Regression Architecture for IMU Navigation and Positioning"
+        ],
+        "authors": [
+          "Zeinali, Behnam",
+          "Zandizari, Hadi",
+          "Chang, J. Morris"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "IMUNet: Efficient Regression Architecture for Inertial IMU Navigation and Positioning",
+        "venue": "IEEE TIM",
+        "year": 2024,
+        "url": "https://arxiv.org/abs/2208.00068"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/BehnamZeinali/IMUNet",
+        "commit": "c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
+        "license": "none (no LICENSE file; all rights reserved)",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/BehnamZeinali/IMUNet",
+        "commit": "c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
+        "head": "c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 24,
+        "source_bytes": 231135,
+        "python_files": 23,
+        "license_files": [],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": true
+      }
+    },
+    {
+      "method": "eqnio",
+      "registered_architectures": [
+        "eqnio_ronin",
+        "eqnio_tlio"
+      ],
+      "profiles": [
+        {
+          "name": "eqnio_ronin",
+          "arch": "eqnio_ronin",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "ca82f42e04eb6e227b912975aabee42f332c239c88ef14f75504d139dcdb4bd7"
+        },
+        {
+          "name": "eqnio_ronin_3d",
+          "arch": "eqnio_ronin",
+          "dims": 3,
+          "fidelity": "3d_adapted (horizontal O(2) equivariance with an independently learned invariant vertical scalar; original source fidelity: official-code)",
+          "sha256": "0c2ba9a18b63c75c85c05cdb2cca3029a1aaac25a74402f3ca57498a6ce66c21"
+        },
+        {
+          "name": "eqnio_tlio",
+          "arch": "eqnio_tlio",
+          "dims": 3,
+          "fidelity": "official-code",
+          "sha256": "bea053422833170a1203d98b041d7b243eb55718315fae3efe219f6c982014ca"
+        }
+      ],
+      "full_authors": [
+        "Royina Karegoudra Jayanth",
+        "Yinshuang Xu",
+        "Ziyun Wang",
+        "Evangelos Chatzipantazis",
+        "Daniel Gehrig",
+        "Kostas Daniilidis"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2408.06321",
+      "primary_evidence": {
+        "name": "eqnio",
+        "primary": "https://arxiv.org/abs/2408.06321",
+        "http": 200,
+        "sha256": "254787d7d96b47f44b73e4a8fab7bc9ec1f8abee1546ea4c4865aeca487a6f12",
+        "title": [
+          "EqNIO: Subequivariant Neural Inertial Odometry"
+        ],
+        "authors": [
+          "Jayanth, Royina Karegoudra",
+          "Xu, Yinshuang",
+          "Wang, Ziyun",
+          "Chatzipantazis, Evangelos",
+          "Gehrig, Daniel",
+          "Daniilidis, Kostas"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "EqNIO: Subequivariant Neural Inertial Odometry",
+        "venue": "ICLR",
+        "year": 2025,
+        "url": "https://arxiv.org/abs/2408.06321"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/RoyinaJayanth/EqNIO",
+        "commit": "97b7a60a5e5cc8f0132bba343c83de114211f827",
+        "license": "none (all rights reserved)",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/RoyinaJayanth/EqNIO",
+        "commit": "97b7a60a5e5cc8f0132bba343c83de114211f827",
+        "head": "97b7a60a5e5cc8f0132bba343c83de114211f827",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 99,
+        "source_bytes": 858412,
+        "python_files": 93,
+        "license_files": [
+          {
+            "path": "TLIO-master/src/dataloader/LICENSE",
+            "bytes": 1520,
+            "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": true
+      }
+    },
+    {
+      "method": "llio",
+      "registered_architectures": [
+        "llio"
+      ],
+      "profiles": [
+        {
+          "name": "llio",
+          "arch": "llio",
+          "dims": 3,
+          "fidelity": "official-code (network); training recipe inherited from TLIO (unverified)",
+          "sha256": "1d460cac248828d7ac7975e2490563bbf2aaa1ce2de70906a2a3645751484d1e"
+        }
+      ],
+      "full_authors": [
+        "Yan Wang",
+        "Jian Kuang",
+        "Xiaoji Niu",
+        "Jingnan Liu"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/JIOT.2022.3214087",
+      "primary_evidence": {
+        "name": "llio",
+        "primary": "https://api.crossref.org/works/10.1109/JIOT.2022.3214087",
+        "http": 200,
+        "sha256": "00f933dd04c41a3950eadde2f6a5eae8236364916b3208077b73c0c97afaab81",
+        "title": [
+          "LLIO: Lightweight Learned Inertial Odometer"
+        ],
+        "authors": [
+          "Yan Wang",
+          "Jian Kuang",
+          "Xiaoji Niu",
+          "Jingnan Liu"
+        ],
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "doi": "10.1109/jiot.2022.3214087",
+        "published": {
+          "date-parts": [
+            [
+              2023,
+              2,
+              1
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "LLIO: Lightweight Learned Inertial Odometer",
+        "venue": "IEEE Internet of Things Journal",
+        "year": 2022,
+        "url": "https://doi.org/10.1109/JIOT.2022.3214087"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/i2Nav-WHU/LightweightLearnedInertialOdometer",
+        "commit": "e225ab8f3080c35c92481673b6af1d68692941f6",
+        "license": "GPL-3.0",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/i2Nav-WHU/LightweightLearnedInertialOdometer",
+        "commit": "e225ab8f3080c35c92481673b6af1d68692941f6",
+        "head": "e225ab8f3080c35c92481673b6af1d68692941f6",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 4,
+        "source_bytes": 53904,
+        "python_files": 2,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 35149,
+            "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "tinyodom",
+      "registered_architectures": [
+        "tinyodom"
+      ],
+      "profiles": [
+        {
+          "name": "tinyodom",
+          "arch": "tinyodom",
+          "dims": 3,
+          "fidelity": "official-code (fixed RoNIN NAS candidate from tinyodom_tcn/model.cc)",
+          "sha256": "4b2e0253b3eee4af1ab52b0a5815452c2bf96e513c98d56a90a3a6270b0c65a5"
+        }
+      ],
+      "full_authors": [
+        "Swapnil Sayan Saha",
+        "Sandeep Singh Sandha",
+        "Luis Antonio Garcia",
+        "Mani Srivastava"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1145/3534594",
+      "primary_evidence": {
+        "name": "tinyodom",
+        "primary": "https://api.crossref.org/works/10.1145/3534594",
+        "http": 200,
+        "sha256": "c674f170562408cb2d811b6ae0905e9f578d57e7aca5c41429e66022b2457547",
+        "title": [
+          "TinyOdom"
+        ],
+        "authors": [
+          "Swapnil Sayan Saha",
+          "Sandeep Singh Sandha",
+          "Luis Antonio Garcia",
+          "Mani Srivastava"
+        ],
+        "publisher": "Association for Computing Machinery (ACM)",
+        "doi": "10.1145/3534594",
+        "published": {
+          "date-parts": [
+            [
+              2022,
+              7,
+              4
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "TinyOdom: Hardware-Aware Efficient Neural Inertial Navigation",
+        "venue": "Proc. ACM IMWUT 6(2), Article 71",
+        "year": 2022,
+        "url": "https://doi.org/10.1145/3534594"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/nesl/tinyodom",
+        "commit": "7958781baeddf1b99a4f365fb54fb7bac5e96845",
+        "license": "BSD-3-Clause",
+        "framework": "keras"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/nesl/tinyodom",
+        "commit": "7958781baeddf1b99a4f365fb54fb7bac5e96845",
+        "head": "7958781baeddf1b99a4f365fb54fb7bac5e96845",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 371,
+        "source_bytes": 8747524,
+        "python_files": 17,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1552,
+            "sha256": "0687bfdfd3aa4e17518f6a61559dc1d4bbac48c12a8bc17d4f4eb91d89b9414f"
+          },
+          {
+            "path": "tinyodom_tcn/tensorflow/lite/micro/tools/make/downloads/cmsis/LICENSE.txt",
+            "bytes": 11357,
+            "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+          },
+          {
+            "path": "tinyodom_tcn/third_party/flatbuffers/LICENSE.txt",
+            "bytes": 11358,
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+          },
+          {
+            "path": "tinyodom_tcn/third_party/gemmlowp/LICENSE",
+            "bytes": 11358,
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+          },
+          {
+            "path": "tinyodom_tcn/third_party/kissfft/COPYING",
+            "bytes": 1475,
+            "sha256": "ddd1400f963747b305bfa39e21206e58805a1c650451e2ee5ce81ed86bc0b1ab"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845-source-manifest.json",
+        "fidelity_upgrade": false,
+        "generated_source_note": "Source-only selection includes tinyodom_tcn/model.cc, which may contain embedded trained parameter arrays; no standalone dataset or checkpoint artifacts were selected.",
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "deepils",
+      "registered_architectures": [
+        "deepils"
+      ],
+      "profiles": [
+        {
+          "name": "deepils",
+          "arch": "deepils",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "893cf7e0208118439b7496d67635ff196a92ab21a1292cc9cfe8efea45d927b5"
+        },
+        {
+          "name": "deepils_3d",
+          "arch": "deepils",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-code)",
+          "sha256": "a92c67e1c1fa772e2b6f1ad8c57462297889cf5e72c4fb2dcd78fa9699f36a3a"
+        }
+      ],
+      "full_authors": [
+        "Omer Tariq",
+        "Muhammad Bilal Akram Dastagir",
+        "Muhammad Bilal",
+        "Dongsoo Han"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/JIOT.2025.3538938",
+      "primary_evidence": {
+        "name": "deepils",
+        "primary": "https://api.crossref.org/works/10.1109/JIOT.2025.3538938",
+        "http": 200,
+        "sha256": "5f876f8414c505dbe1324b54a90f00e12488804ac3f8b5b968020252922e9d13",
+        "title": [
+          "DeepILS: Toward Accurate Domain-Invariant AIoT-Enabled Inertial Localization System"
+        ],
+        "authors": [
+          "Omer Tariq",
+          "Muhammad Bilal Akram Dastagir",
+          "Muhammad Bilal",
+          "Dongsoo Han"
+        ],
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "doi": "10.1109/jiot.2025.3538938",
+        "published": {
+          "date-parts": [
+            [
+              2025,
+              6,
+              1
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "DeepILS: Toward Accurate Domain-Invariant AIoT-Enabled Inertial Localization System",
+        "venue": "IEEE Internet of Things Journal",
+        "year": 2025,
+        "url": "https://ieeexplore.ieee.org/document/10873819"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/OmerTariq-KAIST/DeepILS-IoT-Journal-2025",
+        "commit": "4fd65aa9564075810dab494d43610857dc3e1d01",
+        "license": "none (no LICENSE file; source headers say All Rights Reserved)",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/OmerTariq-KAIST/DeepILS-IoT-Journal-2025",
+        "commit": "4fd65aa9564075810dab494d43610857dc3e1d01",
+        "head": "4fd65aa9564075810dab494d43610857dc3e1d01",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 20,
+        "source_bytes": 186365,
+        "python_files": 15,
+        "license_files": [],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": true
+      }
+    },
+    {
+      "method": "tartanimu",
+      "registered_architectures": [
+        "tartanimu"
+      ],
+      "profiles": [
+        {
+          "name": "tartanimu",
+          "arch": "tartanimu",
+          "dims": 3,
+          "fidelity": "official-code (public LSTM backbone); LoRA / online adaptation / Transformer not public",
+          "sha256": "001abbf23a8aa3a0d7df5b02e76312f48e07b6bb3751edb890d3c0b6af314a37"
+        }
+      ],
+      "full_authors": [
+        "Shibo Zhao",
+        "Sifan Zhou",
+        "Raphael Blanchard",
+        "Yuheng Qiu",
+        "Wenshan Wang",
+        "Sebastian Scherer"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_Tartan_IMU_A_Light_Foundation_Model_for_Inertial_Positioning_in_CVPR_2025_paper.html",
+      "primary_evidence": {
+        "primary": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_Tartan_IMU_A_Light_Foundation_Model_for_Inertial_Positioning_in_CVPR_2025_paper.html",
+        "authors": [
+          "Shibo Zhao",
+          "Sifan Zhou",
+          "Raphael Blanchard",
+          "Yuheng Qiu",
+          "Wenshan Wang",
+          "Sebastian Scherer"
+        ],
+        "status": "primary_CVF_proceedings_citation_verified_via_web"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "Tartan IMU: A Light Foundation Model for Inertial Positioning in Robotics",
+        "venue": "CVPR",
+        "year": 2025,
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/Zhao_Tartan_IMU_A_Light_Foundation_Model_for_Inertial_Positioning_in_CVPR_2025_paper.pdf"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/superxslam/TartanIMU",
+        "commit": "8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
+        "license": "Apache-2.0",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/superxslam/TartanIMU",
+        "commit": "8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
+        "head": "8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 102,
+        "source_bytes": 766450,
+        "python_files": 90,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "dive",
+      "registered_architectures": [
+        "dive"
+      ],
+      "profiles": [
+        {
+          "name": "dive",
+          "arch": "dive",
+          "dims": 3,
+          "fidelity": "official-code (network, input construction, loss, original XYZ head); IPB rate/window adaptation",
+          "sha256": "815ae22ed0dc1028d879746eebadc99ac639af0eb3816138c08ccaa36361fc62"
+        },
+        {
+          "name": "dive_2d",
+          "arch": "dive",
+          "dims": 2,
+          "fidelity": "2d_reference (IPB planar/window adaptation of original XYZ DIVE)",
+          "sha256": "d616c184d0549cfbf63a7781893ef19668e744a4e503d14bf74da9a2f618bae2"
+        }
+      ],
+      "full_authors": [
+        "Angad Bajwa",
+        "Charles Champagne Cossette",
+        "Mohammed Ayman Shalaby",
+        "James Richard Forbes"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/LRA.2024.3370006",
+      "primary_evidence": {
+        "name": "dive",
+        "primary": "https://api.crossref.org/works/10.1109/LRA.2024.3370006",
+        "http": 200,
+        "sha256": "de226e1a3b7cc71dd13708e4aa2a72e694e784a1953dd4ed1ec5e201d599ac81",
+        "title": [
+          "DIVE: Deep Inertial-Only Velocity Aided Estimation for Quadrotors"
+        ],
+        "authors": [
+          "Angad Bajwa",
+          "Charles Champagne Cossette",
+          "Mohammed Ayman Shalaby",
+          "James Richard Forbes"
+        ],
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "doi": "10.1109/lra.2024.3370006",
+        "published": {
+          "date-parts": [
+            [
+              2024,
+              4
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "DIVE: Deep Inertial-Only Velocity Aided Estimation for Quadrotors",
+        "venue": "IEEE RA-L 9(4):3728-3734",
+        "year": 2024,
+        "url": "https://doi.org/10.1109/LRA.2024.3370006"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/decargroup/DIVE",
+        "commit": "e982ddd0643c9d831de77a95467b282b07cceec1",
+        "license": "MIT",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/decargroup/DIVE",
+        "commit": "e982ddd0643c9d831de77a95467b282b07cceec1",
+        "head": "e982ddd0643c9d831de77a95467b282b07cceec1",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 65,
+        "source_bytes": 531786,
+        "python_files": 63,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1068,
+            "sha256": "8f042ebe11c51cc0e7cf9132dba047db14d4854d977c786c8dccb8bef0fc8d40"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "airio",
+      "registered_architectures": [
+        "airio"
+      ],
+      "profiles": [
+        {
+          "name": "airio",
+          "arch": "airio",
+          "dims": 3,
+          "fidelity": "official-code (network and loss); window-level supervision instead of seq2seq",
+          "sha256": "896d4a615eaa94007100a5d5739b3c8e8409a917ddf3810c4a3ee84b119b7f51"
+        }
+      ],
+      "full_authors": [
+        "Yuheng Qiu",
+        "Can Xu",
+        "Yutian Chen",
+        "Shibo Zhao",
+        "Junyi Geng",
+        "Sebastian Scherer"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2501.15659",
+      "primary_evidence": {
+        "name": "airio",
+        "primary": "https://arxiv.org/abs/2501.15659",
+        "http": 200,
+        "sha256": "fd8a94718a3504e24337b111a1116a3721489b909119729089cc0119bdb46a02",
+        "title": [
+          "AirIO: Learning Inertial Odometry with Enhanced IMU Feature Observability"
+        ],
+        "authors": [
+          "Qiu, Yuheng",
+          "Xu, Can",
+          "Chen, Yutian",
+          "Zhao, Shibo",
+          "Geng, Junyi",
+          "Scherer, Sebastian"
+        ],
+        "venue": null,
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "AirIO: Learning Inertial Odometry with Enhanced IMU Feature Observability",
+        "venue": "IEEE RA-L 10(9):9368-9375",
+        "year": 2025,
+        "url": "https://arxiv.org/abs/2501.15659"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/Air-IO/Air-IO",
+        "commit": "7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
+        "license": "BSD-3-Clause",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/Air-IO/Air-IO",
+        "commit": "7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
+        "head": "7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 33,
+        "source_bytes": 156937,
+        "python_files": 29,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1513,
+            "sha256": "9fcf2eec83619e34a6a17824022030b3e14853cf80cd1ca2cd924a17f86ff9cc"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "nio_lie_events",
+      "registered_architectures": [
+        "nio_lie_events_ronin",
+        "nio_lie_events_tlio"
+      ],
+      "profiles": [
+        {
+          "name": "nio_lie_events_ronin",
+          "arch": "nio_lie_events_ronin",
+          "dims": 2,
+          "fidelity": "official-code",
+          "sha256": "efc45090f6886b70fc621f4dd494f5345855870882a99456100e53a3f7bbe5ce"
+        },
+        {
+          "name": "nio_lie_events_ronin_3d",
+          "arch": "nio_lie_events_ronin",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output and privileged XYZ initial velocity in the event representation; original target layout/loss; original source fidelity: official-code)",
+          "sha256": "5e1c19c385a7aee546362e1f4ce3927156ac4900b29c6907913f82b9d4bfdc0e"
+        },
+        {
+          "name": "nio_lie_events_tlio",
+          "arch": "nio_lie_events_tlio",
+          "dims": 3,
+          "fidelity": "official-code",
+          "sha256": "6d1c92bef4cf2d95c667e7e2f0f681fab17e53f30329952642c6bba34336e4cb"
+        }
+      ],
+      "full_authors": [
+        "Royina Karegoudra Jayanth",
+        "Yinshuang Xu",
+        "Evangelos Chatzipantazis",
+        "Kostas Daniilidis",
+        "Daniel Gehrig"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2505.09780",
+      "primary_evidence": {
+        "name": "nio_lie_events",
+        "primary": "https://arxiv.org/abs/2505.09780",
+        "http": 200,
+        "sha256": "ee1ed4fc1784e3d8a2681bfc4f0a8156b5b9ae2d00e5ebdf6c342c17c4955ac0",
+        "title": [
+          "Neural Inertial Odometry from Lie Events"
+        ],
+        "authors": [
+          "Jayanth, Royina Karegoudra",
+          "Xu, Yinshuang",
+          "Chatzipantazis, Evangelos",
+          "Daniilidis, Kostas",
+          "Gehrig, Daniel"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "Neural Inertial Odometry from Lie Events",
+        "venue": "RSS",
+        "year": 2025,
+        "url": "https://arxiv.org/abs/2505.09780"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "official-code",
+      "official_repository": {
+        "url": "https://github.com/RoyinaJayanth/NIO_Lie_Events",
+        "commit": "1e87470f6479c198875c5f1a32b392a46eb5af74",
+        "license": "none (all rights reserved)",
+        "framework": "pytorch"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/RoyinaJayanth/NIO_Lie_Events",
+        "commit": "1e87470f6479c198875c5f1a32b392a46eb5af74",
+        "head": "1e87470f6479c198875c5f1a32b392a46eb5af74",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 106,
+        "source_bytes": 851164,
+        "python_files": 100,
+        "license_files": [
+          {
+            "path": "TLIO/src/dataloader/LICENSE",
+            "bytes": 1520,
+            "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": true
+      }
+    },
+    {
+      "method": "ionet",
+      "registered_architectures": [
+        "ionet"
+      ],
+      "profiles": [
+        {
+          "name": "ionet",
+          "arch": "ionet",
+          "dims": 2,
+          "fidelity": "paper-only",
+          "sha256": "d8712eeeacb983578da6c2ba8cdd975c49162c88871ac91933339117219ee4cf"
+        },
+        {
+          "name": "ionet_3d",
+          "arch": "ionet",
+          "dims": 3,
+          "fidelity": "3d_adapted (horizontal polar speed/heading with independently learned vertical velocity; original source fidelity: paper-only)",
+          "sha256": "e8bbc886e2724e9363fdee68f87c10777a7481192a4baae98c5fdae57a75e1be"
+        }
+      ],
+      "full_authors": [
+        "Changhao Chen",
+        "Xiaoxuan Lu",
+        "Andrew Markham",
+        "Niki Trigoni"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/1802.02209",
+      "primary_evidence": {
+        "name": "ionet",
+        "primary": "https://arxiv.org/abs/1802.02209",
+        "http": 200,
+        "sha256": "32389b557854180a9c7c83a3f708a8b7bb6a6d1fba376e1b3efcf7d24ff0bf47",
+        "title": [
+          "IONet: Learning to Cure the Curse of Drift in Inertial Odometry"
+        ],
+        "authors": [
+          "Chen, Changhao",
+          "Lu, Xiaoxuan",
+          "Markham, Andrew",
+          "Trigoni, Niki"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "IONet: Learning to Cure the Curse of Drift in Inertial Odometry",
+        "venue": "AAAI",
+        "year": 2018,
+        "url": "https://arxiv.org/abs/1802.02209"
+      },
+      "publication_track": "published",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": null,
+        "commit": null,
+        "license": "none (no official code released)",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "ctin",
+      "registered_architectures": [
+        "ctin"
+      ],
+      "profiles": [
+        {
+          "name": "ctin",
+          "arch": "ctin",
+          "dims": 2,
+          "fidelity": "paper-only (widths are assumptions from the spec card; parameter count is derived)",
+          "sha256": "595f4c9806d1540fbbb6ecd9d3942b5c0a210bde3ec2a8aa29a3501ba2bb5682"
+        },
+        {
+          "name": "ctin_3d",
+          "arch": "ctin",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: paper-only (widths are assumptions from the spec card; parameter count is derived))",
+          "sha256": "6b39ad395ef5cc3202b4a5a8ab3e6d91573820f6e02a213863bd10f3fd414b87"
+        }
+      ],
+      "full_authors": [
+        "Bingbing Rao",
+        "Ehsan Kazemi",
+        "Yifan Ding",
+        "Devu M Shila",
+        "Frank M. Tucker",
+        "Liqiang Wang"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2112.02143",
+      "primary_evidence": {
+        "name": "ctin",
+        "primary": "https://arxiv.org/abs/2112.02143",
+        "http": 200,
+        "sha256": "81421b5f1c9cc4534f939b80a1229dae25a1b9c0a3489bb161f3c070a7fe7b09",
+        "title": [
+          "CTIN: Robust Contextual Transformer Network for Inertial Navigation"
+        ],
+        "authors": [
+          "Rao, Bingbing",
+          "Kazemi, Ehsan",
+          "Ding, Yifan",
+          "Shila, Devu M",
+          "Tucker, Frank M.",
+          "Wang, Liqiang"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "CTIN: Robust Contextual Transformer Network for Inertial Navigation",
+        "venue": "AAAI",
+        "year": 2022,
+        "url": "https://arxiv.org/abs/2112.02143"
+      },
+      "publication_track": "published",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": "https://github.com/bingrao/ctin",
+        "commit": "1441c726811ac87283903471562023fd429e3a08",
+        "license": "MIT (LICENSE file; README badge says Apache-2.0) - placeholder repo, no source code",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/bingrao/ctin",
+        "commit": "1441c726811ac87283903471562023fd429e3a08",
+        "head": "1441c726811ac87283903471562023fd429e3a08",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 2,
+        "source_bytes": 2144,
+        "python_files": 0,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1061,
+            "sha256": "890a96e5a660425a0ca2700c367435ad6fb2e372ed475e3683253517f15a9fa5"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08-source-manifest.json",
+        "fidelity_upgrade": false,
+        "network_source_present": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "imot",
+      "registered_architectures": [
+        "imot"
+      ],
+      "profiles": [
+        {
+          "name": "imot",
+          "arch": "imot",
+          "dims": 2,
+          "fidelity": "paper-only",
+          "sha256": "ebf86e29edbb189e8cbe8bef07d28b8f2efec94e3dffec52d5e96e14964c9662"
+        },
+        {
+          "name": "imot_3d",
+          "arch": "imot",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: paper-only)",
+          "sha256": "1fbf6038a7ad72f848502ea2991009432f38c1fb71d533d40cd146beb5180b43"
+        }
+      ],
+      "full_authors": [
+        "Son Minh Nguyen",
+        "Linh Duy Tran",
+        "Duc Viet Le",
+        "Paul J. M Havinga"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2412.12190",
+      "primary_evidence": {
+        "name": "imot",
+        "primary": "https://arxiv.org/abs/2412.12190",
+        "http": 200,
+        "sha256": "0a03cd872c3f3d05b7376060c7c4122f859151b49f488ad0f9382f96a3593fbd",
+        "title": [
+          "iMoT: Inertial Motion Transformer for Inertial Navigation"
+        ],
+        "authors": [
+          "Nguyen, Son Minh",
+          "Tran, Linh Duy",
+          "Le, Duc Viet",
+          "Havinga, Paul J. M"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "iMoT: Inertial Motion Transformer for Inertial Navigation",
+        "venue": "AAAI",
+        "year": 2025,
+        "url": "https://arxiv.org/abs/2412.12190"
+      },
+      "publication_track": "published",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": "https://github.com/Minh-Son-Nguyen/iMoT",
+        "commit": "7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
+        "license": "MIT (LICENSE file) - placeholder repo, no source code",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/Minh-Son-Nguyen/iMoT",
+        "commit": "7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
+        "head": "7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 2,
+        "source_bytes": 2595,
+        "python_files": 0,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1072,
+            "sha256": "3f19af235b925ba2eca3eb23b83be8d575c6f2c58282e92e1c36f851e05a75a3"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac-source-manifest.json",
+        "fidelity_upgrade": false,
+        "network_source_present": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "rio",
+      "registered_architectures": [
+        "rio"
+      ],
+      "profiles": [
+        {
+          "name": "rio",
+          "arch": "rio",
+          "dims": 2,
+          "fidelity": "paper-only",
+          "sha256": "d8aa56024e1a094d7a16c2365fcba55d7139d96954d4d31e1ca757abd321f8df"
+        },
+        {
+          "name": "rio_3d",
+          "arch": "rio",
+          "dims": 3,
+          "fidelity": "3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: paper-only)",
+          "sha256": "dd9cbbf4e8eb41863caddd3c5d637b83f3dec38cb46795f37ff76d8425d75d2d"
+        }
+      ],
+      "full_authors": [
+        "Caifa Zhou",
+        "Xiya Cao",
+        "Dandan Zeng",
+        "Yongliang Wang"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2111.11676",
+      "primary_evidence": {
+        "name": "rio",
+        "primary": "https://arxiv.org/abs/2111.11676",
+        "http": 200,
+        "sha256": "a1c489288ab7a5ed200304bca71256a80d47aac96d2bd5e06afb9df58f658286",
+        "title": [
+          "RIO: Rotation-equivariance supervised learning of robust inertial odometry"
+        ],
+        "authors": [
+          "Zhou, Caifa",
+          "Cao, Xiya",
+          "Zeng, Dandan",
+          "Wang, Yongliang"
+        ],
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "RIO: Rotation-Equivariance Supervised Learning of Robust Inertial Odometry",
+        "venue": "CVPR",
+        "year": 2022,
+        "url": "https://arxiv.org/abs/2111.11676"
+      },
+      "publication_track": "published",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": null,
+        "commit": null,
+        "license": "n/a (no public code; CVPR paper links a Huawei Cloud AI Gallery page, unverified)",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "gnio",
+      "registered_architectures": [
+        "gnio"
+      ],
+      "profiles": [
+        {
+          "name": "gnio",
+          "arch": "gnio",
+          "dims": 3,
+          "fidelity": "paper-only",
+          "sha256": "ca1ab1c789b4238ad5e9af8280d5fbe399a4478260bf8dd048842b9553a06f55"
+        }
+      ],
+      "full_authors": [
+        "Dapeng Feng",
+        "Yizhen Yin",
+        "Zhiqiang Chen",
+        "Yuhua Qi",
+        "Hongbo Chen"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2603.15281",
+      "primary_evidence": {
+        "name": "gnio",
+        "primary": "https://arxiv.org/abs/2603.15281",
+        "http": 200,
+        "sha256": "f961e226011970b1a7f68802af6dff214b7186d01d8b919a7203ed63b77deb12",
+        "title": [
+          "GNIO: Gated Neural Inertial Odometry"
+        ],
+        "authors": [
+          "Feng, Dapeng",
+          "Yin, Yizhen",
+          "Chen, Zhiqiang",
+          "Qi, Yuhua",
+          "Chen, Hongbo"
+        ],
+        "venue": null,
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "GNIO: Gated Neural Inertial Odometry",
+        "venue": "arXiv preprint (submitted to RA-L)",
+        "year": 2026,
+        "url": "https://arxiv.org/abs/2603.15281"
+      },
+      "publication_track": "preprint_only_acceptance_unverified",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": null,
+        "commit": null,
+        "license": "n/a (no code released)",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "velobins",
+      "registered_architectures": [
+        "velobins"
+      ],
+      "profiles": [
+        {
+          "name": "velobins",
+          "arch": "velobins",
+          "dims": 3,
+          "fidelity": "paper-only (IMU-only variant; the official rotor-speed branch is removed)",
+          "sha256": "8bade1cc0173f578a16646f5ce0d12140b9f50fae190174b0239bbe6e641fa92"
+        }
+      ],
+      "full_authors": [
+        "Maulana Bisyir Azhari",
+        "Seungwook Lee",
+        "Donghun Han",
+        "Sung Jun Park",
+        "David Hyunchul Shim"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://arxiv.org/abs/2608.29720",
+      "primary_evidence": {
+        "name": "velobins",
+        "primary": "https://arxiv.org/abs/2608.29720",
+        "http": 200,
+        "sha256": "e7627d26fd4375569e15106be69991ded75a2558a1b77ce8b78c60def9c21f53",
+        "title": [
+          "VeloBins: Learning Velocity and Its Uncertainty via Bins and Error-Conditioned Gaussian Labels for Aerial Inertial Odometry"
+        ],
+        "authors": [
+          "Azhari, Maulana Bisyir",
+          "Lee, Seungwook",
+          "Han, Donghun",
+          "Park, Sung Jun",
+          "Shim, David Hyunchul"
+        ],
+        "venue": null,
+        "status": "primary_html_metadata"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "VeloBins: Learning Velocity and Its Uncertainty via Bins and Error-Conditioned Gaussian Labels for Aerial Inertial Odometry",
+        "venue": "arXiv preprint",
+        "year": 2026,
+        "url": "https://arxiv.org/abs/2608.29720"
+      },
+      "publication_track": "preprint_only_acceptance_unverified",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-only",
+      "official_repository": {
+        "url": null,
+        "commit": null,
+        "license": "n/a (code promised upon acceptance)",
+        "framework": "none"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "lionet",
+      "registered_architectures": [
+        "lionet"
+      ],
+      "profiles": [
+        {
+          "name": "lionet",
+          "arch": "lionet",
+          "dims": 2,
+          "fidelity": "paper-only; gravity_world polar-velocity adaptation; declared kernel/pooling assumptions",
+          "sha256": "a06509afb9aa5a9953942be5fdcdc8e0aec89382b9e4d49a77b23be71ef9b303"
+        },
+        {
+          "name": "lionet_3d",
+          "arch": "lionet",
+          "dims": 3,
+          "fidelity": "3d_adapted; original horizontal polar loss plus independently learned vertical velocity",
+          "sha256": "c6cf0c45c09db305c3d9f02a1a0309969245ca8502a6140f1b411ff9c5a883e1"
+        }
+      ],
+      "full_authors": [
+        "Changhao Chen",
+        "Peijun Zhao",
+        "Chris Xiaoxuan Lu",
+        "Wei Wang",
+        "Andrew Markham",
+        "Niki Trigoni"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/JIOT.2020.2966773",
+      "primary_evidence": {
+        "name": "lionet",
+        "primary": "https://api.crossref.org/works/10.1109/JIOT.2020.2966773",
+        "http": 200,
+        "sha256": "1380a932e950fa8c70ec5ec7151e20e769b8968129d59a6a5a1a4bf767eb61b9",
+        "title": [
+          "Deep-Learning-Based Pedestrian Inertial Navigation: Methods, Data Set, and On-Device Inference"
+        ],
+        "authors": [
+          "Changhao Chen",
+          "Peijun Zhao",
+          "Chris Xiaoxuan Lu",
+          "Wei Wang",
+          "Andrew Markham",
+          "Niki Trigoni"
+        ],
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "doi": "10.1109/jiot.2020.2966773",
+        "published": {
+          "date-parts": [
+            [
+              2020,
+              5
+            ]
+          ]
+        }
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "Deep Learning based Pedestrian Inertial Navigation: Methods, Dataset and On-Device Inference",
+        "venue": "IEEE IoT Journal",
+        "year": 2020,
+        "url": "https://arxiv.org/html/2001.04061v1",
+        "authors": [
+          "Changhao Chen",
+          "Peijun Zhao",
+          "Chris Xiaoxuan Lu",
+          "Wei Wang",
+          "Andrew Markham",
+          "Niki Trigoni"
+        ],
+        "source_version": "arXiv:2001.04061v1"
+      },
+      "publication_track": "published",
+      "implementation_track": "paper_only_independent_implementation",
+      "implementation_fidelity": "paper-core; unified polar task and XYZ adapted; declared architecture assumptions",
+      "official_repository": null,
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "ridi",
+      "registered_architectures": [
+        "ridi"
+      ],
+      "profiles": [
+        {
+          "name": "ridi",
+          "arch": "ridi",
+          "dims": 2,
+          "fidelity": "paper core reimplementation; planar SVM/SVR plus bias-corrected double integration; bounded offline blocks",
+          "sha256": "a33d7baf0aed05cbb8aa3d6ffee21fbaf0e965e8a84ebf2fdf4eca425d9a28fd"
+        },
+        {
+          "name": "ridi_3d",
+          "arch": "ridi",
+          "dims": 3,
+          "fidelity": "3d_adapted; real vertical epsilon-SVR and XYZ physical bias correction; original RIDI is planar",
+          "sha256": "111ded48ea29ad317085b77c69f62964f3290764e7b5f5c162498b9d1ac90a25"
+        }
+      ],
+      "full_authors": [
+        "Hang Yan",
+        "Qi Shan",
+        "Yasutaka Furukawa"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html",
+      "primary_evidence": {
+        "primary": "https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html",
+        "authors": [
+          "Hang Yan",
+          "Qi Shan",
+          "Yasutaka Furukawa"
+        ],
+        "status": "primary_ECCV_proceedings_and_paper_verified_via_web"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "RIDI: Robust IMU Double Integration",
+        "venue": "ECCV",
+        "year": 2018,
+        "url": "https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html",
+        "authors": [
+          "Hang Yan",
+          "Qi Shan",
+          "Yasutaka Furukawa"
+        ],
+        "source_version": "ECCV 2018 proceedings, section 4/equation 1"
+      },
+      "publication_track": "published",
+      "implementation_track": "official_source_spec_independent_implementation",
+      "implementation_fidelity": "paper core; train-only RBF SVM/SVR and device-frame acceleration bias LS; bounded offline schedule; XYZ adapted",
+      "official_repository": {
+        "url": "https://github.com/higerra/ridi_imu",
+        "commit": "ce5d772a1ef8ce590121f0f0b254910bc07a2949",
+        "license": "MIT",
+        "framework": "libsvm; independent sklearn fitting and tensor-only runtime"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/higerra/ridi_imu",
+        "commit": "ce5d772a1ef8ce590121f0f0b254910bc07a2949",
+        "head": "ce5d772a1ef8ce590121f0f0b254910bc07a2949",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 35,
+        "source_bytes": 199469,
+        "python_files": 7,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 1065,
+            "sha256": "6b37dd1f2ddf409be33497d43e7d109e5b56f77b1bc68ca3f1b7d4e16522e136"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949-source-manifest.json",
+        "fidelity_upgrade": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "meio",
+      "registered_architectures": [
+        "meio"
+      ],
+      "profiles": [
+        {
+          "name": "meio",
+          "arch": "meio",
+          "dims": 3,
+          "fidelity": "paper-core partial; official training-spec loss; missing official network reconstructed with declared assumptions",
+          "sha256": "045b32a9780657f70e66b857d3cbf7fad7816ed64724aab5733e3de687cf5061"
+        }
+      ],
+      "full_authors": [
+        "Xuehang Sun",
+        "You Li",
+        "Yan Wang",
+        "Hongji Yan",
+        "Xuanxuan Zhang",
+        "Sikang Liu",
+        "Xueli Guo",
+        "Zhichao Wen"
+      ],
+      "author_status": "verified_from_primary_metadata",
+      "primary_author_source": "https://api.crossref.org/works/10.1109/JIOT.2025.3633690",
+      "primary_evidence": {
+        "primary": "https://api.crossref.org/works/10.1109/JIOT.2025.3633690",
+        "authors": [
+          "Xuehang Sun",
+          "You Li",
+          "Yan Wang",
+          "Hongji Yan",
+          "Xuanxuan Zhang",
+          "Sikang Liu",
+          "Xueli Guo",
+          "Zhichao Wen"
+        ],
+        "title": [
+          "MEIO-Net: A Motion-Aware Early-Exit Inertial Odometry Network for Efficient Pedestrian Dead Reckoning (PDR)"
+        ],
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "metadata_receipt_sha256": "dcc38ef4e2416df0f2b46832a4751a8c956d7cf07ac221ec7d356de7fb67cdcf"
+      },
+      "excluded_by_author_policy": false,
+      "paper": {
+        "title": "MEIO-Net: A Motion-Aware Early-Exit Inertial Odometry Network for Efficient Pedestrian Dead Reckoning (PDR)",
+        "venue": "IEEE IoT Journal",
+        "year": 2026,
+        "url": "https://ieeexplore.ieee.org/document/11251007",
+        "doi": "10.1109/JIOT.2025.3633690",
+        "authors": [
+          "Xuehang Sun",
+          "You Li",
+          "Yan Wang",
+          "Hongji Yan",
+          "Xuanxuan Zhang",
+          "Sikang Liu",
+          "Xueli Guo",
+          "Zhichao Wen"
+        ],
+        "author_primary": "https://api.crossref.org/works/10.1109/JIOT.2025.3633690"
+      },
+      "publication_track": "published",
+      "implementation_track": "partial_official_training_spec_network_missing",
+      "implementation_fidelity": "paper-core partial; official multi-exit training-spec; absent network reconstructed with assumptions",
+      "official_repository": {
+        "url": "https://github.com/SunXuehang/MEIO-Net",
+        "commit": "e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
+        "license": "GPL-3.0",
+        "framework": "pytorch training wrappers; actual network absent"
+      },
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot",
+      "official_reference_acquisition": {
+        "url": "https://github.com/SunXuehang/MEIO-Net",
+        "commit": "e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
+        "head": "e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
+        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
+        "state": "source_verified",
+        "source_verified": true,
+        "source_files": 4,
+        "source_bytes": 64124,
+        "python_files": 2,
+        "license_files": [
+          {
+            "path": "LICENSE",
+            "bytes": 35149,
+            "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+          }
+        ],
+        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e-source-manifest.json",
+        "fidelity_upgrade": false,
+        "core_network_present": false,
+        "license_review_required": false
+      }
+    },
+    {
+      "method": "pdr",
+      "registered_architectures": [
+        "pdr"
+      ],
+      "profiles": [
+        {
+          "name": "pdr",
+          "arch": "pdr",
+          "dims": 2,
+          "fidelity": null,
+          "sha256": "08c9dc721fce17a21f77c5d27a1cad0f60fb54aab7d6472f3ebd051a99798bcd"
+        }
+      ],
+      "full_authors": [],
+      "author_status": "repository_defined_classic_no_paper_author_claim",
+      "primary_author_source": null,
+      "excluded_by_author_policy": false,
+      "paper": null,
+      "publication_track": "classic_definition",
+      "implementation_track": "classic_definition",
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    },
+    {
+      "method": "mean_speed_heading",
+      "registered_architectures": [
+        "mean_speed_heading"
+      ],
+      "profiles": [
+        {
+          "name": "mean_speed_heading",
+          "arch": "mean_speed_heading",
+          "dims": 2,
+          "fidelity": null,
+          "sha256": "51f43c9ba9f54768dda7429e1d8d91f07543deb2db4cce690c2d655eea3cabc0"
+        }
+      ],
+      "full_authors": [],
+      "author_status": "repository_defined_classic_no_paper_author_claim",
+      "primary_author_source": null,
+      "excluded_by_author_policy": false,
+      "paper": null,
+      "publication_track": "classic_definition",
+      "implementation_track": "classic_definition",
+      "server_current_matrix_acceptance": "pending_execution_owner_receipt_for_current_snapshot"
+    }
+  ],
+  "excluded": [
+    {
+      "method": "ionext",
+      "excluded": true,
+      "reason": "user_excluded_methods_proposed_in_Shanshan_Zhang_papers",
+      "authors": [
+        "Shanshan Zhang",
+        "Qi Zhang",
+        "Siyue Wang",
+        "Tianshui Wen",
+        "Liqin Wu",
+        "Ziheng Zhou",
+        "Xuemin Hong",
+        "Ao Peng",
+        "Lingxiang Zheng",
+        "Yu Yang"
+      ],
+      "primary_paper": "https://arxiv.org/abs/2507.17089",
+      "source_retained": "src/inertial_benchmark/models/ionext/model.py",
+      "fixture_retained": "tests/fixtures/algorithms/ionext.json",
+      "historical_test_archive": "docs/models/excluded/test_ionext.py",
+      "profile_archives": [
+        {
+          "profile": "ionext",
+          "archive": "src/inertial_benchmark/cfg/excluded/ionext.yaml",
+          "sha256": "ec759e7b9390ff6b5e70979d19e579da5b9220634ac8c8fe415768811986db0c"
+        },
+        {
+          "profile": "ionext_3d",
+          "archive": "src/inertial_benchmark/cfg/excluded/ionext_3d.yaml",
+          "sha256": "7ed6e18e4b2b93753b60d9879c018d7032d84582c7a6565274a42ef64b335b17"
+        }
+      ],
+      "historical_catalog_entry": {
+        "name": "ionext",
+        "display_name": "IONext",
+        "priority": "paper-only",
+        "family": "ionext",
+        "card": "docs/algorithms/ionext.md",
+        "fixture": null,
+        "fidelity": "paper-only",
+        "paper": {
+          "title": "IONext: Unlocking the Next Era of Inertial Odometry",
+          "venue": "arXiv preprint (under review)",
+          "year": 2025,
+          "url": "https://arxiv.org/abs/2507.17089"
+        },
+        "repo": {
+          "url": null,
+          "commit": null,
+          "license": "n/a (code promised after peer review; not released as of 2026-09-17)",
+          "framework": "none"
+        },
+        "input": {
+          "rate_hz": 200,
+          "window": 200,
+          "stride": null,
+          "frame": "gravity_world",
+          "orientation": "reference",
+          "remove_gravity": false,
+          "channels": "[acc, gyro] per paper wording (order irrelevant: full-channel stem conv)",
+          "extra": []
+        },
+        "output": {
+          "quantity": "avg_velocity",
+          "dims": 2,
+          "uncertainty": "none"
+        },
+        "params": {
+          "official": null,
+          "benchmark": 10641506
+        },
+        "requires_orientation": true,
+        "official_datasets": [
+          "IMUNet",
+          "RoNIN",
+          "RIDI",
+          "OxIOD",
+          "RNIN",
+          "TLIO"
+        ],
+        "status": "spec-partial",
+        "pitfalls": [
+          "No code; v1 (DADM/STGU) and v2 (ADM/AGU) disagree on gating axis and per-wing BN; card follows v2 (only v2 gating matches the reported 1.1e7 params).",
+          "Stem/downsample normalisation, head, AGU value-branch kernel and softmax axis are unspecified; card fills them with marked assumptions.",
+          "Paper re-splits all datasets randomly 8:1:1 and reports length-normalised metrics x100; not comparable with IPB."
+        ],
+        "notes": "Spec model: stem Conv(6,96,k4,s4)+BN, stages [2,2,6,2] x [96,192,384,768] ADE blocks (4.5C^2+35C params each), BN+Conv(k2,s2) downsampling, BN+GAP+Linear head; 10,641,506 params (D=2) vs reported 1.1e7; 35.6M MACs at T=200 vs reported 7.3e7 FLOPs."
+      }
+    },
+    {
+      "method": "tinyio",
+      "excluded": true,
+      "reason": "user_excluded_methods_proposed_in_Shanshan_Zhang_papers",
+      "authors_as_primary_metadata": [
+        "Shanshan Zhang",
+        "Siyue Wang",
+        "Mengzi Chen",
+        "Mengzhe Wang",
+        "Liqin Wu",
+        "Qi Zhang",
+        "Lingxiang Zheng"
+      ],
+      "primary_paper": "https://arxiv.org/abs/2507.15293",
+      "registration_status": "never_registered_candidate",
+      "metadata_caveat": null
+    },
+    {
+      "method": "ckanio",
+      "excluded": true,
+      "reason": "user_excluded_methods_proposed_in_Shanshan_Zhang_papers",
+      "authors_as_primary_metadata": [
+        "Shanshan Zhang",
+        "Siyue Wang",
+        "Tianshui Wen",
+        "Liqin Wu",
+        "Qi Zhang",
+        "Ziheng Zhou",
+        "Ao Peng",
+        "Xuemin Hong",
+        "Lingxiang Zheng",
+        "Yu Yang"
+      ],
+      "primary_paper": "https://arxiv.org/abs/2507.16865",
+      "registration_status": "never_registered_candidate",
+      "metadata_caveat": null
+    },
+    {
+      "method": "stario",
+      "excluded": true,
+      "reason": "user_excluded_methods_proposed_in_Shanshan_Zhang_papers",
+      "authors_as_primary_metadata": [
+        "Shanshan Zhang",
+        "Siyue Wang",
+        "Qi Zhang Liqin Wu",
+        "Tianshui Wen",
+        "Ziheng Zhou",
+        "Xuemin Hong",
+        "Lingxiang Zheng",
+        "Yu Yang"
+      ],
+      "primary_paper": "https://arxiv.org/abs/2507.16121",
+      "registration_status": "never_registered_candidate",
+      "metadata_caveat": "arXiv merges Qi Zhang and Liqin Wu into one author string; Shanshan match unambiguous"
+    }
+  ],
+  "catalog_only_not_registered": [
+    {
+      "name": "pedestrian_diffusion",
+      "primary": "https://arxiv.org/abs/2607.03349",
+      "reason": "Catalog/spec only; no registered architecture/profile, not counted as implemented. Author audit pending before new implementation."
+    }
+  ],
+  "scope": "Static provenance and primary author audit; not evidence of current server CPU acceptance or paper-level accuracy.",
+  "official_reference_acquisition_summary": {
+    "state": "complete",
+    "verified_repositories": 16,
+    "source_bytes": 13618214,
+    "model_execution": false,
+    "source_only_selection": true,
+    "generated_c_may_embed_parameters": true,
+    "receipt_sha256": "9b7a6988af31893d4259de29c87461468a461ea45b432fe71234f1814ee594e0",
+    "source_fidelity_upgrade": false
+  }
+}

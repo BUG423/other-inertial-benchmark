@@ -1,0 +1,12 @@
+name: grandtour
+path: grandtour
+splits:
+  test: test
+test_splits: [test]
+strata: [device_id]
+notes: >-
+  Independent GrandTour legged-robot source. Acquired representative missions
+  are test-only; whole missions remain groups. ADIS raw IMU with privileged
+  CPT7 GNSS/INS reference corrected to the ADIS origin using mission TF.
+  No deployable device attitude; Leica prism positions are a separate frame
+  and are not substituted for the IMU origin.

@@ -179,6 +179,11 @@ class Trainer:
     def _load_resume_state(self) -> None:
         ckpt = load_checkpoint(self.resume_ckpt, map_location=self.device)
         self.model.load_state_dict(ckpt["model"])
+        evidence = ckpt.get('training_evidence') or {}
+        model = de_parallel(self.model)
+        model._ipb_trained_epoch = evidence.get('completed_epoch', -1)
+        model._ipb_epoch_optimizer_updates = evidence.get('epoch_optimizer_updates', 0)
+        model._ipb_optimizer_updates = evidence.get('total_optimizer_updates', 0)
         self.optimizer.load_state_dict(ckpt["optimizer"])
         if ckpt.get("scheduler"):
             self.scheduler.load_state_dict(ckpt["scheduler"])
@@ -222,6 +227,7 @@ class Trainer:
         self.seed_epoch(epoch)
         self.train_set.set_epoch(epoch)
         total, count, items_sum = 0.0, 0, {}
+        actual_optimizer_updates = 0
         grad_clip = float(a.grad_clip)
         for batch_idx, batch in enumerate(self.train_loader):
             self.batch = batch
@@ -258,12 +264,18 @@ class Trainer:
                 ) from exc
             self.scaler.step(self.optimizer)
             self.scaler.update()
+            actual_optimizer_updates += 1
             n = x.shape[0]
             total += float(loss.detach()) * n
             count += n
             for k, v in items.items():
                 items_sum[k] = items_sum.get(k, 0.0) + float(v) * n
             run_callbacks(self.callbacks, "on_train_batch_end", self)
+        if actual_optimizer_updates:
+            trained = de_parallel(model)
+            trained._ipb_trained_epoch = epoch
+            trained._ipb_epoch_optimizer_updates = actual_optimizer_updates
+            trained._ipb_optimizer_updates = getattr(trained, '_ipb_optimizer_updates', 0) + actual_optimizer_updates
         out = {"train/loss": total / max(count, 1)}
         out.update({f"train/{k}": v / max(count, 1) for k, v in items_sum.items()
                     if f"train/{k}" != "train/loss"})
@@ -356,7 +368,7 @@ class Trainer:
                 self._append_row(row)
                 LOGGER.info(self._epoch_summary(row, improved))
                 run_callbacks(self.callbacks, "on_fit_epoch_end", self)
-                if self.stopper.should_stop(epoch):
+                if epoch + 1 >= int(self.args.min_epochs) and self.stopper.should_stop(epoch):
                     break
             self.final_eval(epoch)
             LOGGER.info(f"train: done in {(time.time() - t_start) / 60:.2f} min, "
@@ -391,6 +403,9 @@ class Trainer:
             "model_cfg": to_builtin(model.model_cfg),
             "model_name": str(model.model_cfg.get("name")),
             "input_spec": model.input_spec.to_dict(),
+            "training_evidence": {"completed_epoch": getattr(model, '_ipb_trained_epoch', None),
+                                  "epoch_optimizer_updates": getattr(model, '_ipb_epoch_optimizer_updates', 0),
+                                  "total_optimizer_updates": getattr(model, '_ipb_optimizer_updates', 0)},
             "cfg": to_builtin(self.args.to_dict()),
             "optimizer": self.optimizer.state_dict(),
             "scheduler": self.scheduler.state_dict(),
@@ -437,7 +452,8 @@ class Trainer:
         rows.append(row)
         self._write_rows(rows)
 
-    def train_eval_gap(self, windows: int = 1024, repeats: int = MC_SAMPLES) -> dict:
+    def train_eval_gap(self, windows: Optional[int] = None, repeats: int = MC_SAMPLES,
+                       epoch: Optional[int] = None) -> dict:
         """用四种模块模式诊断 train/eval 失配，并以 MC-dropout 幅值恢复量守卫结果。
 
         ``eval`` / ``dropout_only`` / ``bn_only`` / ``train`` 把 dropout 与 BatchNorm 两条通道
@@ -456,6 +472,10 @@ class Trainer:
 
         if self.sequence_model:
             return {"skipped": "sequence model has no train()/eval() distinction"}
+        windows = int(self.args.gap_windows if windows is None else windows)
+        evaluation_epoch = self.epoch if epoch is None else int(epoch)
+        if windows < 1:
+            raise ValueError('train_eval_gap windows must be >= 1')
         repeats = int(repeats)
         if repeats < 1:
             raise ValueError(f"train_eval_gap repeats must be >= 1, got {repeats}")
@@ -463,13 +483,13 @@ class Trainer:
         if n_seq == 0:
             return {}
         # 跨若干条 val 序列均匀取窗口，避免结论依赖单条序列
-        views, used = [], min(4, n_seq)
+        views, used = [], min(4, n_seq, windows)
         for k in range(used):
             v = self.val_sources[k]
             views.append(v if hasattr(v, "imu_windows") else self.val_set.sequence_view(k))
-        per_view = max(int(windows) // used, 1)
         parts: list = []
-        for v in views:
+        for k, v in enumerate(views):
+            per_view = windows // used + int(k < windows % used)
             starts = v.starts(int(self.args.eval_stride))
             if len(starts) == 0:
                 continue
@@ -532,7 +552,7 @@ class Trainer:
                     if self.device.type == "cuda":
                         torch.cuda.manual_seed_all(int(self.args.seed))
                     out = average_forward(mode)
-                    loss = float(work.loss(out, batch, self.epoch)[0])
+                    loss = float(work.loss(out, batch, evaluation_epoch)[0])
                     pred_sum, target_sum = speed_sums(out["vel"])
                     per_mode[mode.name] = {
                         "loss": loss,
@@ -570,7 +590,9 @@ class Trainer:
             "dropout_risk": risk,
             "dropout_probe_applicable": any(
                 item["mean_shift_risk"] for item in risk.values()),
-            "config": {"mc_samples": repeats, "precision": "fp32"},
+            "config": {"mc_samples": repeats, "precision": "fp32", "requested_windows": windows,
+                       "evaluation_epoch": evaluation_epoch,
+                       "maximum_sequences": 4, "batchnorm_small_batch_limitation": len(x) < 128},
         }
         if verdict["level"] != "ok":
             message = (f"train/eval mismatch guard {verdict['level']}: "
@@ -589,6 +611,11 @@ class Trainer:
             save_checkpoint(self.best, load_checkpoint(self.last))
         ckpt = load_checkpoint(self.best, map_location=self.device)
         self.model.load_state_dict(ckpt["model"])
+        evidence = ckpt.get('training_evidence') or {}
+        model = de_parallel(self.model)
+        model._ipb_trained_epoch = evidence.get('completed_epoch', -1)
+        model._ipb_epoch_optimizer_updates = evidence.get('epoch_optimizer_updates', 0)
+        model._ipb_optimizer_updates = evidence.get('total_optimizer_updates', 0)
         self.validate(int(ckpt["epoch"]))
         result = self.val_result
         result.weights = str(self.best)
@@ -600,7 +627,7 @@ class Trainer:
         payload.update(mode="train", best_epoch=int(ckpt["epoch"]), last_epoch=epoch,
                        epochs=int(self.args.epochs), train_budget=self.budget)
         try:
-            payload["train_eval_gap"] = self.train_eval_gap()
+            payload["train_eval_gap"] = self.train_eval_gap(epoch=int(ckpt['epoch']))
         except Exception as exc:  # noqa: BLE001 - 诊断失败不影响训练结果
             LOGGER.warning(f"train/eval gap check failed: {exc}")
         result.save(self.save_dir, predictions=bool(self.args.save_predictions),

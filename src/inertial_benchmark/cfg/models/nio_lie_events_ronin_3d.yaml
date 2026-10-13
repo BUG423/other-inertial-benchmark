@@ -1,0 +1,42 @@
+# IPB XYZ adaptation of nio_lie_events_ronin. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+# Privileged reference init_velocity is XYZ; compare only within the privileged-input track.
+name: nio_lie_events_ronin_3d
+arch: nio_lie_events_ronin
+paper: https://arxiv.org/abs/2505.09780
+code: https://github.com/RoyinaJayanth/NIO_Lie_Events
+license: none (no LICENSE in the official repo); this implementation is written from
+  the spec card
+commit: 1e87470f6479c198875c5f1a32b392a46eb5af74
+fidelity: '3d_adapted (learned XYZ output and privileged XYZ initial velocity in the event representation; original target layout/loss; original
+  source fidelity: official-code)'
+args:
+  threshold: 0.1
+  v0_noise: 0.5
+  polarity_noise: 0.5
+  group_sizes:
+  - 2
+  - 2
+  - 2
+  - 2
+  base_plane: 64
+  kernel_size: 3
+  fc_dim: 512
+  trans_planes: 128
+  dropout: 0.5
+  max_events_per_step: 64
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  extra_inputs:
+  - orientation
+  - init_velocity
+loss: mse
+recipes:
+  unified:
+    augment: []

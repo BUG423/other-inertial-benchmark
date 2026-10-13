@@ -1,0 +1,31 @@
+name: ridi_3d
+arch: ridi
+paper: https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html
+code: https://github.com/higerra/ridi_imu
+license: independent mathematical implementation; original repository MIT
+fidelity: 3d_adapted; real vertical epsilon-SVR and XYZ physical bias correction; original RIDI is planar
+args:
+  train_stride: 10
+  svm_c: 10.0
+  svr_c: 10.0
+  epsilon: 0.01
+  feature_sigma: 2.0
+  target_sigma: 30.0
+  knot_spacing: 50
+  correction_block: 1000
+  regularization: 0.1
+  max_fit_windows: 20000
+  cache_mb: 256
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: true
+  target: velocity_at_end
+  dims: 3
+recipes:
+  unified:
+    epochs: 1
+    patience: 0
+    fitness: ate
+    augment: []

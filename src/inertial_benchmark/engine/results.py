@@ -15,6 +15,7 @@ from typing import Any, Iterable, Optional, Union
 import numpy as np
 
 from ..metrics import MAIN_METRICS, path_length, sequence_metrics
+from ..metrics.uncertainty import gaussian_uncertainty_metrics
 from ..utils import LOGGER, json_save, to_builtin
 
 PathLike = Union[str, Path]
@@ -60,7 +61,8 @@ class Trajectory:
 
 ARRAYS = ("t", "pos_pred", "pos_gt", "pos_oracle", "valid_pose", "t_window", "starts",
           "vel_pred", "vel_target", "window_valid", "window_valid_input",
-          "window_valid_target", "logstd")
+          "window_valid_target", "logstd", "uncertainty_mean_raw", "uncertainty_target_raw",
+          "uncertainty_logstd_raw", "uncertainty_valid_raw", "uncertainty_basis_raw")
 OUTPUT_PREFIX = "out_"  # 其他逐窗口模型输出在 .npz 中的键前缀
 DIMENSION_FIELDS = ("metric_dims_requested", "metric_dims_effective", "predicted_axes")
 
@@ -98,6 +100,16 @@ class SequenceResult:
     metric_dims_requested: Optional[int] = None
     metric_dims_effective: Optional[int] = None
     predicted_axes: Optional[list] = None
+    # Optional additive raw-task fields. Legacy vel_pred/vel_target are world-frame,
+    # overlap-merged velocities; legacy logstd remains the untouched model output.
+    uncertainty_mean_raw: Optional[np.ndarray] = None
+    uncertainty_target_raw: Optional[np.ndarray] = None
+    uncertainty_logstd_raw: Optional[np.ndarray] = None
+    uncertainty_valid_raw: Optional[np.ndarray] = None
+    uncertainty_basis_raw: Optional[np.ndarray] = None
+    uncertainty: dict = field(default_factory=lambda: {
+        "schema": "ib.uncertainty.raw-task.v1", "supported": False,
+        "head_trained": False, "reason": "legacy_or_missing_raw_task_contract"})
 
     @property
     def trajectory(self) -> Trajectory:
@@ -138,6 +150,51 @@ class SequenceResult:
     def dimension_metadata(self) -> dict:
         return {key: getattr(self, key) for key in DIMENSION_FIELDS}
 
+    def uncertainty_metrics(self, dims: int) -> dict:
+        """Score matched unmerged task rows; unavailable distributions stay NA.
+
+        Scores are conditional network-head diagnostics in the declared task frame
+        and units, not uncertainty of the integrated world trajectory. XYZ and XY
+        use the identical raw outputs/mask, with XY slicing the last axis only.
+        """
+        contract = self.uncertainty
+        empty = np.empty((0, dims), dtype=float)
+        unavailable = lambda: gaussian_uncertainty_metrics(empty, empty, None)
+        if not contract.get("supported") or not contract.get("head_trained"):
+            return unavailable()
+        arrays = (self.uncertainty_mean_raw, self.uncertainty_target_raw,
+                  self.uncertainty_logstd_raw, self.uncertainty_valid_raw)
+        if any(value is None for value in arrays):
+            contract["reason"] = "missing_raw_task_arrays"
+            return unavailable()
+        mean, target, logstd, valid = (np.asarray(value) for value in arrays)
+        if (mean.ndim not in (2, 3) or target.shape != mean.shape or mean.shape[-1] < dims
+                or mean.shape[-1] != contract.get("dims")):
+            raise ValueError("uncertainty raw mean/target must match declared task axes/layout")
+        expected_layout = "window" if mean.ndim == 2 else contract.get("layout")
+        if expected_layout != contract.get("layout") or expected_layout not in (
+                "window", "frame", "steps"):
+            raise ValueError("uncertainty raw arrays disagree with declared task layout")
+        expected_mask = (mean.shape[0], 1) if mean.ndim == 2 else mean.shape[:-1]
+        if valid.shape != expected_mask:
+            raise ValueError("uncertainty valid mask must match raw output rows")
+        if logstd.shape not in (mean.shape, mean.shape[:-1] + (1,)):
+            raise ValueError("uncertainty raw logstd must match mean layout or be isotropic")
+        valid = valid.astype(bool, copy=False).reshape(-1)
+        if not valid.any():
+            contract["reason"] = "no_valid_raw_outputs"
+            return unavailable()
+        # Apply the actual loss's distribution parameterization to a copy. Raw
+        # arrays and all legacy prediction values remain unchanged, including floors.
+        sigma = logstd.astype(np.float64, copy=True) + float(contract.get("logstd_offset", 0))
+        lo, hi = contract.get("min_logstd"), contract.get("max_logstd")
+        if lo is not None or hi is not None:
+            sigma = np.clip(sigma, lo, hi)
+        channels = sigma.shape[-1]
+        return gaussian_uncertainty_metrics(
+            mean[..., :dims].reshape(-1, dims), target[..., :dims].reshape(-1, dims),
+            sigma[..., :dims].reshape(-1, min(channels, dims)), valid)
+
     def compute_metrics(self, dims: int = 2, rte_delta: float = 60.0,
                         t_rte: Iterable[float] = (1.0, 10.0),
                         d_rte: Iterable[float] = (10.0,), min_speed: float = 0.2) -> dict:
@@ -151,6 +208,7 @@ class SequenceResult:
             self.pos_pred, self.pos_gt, self.valid_pose, self.vel_pred, self.vel_target,
             self.window_valid, rate=self.rate, pos_oracle=self.pos_oracle, dims=dims,
             rte_delta=rte_delta, t_rte=t_rte, d_rte_distance=d_rte, min_speed=min_speed)
+        self.metrics.update(self.uncertainty_metrics(dims))
         if dims == 3:
             xy = sequence_metrics(
                 self.pos_pred[:, :2], self.pos_gt[:, :2], self.valid_pose,
@@ -160,6 +218,8 @@ class SequenceResult:
                 dims=2, rte_delta=rte_delta, t_rte=t_rte, d_rte_distance=d_rte,
                 min_speed=min_speed)
             self.metrics.update({f"xy_{key}": value for key, value in xy.items()})
+            self.metrics.update({f"xy_{key}": value for key, value in
+                                 self.uncertainty_metrics(2).items()})
         self.metric_dims_requested = self.metric_dims_effective = int(dims)
         self.predicted_axes = list("xyz"[:self.pos_pred.shape[1]])
         if self.loss is not None:
@@ -174,6 +234,7 @@ class SequenceResult:
         row.update(self.dimension_metadata())
         row["predicted_axes"] = ",".join(self.predicted_axes) if self.predicted_axes else ""
         row.update(self.metrics)
+        row["uncertainty_support"] = json.dumps(to_builtin(self.uncertainty), sort_keys=True)
         return row
 
     def save(self, path: PathLike) -> Path:
@@ -184,7 +245,8 @@ class SequenceResult:
         arrays.update({OUTPUT_PREFIX + k: np.asarray(v) for k, v in self.outputs.items()})
         meta = {"sequence_id": self.sequence_id, "dataset": self.dataset,
                 "group_id": self.group_id, "frame": self.frame, "rate": self.rate,
-                "loss": self.loss, "skipped": self.skipped, "metrics": self.metrics}
+                "loss": self.loss, "skipped": self.skipped, "metrics": self.metrics,
+                "uncertainty": self.uncertainty}
         meta.update(self.dimension_metadata())
         np.savez_compressed(path, meta=np.array(json.dumps(to_builtin(meta))), **arrays)
         return path
@@ -328,6 +390,9 @@ class RunResult:
             "count": agg["count"],
             "efficiency": self.efficiency,
             "calibration": self.calibration,
+            # Present even when predictions=False: support/NA and coordinates are
+            # scientific evidence rather than optional visualization payloads.
+            "uncertainty_support": {s.sequence_id: s.uncertainty for s in self.evaluated},
         }
 
     def summary(self, keys: Iterable[str] = MAIN_METRICS) -> str:

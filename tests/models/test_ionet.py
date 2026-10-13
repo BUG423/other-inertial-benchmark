@@ -57,11 +57,47 @@ def test_forward_shapes_and_gradients():
         model(torch.randn(2, 6, 200))
     with pytest.raises(ValueError, match="multiple of"):
         build(window=401)
-    with pytest.raises(ValueError, match="dims=2"):
-        build(dims=3)
     assert_deterministic_eval(model, x)
     assert_backprop(build(), x, torch.randn(4, 2))
     assert model.loss_name == "ionet_polar"
+
+
+def test_xyz_adaptation_preserves_horizontal_polar_semantics_and_learns_z():
+    model = build_model(get_cfg({"model": "ionet_3d"})).eval()
+    x = torch.randn(2, 6, 400)
+    out = model(x)
+    assert out["vel"].shape == (2, 3)
+    torch.testing.assert_close(out["vel"][:, :2].norm(dim=-1), out["speed"].abs())
+    torch.testing.assert_close(out["vel"][:, 2], model.fc(model.features(x))[:, 2])
+    # Isolating the vertical residual must train the real third FC row, while
+    # preserving both of the paper's horizontal polar outputs.
+    target = out["vel"].detach().clone()
+    target[:, 2] += 1.0
+    loss, items = model.loss(out, {"imu": x, "target": target})
+    loss.backward()
+    assert items["vertical"] > 0
+    assert model.fc.weight.grad[2].abs().sum() > 0
+    assert torch.isfinite(model.fc.weight.grad).all()
+
+
+def test_xyz_polar_loss_uses_horizontal_speed_and_vertical_mask():
+    speed = torch.tensor([0.05, 1.0], requires_grad=True)
+    heading = torch.tensor([3.0, 0.0], requires_grad=True)
+    vel = torch.tensor([[0.05, 0.0, 0.0], [1.0, 0.0, 0.0]], requires_grad=True)
+    target = torch.tensor([[0.05, 0.0, 4.0], [1.0, 0.0, 2.0]])
+    loss, items = IONetPolarLoss(vertical_weight=2.0)(
+        {"speed": speed, "heading": heading, "vel": vel}, target,
+        mask=torch.tensor([False, True]))
+    assert items["speed"] == 0 and items["heading"] == 0
+    assert items["vertical"] == 4 and loss == 8
+    loss.backward()
+    assert vel.grad[0, 2] == 0 and vel.grad[1, 2] != 0
+    assert torch.count_nonzero(vel.grad[:, :2]) == 0
+    # Pure Z motion does not define a horizontal heading.
+    pure_z = {"speed": torch.zeros(1), "heading": torch.ones(1),
+              "vel": torch.tensor([[0.0, 0.0, 2.0]])}
+    value, items = IONetPolarLoss()(pure_z, pure_z["vel"])
+    assert value == 0 and items["heading"] == 0
 
 
 def test_channel_permutation_and_decimation():

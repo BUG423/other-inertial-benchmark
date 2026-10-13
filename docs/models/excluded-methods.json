@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "policy": "author-based exclusion requested by the repository owner; excluded methods are never counted as active algorithms",
+  "methods": [
+    {
+      "method": "ionext",
+      "excluded": true,
+      "reason": "user_excluded_methods_proposed_in_Shanshan_Zhang_papers",
+      "authors": [
+        "Shanshan Zhang",
+        "Qi Zhang",
+        "Siyue Wang",
+        "Tianshui Wen",
+        "Liqin Wu",
+        "Ziheng Zhou",
+        "Xuemin Hong",
+        "Ao Peng",
+        "Lingxiang Zheng",
+        "Yu Yang"
+      ],
+      "primary_paper": "https://arxiv.org/abs/2507.17089",
+      "source_retained": "src/inertial_benchmark/models/ionext/model.py",
+      "fixture_retained": "tests/fixtures/algorithms/ionext.json",
+      "historical_test_archive": "docs/models/excluded/test_ionext.py",
+      "profile_archives": [
+        {
+          "profile": "ionext",
+          "archive": "src/inertial_benchmark/cfg/excluded/ionext.yaml",
+          "sha256": "ec759e7b9390ff6b5e70979d19e579da5b9220634ac8c8fe415768811986db0c"
+        },
+        {
+          "profile": "ionext_3d",
+          "archive": "src/inertial_benchmark/cfg/excluded/ionext_3d.yaml",
+          "sha256": "7ed6e18e4b2b93753b60d9879c018d7032d84582c7a6565274a42ef64b335b17"
+        }
+      ],
+      "historical_catalog_entry": {
+        "name": "ionext",
+        "display_name": "IONext",
+        "priority": "paper-only",
+        "family": "ionext",
+        "card": "docs/algorithms/ionext.md",
+        "fixture": null,
+        "fidelity": "paper-only",
+        "paper": {
+          "title": "IONext: Unlocking the Next Era of Inertial Odometry",
+          "venue": "arXiv preprint (under review)",
+          "year": 2025,
+          "url": "https://arxiv.org/abs/2507.17089"
+        },
+        "repo": {
+          "url": null,
+          "commit": null,
+          "license": "n/a (code promised after peer review; not released as of 2026-09-17)",
+          "framework": "none"
+        },
+        "input": {
+          "rate_hz": 200,
+          "window": 200,
+          "stride": null,
+          "frame": "gravity_world",
+          "orientation": "reference",
+          "remove_gravity": false,
+          "channels": "[acc, gyro] per paper wording (order irrelevant: full-channel stem conv)",
+          "extra": []
+        },
+        "output": {
+          "quantity": "avg_velocity",
+          "dims": 2,
+          "uncertainty": "none"
+        },
+        "params": {
+          "official": null,
+          "benchmark": 10641506
+        },
+        "requires_orientation": true,
+        "official_datasets": [
+          "IMUNet",
+          "RoNIN",
+          "RIDI",
+          "OxIOD",
+          "RNIN",
+          "TLIO"
+        ],
+        "status": "spec-partial",
+        "pitfalls": [
+          "No code; v1 (DADM/STGU) and v2 (ADM/AGU) disagree on gating axis and per-wing BN; card follows v2 (only v2 gating matches the reported 1.1e7 params).",
+          "Stem/downsample normalisation, head, AGU value-branch kernel and softmax axis are unspecified; card fills them with marked assumptions.",
+          "Paper re-splits all datasets randomly 8:1:1 and reports length-normalised metrics x100; not comparable with IPB."
+        ],
+        "notes": "Spec model: stem Conv(6,96,k4,s4)+BN, stages [2,2,6,2] x [96,192,384,768] ADE blocks (4.5C^2+35C params each), BN+Conv(k2,s2) downsampling, BN+GAP+Linear head; 10,641,506 params (D=2) vs reported 1.1e7; 35.6M MACs at T=200 vs reported 7.3e7 FLOPs."
+      }
+    }
+  ]
+}

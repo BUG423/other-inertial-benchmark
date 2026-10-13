@@ -1,22 +1,45 @@
 # IPB v1 算法总表 / Algorithm Catalogue
 
-> 状态：v1 规格基线（2026-09-17）。本文件是 `docs/algorithms/*.md` 规格卡的索引，机读版本为
-> [`docs/algorithms/index.yaml`](algorithms/index.yaml)。规格卡供“算法移植工程师”**不看官方代码**、照卡实现；
-> 忠实性由 `tests/fixtures/algorithms/<name>.json` 夹具（参数量与逐项参数形状）锁定。
-> 本文件只描述规格，不代表 `src/` 中已有实现。
+> 当前实现和迁移后工程验收：2026-10-14；§2 的原始规格表保留 2026-09-17 历史口径。
+> 本文件是 `docs/algorithms/*.md` 规格卡的索引，历史规格机读版本为
+> [`docs/algorithms/index.yaml`](algorithms/index.yaml)，当前方法、完整作者、配置和源码来源见
+> [`docs/models/provenance.json`](models/provenance.json)。形状夹具锁定已核对的原配置；
+> 自主重实现的声明假设、三维适配、工程验收和原论文精度复现分别记录。
 
 当前接入以 `dev/v1` 的 [模型接口](../src/inertial_benchmark/nn/base.py)、[注册器](../src/inertial_benchmark/nn/registry.py)和 [模型配置](../src/inertial_benchmark/cfg/models/)为准；现有实现与本轮服务器验收见 [当前状态](DEV_V1_INTEGRATION.md)。下表的“可移植”等标签保留规格基线含义，算法实现、形状夹具核对与论文精度复现分别记录。
 
-当前实现为 **29 个注册架构、34 份模型配置、21 个算法包**；三份新增三维配置共用已有架构，不计作三个新方法。主 benchmark 使用三维预测，二维指标从同一预测的 XY 派生；原文二维配置与参数夹具仍作为独立参考。
+当前实现为 **31 个活跃注册架构、53 份活跃模型配置、21 个独立论文方法与 2 个仓库经典定义**。论文方法中 **19 个已发表、2 个仅预印本**（GNIO、VeloBins）；RoNIN 的骨干深度、IMUNet 的骨干变体、EqNIO/NIO 的两个网络分支及二维/三维配置均不重复增加论文方法数。因此当前没有“31 个独立论文算法”的声明。
 
-| 三维主协议配置 | 已有架构 / 目标 | 忠实性边界 |
+53 份配置包括 **49 份神经网络配置、2 份 RIDI 非梯度标定配置、2 份经典序列配置**。迁移后的 AutoDL 已完成全部 **53 份配置的有限 CPU 工程闭环**，49 份神经网络配置已完成实际 CUDA 工程探测；这些证明包含模型/目标/损失、预测和保存重载，不能当作所有数据集充分训练、所有共同 batch 容量通过或论文精度复现。新增训练/不确定性/性能补丁仍按其新源码单独验收，不把历史通过自动转成新快照通过。服务器操作和源码绑定见 [操作说明](../tools/ops_v1/README.md)。
+
+主 benchmark 使用真实三维预测，二维辅助指标从同一 XYZ 预测的 XY 派生；原文二维配置和参数夹具作为独立参考轨保留。当前 31 份 XYZ 配置含 30 份神经网络配置和 `ridi_3d`；22 份二维配置含 19 份神经网络配置、`ridi` 和两个经典参考。原生 XYZ、显式 `3d_adapted`、二维参考以及姿态/初始速度输入权限分别报告，不能以补零 Z 混入三维主榜。
+
+IONext 已按仓库拥有者指定的作者排除规则从注册器、活跃配置和目录移除；一手作者证据及历史源码/夹具留存见 [排除记录](models/excluded-methods.json)。TinyIO、CKANIO、StarIO 同样命中 Shanshan Zhang 提出方法的排除规则，不作为活跃候选。21 个当前论文方法均已逐项核对一手完整作者；不把 MEIO 的 Xuanxuan Zhang 或 RNIN 的 Guofeng Zhang 当作同一作者。
+
+下表列出三维语义的代表，完整主配置覆盖上述 31 份，并不只交付四个模型：
+
+| 三维主协议配置示例 | 已有架构 / 目标 | 忠实性边界 |
 |---|---|---|
 | `ronin_resnet18_3d` | `ronin_resnet` / XYZ 平均速度 | `3d_adapted`：原二维输出头扩为可学习三维，窗口和 MSE 保留 |
 | `ronin_lstm_3d` | `ronin_lstm` / 逐帧 XYZ 速度 | `3d_adapted`：两个输出线性层随三维扩展，GlobalPosLoss 保留 |
 | `imunet_3d` | `imunet` / XYZ 平均速度 | `3d_adapted`：噪声层与骨干不变，输出头新增可学习 Z |
 | `tlio` | `tlio` / XYZ 位移与 logstd | 原生三维网络；不包含论文 EKF |
+| `ionet_3d`、`lionet_3d` | 各自极坐标预测 / XYZ 平均速度 | 水平速度/航向损失保留，额外学习垂直速度；L-IONet 架构细节存在论文未明确的假设 |
+| `eqnio_ronin_3d` | O(2) 规范化 / XYZ 平均速度 | XY 保持 O(2) 等变，Z 是独立学习的不变标量 |
+| `ridi_3d` | SVM/SVR 与偏置修正双积分 | 垂直 SVR 用真实 XYZ 标签拟合；离线更新日程和参考姿态协议是显式适配 |
+| `meio` | 多出口网络 / XYZ 位移和各向同性 logstd | 官方网络文件缺失，自主重建声明假设；不能称完整官方网络复现 |
 
-三维适配配置只提供统一配方，不能以 `recipe=official` 宣称原文二维复现；旧二维 checkpoint 也不能直接改 `dims` 重载。IONet 与 EqNIO-RoNIN 当前为二维专用。PDR、`mean_speed_heading` 的 `constant` / `gated` 变体拒绝 `dims=3`；显式 `zero_velocity` 可定义三维零向量，`train_mean_velocity` 可定义训练集 XYZ 均值，但这两种常量基线不属于航向估计三维扩展。三维主排序不纳入缺少预测 Z 的配置。
+三维适配配置只提供统一配方，不能以 `recipe=official` 宣称原文二维复现；旧二维 checkpoint 也不能直接改 `dims` 重载。IONet 与 EqNIO-RoNIN 的三维适配已纳入上述真实 CPU/CUDA 工程验收。PDR、`mean_speed_heading` 的 `constant` / `gated` 变体拒绝 `dims=3`；显式 `zero_velocity` 可定义三维零向量，`train_mean_velocity` 可定义训练集 XYZ 均值，但这两种常量基线不属于航向估计三维扩展。它们在完整矩阵的二维参考轨保留，三维主排序不纳入缺少预测 Z 的配置。
+
+### 本轮新增独立论文方法
+
+| 方法 / 一手来源 | 当前实现 | 忠实性与输入边界 |
+|---|---|---|
+| [L-IONet，IoT Journal 2020](https://arxiv.org/abs/2001.04061) | [`lionet` / `lionet_3d`](algorithms/lionet.md)：8 层因果门控 WaveNet，扩张率 1–128，水平极坐标头与损失 | 无可核验官方网络源码；卷积核、池化等声明假设。统一绝对速度任务改变原相对步进语义，XYZ 为显式适配 |
+| [RIDI，ECCV 2018](https://openaccess.thecvf.com/content_ECCV_2018/html/Hang_Yan_RIDI_Robust_IMU_ECCV_2018_paper.html) | [`ridi` / `ridi_3d`](algorithms/ridi.md)：train-only placement RBF SVM、逐轴 SVR、设备系加计偏置最小二乘与双积分 | 官方 [MIT 源码](https://github.com/higerra/ridi_imu)已在服务器固定版本取得；独立实现的离线块更新、窗口拟合上限与参考姿态协议须记录，不宣称原预训练精度 |
+| [MEIO-Net，IoT Journal 2026](https://ieeexplore.ieee.org/document/11251007) | [`meio`](algorithms/meio.md)：多出口 XYZ 位移、各向同性不确定性、联合分阶段损失和实际早退 | 官方 [GPLv3 仓库](https://github.com/SunXuehang/MEIO-Net)有训练包装但缺 `NeuralNetwork/EarlyExit/EarlyExitDense.py`；当前是 `paper-core partial`，不是完整官方网络迁移 |
+
+参考姿态或真值初始速度须与设备姿态/纯传感器输入分轨。TLIO/DIVE 的纯网络预测不包含其原 EKF；NIO-LieEvents 当前采用每窗参考初速度，未复现 RoNIN 原有状态递归推理；RIO 的 A-TTT 未作为完整原测试协议复现；VeloBins 是去执行器支路的 IMU-only 结构适配。统一接口和 CPU/CUDA 通过不消除这些科学差别。
 
 ## 1. 约定
 
@@ -28,11 +51,11 @@
 - **依赖外部姿态**：指官方**推理**时网络输入或轨迹重建是否需要外部姿态（设备 game RV、VIO 或滤波器姿态）。
 - **状态**：`可移植` 表示卡片足以直接实现；`许可风险` 表示仓库无 LICENSE 或为强 copyleft，只能照卡独立实现，不得复制代码或再分发权重；`部分` 表示论文或代码缺少关键细节，卡中有待核实的假设。
 - **夹具格式**：必需键为 `name, source_repo, commit, input_shape, output_shape, total_params, trainable_params, param_shapes, notes`。`param_shapes` 按 `named_parameters()` 的注册顺序排列（Keras 模型按 `model.weights` 顺序）。`input_shape`/`output_shape` 在单张量时为列表，多输入/多输出时为“名称 → 形状”的字典。各夹具另带 `param_names`、`buffer_shapes`、`official_config`、`benchmark_config` 等补充键；参数名仅作核对参考，移植实现不必沿用。
-- **官方代码来源**：所有官方仓库浅克隆在 `/workspace/webCodex/third_party/<repo>`（不进入本仓库），提交号见 §5。本仓库不包含任何官方代码或权重。
+- **官方代码来源**：本轮在新 AutoDL 的 ignored `.local/external/reference-code/<repo>/<commit>` 固定版本保存 16 个官方参考仓库的网络/损失/预处理/训练和许可文档，记录 HEAD、逐文件 SHA 和体积；不拉数据集、权重包或完整历史。CTIN/iMoT 仓库只有文档，MEIO 缺核心网络。来源下载不自动提升实现忠实性；TinyOdom 的生成 C 文件可内嵌模型参数，作为隔离参考证据保存，不用于模型初始化或公开再分发。§5 的 `third_party` 路径是原规格审计历史路径。
 
-## 2. 总表
+## 2. 历史原始规格总表
 
-按 P0（行人、官方代码可用）→ P1（跨平台或需接口扩展）→ paper-only 重实现 → 经典基线排序。
+以下按 P0（行人、官方代码可用）→ P1（跨平台或需接口扩展）→ paper-only 重实现 → 经典基线排序，记录原论文/发布代码的规格基线。它不是当前活跃配置或本轮测试状态表；例如 `pedestrian_diffusion` 只有规格卡、未注册，DIVE 旧二维适配留作 `dive_2d`，当前主 `dive` 已恢复可学习 XYZ 输出。L-IONet/RIDI/MEIO 的当前增量见上表。不得从历史“official / 可移植”推出已完整复现原系统。
 
 | 名称 | 优先级 | fidelity | 许可 | 输入（官方） | 输出（官方） | 参数量（官方 / IPB） | 依赖外部姿态 | 官方数据集 | 状态 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -61,7 +84,6 @@
 | [`ctin`](algorithms/ctin.md) | paper-only | paper-only | 占位仓库（MIT，无源码） | 200 Hz×200；`gravity_world`；`[gyro,acc]` | 逐帧 2D 速度＋logstd | 论文 0.557 M / 推导 477,572 | 是 | RIDI, OxIOD, RoNIN, IDOL, CTIN | 部分（假设待核实） |
 | [`imot`](algorithms/imot.md) | paper-only | paper-only | 占位仓库（MIT，无源码） | 200 Hz×200；世界系（论文未明示）；`[acc,gyro]` | 2D 速度 | 论文 14.49 M / 推导 7,137,482 | 是（来源未明示） | RIDI, RoNIN, OxIOD, IDOL | 部分（假设待核实） |
 | [`rio`](algorithms/rio.md) | paper-only | paper-only | 无代码 | 200 Hz×200；`gravity_world`；`[gyro,acc]` | 2D 速度 | 论文未报告 / 推导 4,634,882 | 是 | RoNIN, OxIOD, RIDI, IPS | 可移植 |
-| [`ionext`](algorithms/ionext.md) | paper-only | paper-only | 无代码 | 200 Hz×200；`gravity_world`；`[acc,gyro]` | 2D 速度 | 论文 ≈1.1×10⁷ / 推导 10,641,506 | 是 | IMUNet, RoNIN, RIDI, OxIOD, RNIN, TLIO | 部分（假设待核实） |
 | [`gnio`](algorithms/gnio.md) | paper-only | paper-only | 无代码 | 200 Hz×200（1 s 窗、0.1 s 步长）；`gravity_yaw_local`；`[gyro,acc]` | 3D 位移＋logstd（门控头） | 论文 4.90 M / 推导 4,934,153 | 是 | OxIOD, RIDI, RoNIN, IDOL, TLIO | 可移植 |
 | [`velobins`](algorithms/velobins.md) | paper-only | paper-only | 无代码 | 100 Hz×100；`body`；`[acc,gyro]`＋逐旋翼转速/PWM | 逐轴 512 箱分布 → 机体系 3D 速度＋方差 | 论文 ≈76.6 k / 推导 69,968（无转速支路） | 否（网络）；积分需要 | AI-IO, NanoBench, TII-RATM, NeuroBEM | 部分（假设待核实） |
 | [`pdr`](algorithms/pdr.md) | baseline | 定义 | — | 200 Hz 连续序列；加计＋姿态 | 2D 平均速度 | 0（标定标量） | 是 | — | 可移植 |
@@ -123,6 +145,8 @@ DESIGN §3/§4 原本规定模型只接收 `(B, 6, T)` 并返回窗口级 `vel`�
 
 ## 5. 官方仓库、提交与许可
 
+此表保留原规格审计提交与历史路径；本轮服务器参考来源的实际路径、HEAD、文件 SHA 和许可扫描以 [provenance](models/provenance.json) 为准。16 个仓库已经取得文件不等于 16 个完整可运行官方算法：CTIN/iMoT 是文档占位，MEIO 是缺网络的训练包装。
+
 | 仓库 | 提交 | 许可 | 本地路径 / 说明 |
 |---|---|---|---|
 | <https://github.com/Sachini/ronin> | `805b7f0f28bb164ce89ada9ac05a9470dbe3d715` | GPL-3.0 | `third_party/ronin` |
@@ -138,10 +162,12 @@ DESIGN §3/§4 原本规定模型只接收 `(B, 6, T)` 并返回窗口级 `vel`�
 | <https://github.com/decargroup/DIVE> | `e982ddd0643c9d831de77a95467b282b07cceec1` | MIT | `third_party/DIVE` |
 | <https://github.com/Air-IO/Air-IO> | `7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73` | BSD-3-Clause | `third_party/Air-IO` |
 | <https://github.com/jacklu333333/PedestrianDiffusion> | `0b6cc2d019397e390ce757335e01712304339c9b` | **AGPL-3.0**（内含 GPL 代码副本） | `third_party/PedestrianDiffusion` |
-| <https://github.com/bingrao/ctin> | `1441c726811ac87283903471562023fd429e3a08` | MIT（README 徽章写 Apache-2.0） | 占位仓库，只有 README/LICENSE，未克隆 |
-| <https://github.com/Minh-Son-Nguyen/iMoT> | `7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac` | MIT | 占位仓库（“coming soon”），未克隆 |
+| <https://github.com/bingrao/ctin> | `1441c726811ac87283903471562023fd429e3a08` | MIT（README 徽章写 Apache-2.0） | 当前服务器已取得 README/LICENSE；没有网络代码 |
+| <https://github.com/Minh-Son-Nguyen/iMoT> | `7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac` | MIT | 当前服务器已取得占位文档；没有网络代码 |
+| <https://github.com/higerra/ridi_imu> | `ce5d772a1ef8ce590121f0f0b254910bc07a2949` | MIT | 当前服务器已取得官方 SVM/SVR 与预处理/双积分来源 |
+| <https://github.com/SunXuehang/MEIO-Net> | `e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e` | GPL-3.0 | 当前服务器已取得训练包装/配置；官方核心网络缺失 |
 
-IONet、RIO、IONext、GNIO、VeloBins 没有公开代码（RIO 的 CVPR 论文链接到华为云 AI Gallery 页面，该页面需要 JS 渲染，内容未能核实；IONext 承诺审稿后发布；VeloBins 摘要称“录用后发布”；GNIO 未提供任何链接）。
+IONet、L-IONet、RIO、GNIO、VeloBins 没有核实到可运行官方网络源码（RIO 的 CVPR 论文链接到华为云 AI Gallery 页面，源码未核实；VeloBins 摘要称“录用后发布”；GNIO 未提供代码链接）。这五项加仅占位的 CTIN/iMoT 共七个 paper-only 方法。MEIO 单列 partial，不把包装文件等同完整网络；已排除的 IONext 不再作为待迁移算法。
 
 **许可策略**：
 - GPL/AGPL 仓库：只依据规格卡独立实现，不得复制代码，否则衍生文件受 copyleft 约束。
@@ -149,6 +175,17 @@ IONet、RIO、IONext、GNIO、VeloBins 没有公开代码（RIO 的 CVPR 论文�
 - 夹具中的 `pretrained_golden`/`checkpoint_check` 只记录官方权重的 sha256、严格加载结果和少量推理输出，用于本地核对，不包含权重本身。
 
 ## 6. 排除项
+
+仓库拥有者要求排除 **Shanshan Zhang 发表论文中自己提出的方法**。当前一手记录如下；命中按完整作者身份判断，历史文件保留审计，排除项不进入活跃 registry/config/catalog 或正式队列：
+
+| 方法 | 一手作者来源 | 活跃状态 |
+|---|---|---|
+| IONext | [arXiv:2507.17089](https://arxiv.org/abs/2507.17089)，含 Shanshan Zhang | 原注册与二维/三维配置已移除，源码和夹具归档留存 |
+| TinyIO | [arXiv:2507.15293](https://arxiv.org/abs/2507.15293)，含 Shanshan Zhang | 不接入候选 |
+| CKANIO | [arXiv:2507.16865](https://arxiv.org/abs/2507.16865)，含 Shanshan Zhang | 不接入候选 |
+| StarIO | [arXiv:2507.16121](https://arxiv.org/abs/2507.16121)，含 Shanshan Zhang | 不接入候选 |
+
+其他领域/输入限制与作者排除是不同原因。下表保留原行人优先规格调研范围；对于跨域新方法可以在具备真实所需输入后另轨接入，不能直接删除执行器/LiDAR/磁力计支路冒充完整原方法。
 
 | 项目 | 排除理由 |
 |---|---|
@@ -164,9 +201,11 @@ IONet、RIO、IONext、GNIO、VeloBins 没有公开代码（RIO 的 CVPR 论文�
 ## 7. 未完成与待核实
 
 - **论文全文不可得**：LLIO、DeepILS、DIVE 的论文全文在 IEEE 付费墙后，卡中的训练配方与报告数值标为“未核实”。其中 LLIO 状态为“部分”，拿到 PDF 后应补齐 §5、§7。
-- **paper-only 的参数量与论文不符**：CTIN 推导值比论文少 14%，iMoT 只到论文值的约 49%，IONext 需在 v1/v2 两版描述之间取舍。这些卡片状态为“部分”，参数量不能作为忠实性锁定依据。
+- **paper-only 的参数量与论文不符**：历史 CTIN 推导值比论文少 14%，iMoT 只到论文值的约 49%；网络可执行和 GPU 通过不能证明这些声明假设与原论文未公开结构一致。IONext 的版本差别只留在已排除历史记录，不是活跃待办。
 - **未下载核对的权重**：RoNIN（FRDR 记录当前无文件）、IMUNet、RNIN、PedestrianDiffusion 的预训练权重，以及 NIO 其余 3 个 TLIO 权重。
 - **TinyOdom**：官方未公布 NAS 最终结构，卡片固定仓库 `model.cc` 中的 RoNIN 候选结构（未训练权重，已与 TFLite 输出对拍）。
-- **DIVE**：IPB 配置把窗口改为 200 @ 200 Hz、输出改为 2 维，属于改变结构，参数量与官方 3.5 s @ 400 Hz 配置不同（12,367,110 → 7,516,420）。
+- **DIVE**：当前主 `dive` 恢复原 XYZ 头，200 @ 200 Hz 下为 7,517,446 参数；旧二维变体为 `dive_2d`、7,516,420 参数。两者与官方 3.5 s @ 400 Hz 的 12,367,110 参数仍有采样/窗口适配差别，均不包含原 EKF 融合。
 - **GNIO**：注意力维度/头数与特征池化方式未给出，推导参数量 4,934,153（论文 4.90 M）依赖 §4.3 的假设；增强、权重衰减、划分未写明，按 TLIO 补齐并标注。
 - **VeloBins**：编码器沿用 AI-IO 且未复述细节，只有 6,848 参数的分箱解码器可精确复现；箱中心是否均匀、速度目标取窗口哪个时刻、越界速度如何处理均未规定。
+- **MEIO**：官方核心网络缺失，早退规则、头位置和布局仍有声明假设。后阶段 NLL 的 head 训练证据、实际选中出口及原始任务不确定性必须单列，不能把 epoch-one smoke 当作全部科学阶段验证。
+- **范围继续扩充**：当前 21 个论文方法未达 30 个独立论文方法；新增方法先核完整作者、发表状态、官方源码与真实输入契约，再按现有 dev/v1 接口独立实现。已有数据集名字（例如 IDOL）不代表对应算法已实现。

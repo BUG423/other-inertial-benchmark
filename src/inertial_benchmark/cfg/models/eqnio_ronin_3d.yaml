@@ -1,0 +1,37 @@
+# IPB XYZ adaptation of eqnio_ronin. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: eqnio_ronin_3d
+arch: eqnio_ronin
+paper: https://arxiv.org/abs/2408.06321
+code: https://github.com/RoyinaJayanth/EqNIO
+license: none (no LICENSE in the official repo); this implementation is written from
+  the spec card
+commit: 97b7a60a5e5cc8f0132bba343c83de114211f827
+fidelity: '3d_adapted (horizontal O(2) equivariance with an independently learned
+  invariant vertical scalar; original source fidelity: official-code)'
+args:
+  hidden: 64
+  depth: 2
+  frame_kernel: 32
+  group_sizes:
+  - 2
+  - 2
+  - 2
+  - 2
+  base_plane: 64
+  kernel_size: 3
+  fc_dim: 512
+  trans_planes: 128
+  dropout: 0.5
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+recipes:
+  unified:
+    augment:
+    - time_shift

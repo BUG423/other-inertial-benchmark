@@ -1,0 +1,21 @@
+name: subt_mrs
+path: subt_mrs
+splits:
+  test: test
+test_splits: [test]
+strata: [device_id, scene_id]
+domain: wheeled_robot
+independent_source_id: subt_mrs
+reference: map_constrained_multisensor_fusion
+orientation_capabilities:
+  reference: true
+  device: false
+notes: >-
+  Independent SubT-MRS source acquired as the AirIMU release of 28 wheeled-robot
+  segments from five event-robot groups. The acquired subset is test-only;
+  test_ood_device, test_ood_placement and test_ood_position_source are derived
+  views of the same recordings, not additional independent test sets.
+  Map-constrained multisensor fusion provides a correlated reference rather
+  than independent motion-capture ground truth. Reference attitude is
+  privileged; deployable device attitude is unavailable. Placement is body,
+  with the original robot_body label preserved as source provenance.

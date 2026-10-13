@@ -1,0 +1,44 @@
+# IPB XYZ adaptation of ctin. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: ctin_3d
+arch: ctin
+paper: https://arxiv.org/abs/2112.02143
+code: https://github.com/bingrao/ctin
+license: MIT per LICENSE (README badge says Apache-2.0); no code published
+commit: 1441c726811ac87283903471562023fd429e3a08
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: paper-only (widths are assumptions from the spec card; parameter
+  count is derived))'
+args:
+  dim: 64
+  heads: 8
+  encoder_layers: 1
+  decoder_layers: 4
+  ff_dim: 512
+  kernel_size: 3
+  groups: 4
+  reduction: 2
+  encoder_dropout: 0.5
+  decoder_dropout: 0.05
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: frame_velocity
+  dims: 3
+  overlap: mean
+loss: ctin_multitask
+loss_kwargs:
+  rate: 200.0
+  position_weight: 1.0
+  velocity_weight: 1.0
+recipes:
+  unified:
+    augment:
+    - random_yaw
+    - bias_shift:
+        gyro: 0.05
+        acc: 0.2
+    - time_shift

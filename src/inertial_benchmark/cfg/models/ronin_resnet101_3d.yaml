@@ -1,0 +1,30 @@
+# IPB XYZ adaptation of ronin_resnet101. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: ronin_resnet101_3d
+arch: ronin_resnet
+paper: https://arxiv.org/abs/1905.12853
+code: https://github.com/Sachini/ronin
+license: GPL-3.0 (official code); this implementation is written from scratch
+commit: 805b7f0f28bb164ce89ada9ac05a9470dbe3d715
+args:
+  group_sizes:
+  - 3
+  - 4
+  - 23
+  - 3
+  base_plane: 64
+  kernel_size: 3
+  fc_dim: 1024
+  trans_planes: 128
+  dropout: 0.5
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+recipes:
+  unified: {}
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original source fidelity: official-source/spec migrated independent implementation)'

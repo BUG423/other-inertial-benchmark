@@ -10,6 +10,8 @@ from typing import Iterable, Optional
 
 import numpy as np
 
+from .community import community_trajectory_metrics
+
 NAN = float("nan")
 
 
@@ -236,6 +238,7 @@ def trajectory_metrics(
     RTE 系指标另附 ``*_scaled``（该序列的值是否按有效跨度线性换算，见 :func:`relative_error`）与
     ``valid_span_s``（有效跨度，秒），使聚合结果里“换算过的序列占多少”可见。
     """
+    t_rte = tuple(t_rte)
     main = relative_error(pred, gt, valid, rate, rte_delta, dims)
     out = {
         "ate": ate(pred, gt, valid, dims),
@@ -254,4 +257,6 @@ def trajectory_metrics(
     out.update(length_ratios(pred, gt, valid, rate, oracle, dims))
     if oracle is not None:
         out["ate_oracle"] = ate(oracle, gt, valid, dims)
+    out.update(community_trajectory_metrics(pred, gt, valid, rate=rate, dims=dims,
+                                          intervals=(*t_rte, rte_delta)))
     return out

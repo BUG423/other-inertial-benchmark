@@ -231,6 +231,15 @@ def test_privileged_input_is_declared_and_required():
         build("nio_lie_events_ronin", extra_inputs=["orientation"])
 
 
+def test_xyz_ronin_adaptation_preserves_privileged_vertical_initial_velocity():
+    model = build("nio_lie_events_ronin_3d").eval()
+    extra = {"init_velocity": torch.tensor([[0.4, -0.2, 1.5]])}
+    assert model.input_spec.dims == 3 and model.zero_v0_z is False
+    assert "init_velocity" in model.input_spec.privileged_inputs
+    torch.testing.assert_close(model.initial_velocity(extra, torch.float64),
+                               extra["init_velocity"].double(), atol=0, rtol=0)
+
+
 def test_ronin_zeroes_the_vertical_initial_velocity():
     """官方 RoNIN 的 ``v0_z`` 恒为 0（训练与测试都是），TLIO 变体保留 3 维 ``v0``。"""
     ronin = build("nio_lie_events_ronin").eval()

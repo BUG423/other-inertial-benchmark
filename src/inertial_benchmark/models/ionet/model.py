@@ -60,26 +60,36 @@ class IONetPolarLoss:
     ``mask``（逐输出的有效掩码）与 ``m`` 相互独立：无效的窗口/帧/步两项都不计入。
     """
 
-    def __init__(self, kappa: float = 1.0, min_speed: float = 0.1) -> None:
+    def __init__(self, kappa: float = 1.0, min_speed: float = 0.1,
+                 vertical_weight: float = 1.0) -> None:
         self.kappa = float(kappa)
         self.min_speed = float(min_speed)
+        self.vertical_weight = float(vertical_weight)
 
     def __call__(self, out: dict, target: torch.Tensor, epoch: int = 0,
                  mask: Optional[torch.Tensor] = None) -> tuple:
-        speed_target = target.norm(dim=-1)
+        # The paper's polar quantities remain horizontal in the XYZ adaptation.
+        # Vertical motion must not change the horizontal speed or moving mask.
+        speed_target = target[..., :2].norm(dim=-1)
         angle_target = torch.atan2(target[..., 1], target[..., 0])
         speed_term = masked_output_mean((out["speed"] - speed_target) ** 2, mask)
         moving = (speed_target > self.min_speed).to(target.dtype)
         angle_term = masked_output_mean(
             moving * wrap_angle(out["heading"] - angle_target) ** 2, mask)
         loss = speed_term + self.kappa * angle_term
-        return loss, {"speed": speed_term.detach(), "heading": angle_term.detach(),
-                      "mse": mse(out["vel"], target, mask).detach()}
+        items = {"speed": speed_term.detach(), "heading": angle_term.detach(),
+                 "mse": mse(out["vel"], target, mask).detach()}
+        if target.shape[-1] == 3:
+            vertical_term = masked_output_mean((out["vel"][..., 2] - target[..., 2]) ** 2,
+                                                mask)
+            loss = loss + self.vertical_weight * vertical_term
+            items["vertical"] = vertical_term.detach()
+        return loss, items
 
 
 @register_model("ionet")
 class IONet(BaseModel):
-    """IONet（双层 BiLSTM + 极坐标头；IPB 默认适配输出世界系水平速度）。"""
+    """双层 BiLSTM + 水平极坐标头；显式 XYZ 适配另回归真实垂直速度。"""
 
     default_loss = "ionet_polar"
 
@@ -92,8 +102,8 @@ class IONet(BaseModel):
         permute_channels: bool = True,
     ) -> None:
         super().__init__(input_spec)
-        if input_spec.dims != 2:
-            raise ValueError("ionet's polar head predicts a horizontal vector and needs dims=2")
+        if input_spec.dims not in (2, 3):
+            raise ValueError("ionet supports dims=2 or dims=3")
         self.decimation = int(decimation)
         if self.decimation > 1 and input_spec.window % self.decimation:
             raise ValueError(f"window {input_spec.window} is not a multiple of "
@@ -103,7 +113,9 @@ class IONet(BaseModel):
         self.dropout1 = nn.Dropout(dropout)
         self.lstm2 = nn.LSTM(2 * hidden, hidden, batch_first=True, bidirectional=True)
         self.dropout2 = nn.Dropout(dropout)
-        self.fc = nn.Linear(2 * hidden, 2)
+        # In 3D, the third component independently regresses vertical velocity;
+        # the original horizontal speed/heading parameterisation is unchanged.
+        self.fc = nn.Linear(2 * hidden, input_spec.dims)
         self.hidden = int(hidden)
         self.permute_channels = bool(permute_channels)
 
@@ -121,4 +133,6 @@ class IONet(BaseModel):
         polar = self.fc(self.dropout2(self.features(imu)))
         speed, heading = polar[:, 0], polar[:, 1]
         vel = speed.unsqueeze(-1) * torch.stack([torch.cos(heading), torch.sin(heading)], dim=-1)
+        if self.input_spec.dims == 3:
+            vel = torch.cat([vel, polar[:, 2:3]], dim=-1)
         return {"vel": vel, "speed": speed, "heading": heading}

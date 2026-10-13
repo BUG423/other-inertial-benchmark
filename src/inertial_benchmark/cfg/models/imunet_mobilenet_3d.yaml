@@ -1,0 +1,31 @@
+# IPB XYZ adaptation of imunet_mobilenet. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: imunet_mobilenet_3d
+arch: imunet_mobilenet
+paper: https://arxiv.org/abs/2208.00068
+code: https://github.com/BehnamZeinali/IMUNet
+license: none (no LICENSE in the official repo); this implementation is written from
+  the spec card
+commit: c57f14d0f4f5bbb8e29d836dabacc8718ca825e1
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: official-code)'
+args:
+  channels:
+  - 32
+  - 64
+  - 128
+  - 256
+  - 512
+  - 1024
+  width_multiplier: 1.0
+  kernel_size: 3
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+recipes:
+  unified: {}

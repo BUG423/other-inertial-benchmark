@@ -1,0 +1,12 @@
+name: tartanimu_2025
+path: tartanimu_2025
+splits:
+  test: test
+test_splits: [test]
+strata: [motion_platform]
+notes: >-
+  CVPR2025 labelled retargetted NPZ samples, not the IROS2026 challenge.
+  All acquired source samples are official test; no train/val is fabricated.
+  Original recording identity is unknown; platform grouping conservatively
+  retains overlapping clips and reference origin limitations. XYZ canonical;
+  XY evaluation selects the first two coordinates through the standard view.

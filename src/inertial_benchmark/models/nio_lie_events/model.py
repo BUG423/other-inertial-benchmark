@@ -182,7 +182,10 @@ class NIOLieEventsRoNIN(LieEventModel):
         dropout: float = 0.5,
         max_events_per_step: int = 64,
     ) -> None:
-        super().__init__(input_spec, threshold, v0_noise, polarity_noise, zero_v0_z=True,
+        # The original planar RoNIN branch suppresses v0_z.  Its explicit XYZ
+        # adaptation retains measured XYZ privileged initial velocity instead.
+        super().__init__(input_spec, threshold, v0_noise, polarity_noise,
+                         zero_v0_z=input_spec.dims == 2,
                          zero_pseudo_measurements=False,
                          max_events_per_step=max_events_per_step)
         if input_spec.frame == "body":

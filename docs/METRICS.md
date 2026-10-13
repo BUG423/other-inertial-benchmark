@@ -118,6 +118,55 @@ oracle ATE 5.37 m，而模型 ATE 3.31 m）。这类序列上的 `ate`/`pde` 度
 恒等式 `plr_dense = oracle_ratio × plr_oracle` 精确成立（测试锁定）。`oracle_ratio < 1` 反映窗口平均速度
 与 1 s 采样对路径的平滑程度（协议效应），`plr_oracle` 反映模型效应。参考长度为 0 时对应比值为 `NaN`。
 
+### 2.6 位置误差分布与连续有效段
+
+新增指标直接进入同一份序列结果。XYZ 主结果和 `xy_` 辅助结果使用同一预测的轴截取；不重新积分。
+设 `e_i = ‖p̂_i − p_i‖`，只取参考有效样本。预测或参考在有效样本处含非有限值时直接失败，
+不能通过丢掉失败预测获得更好的指标；参考无效处可含 `NaN`。
+
+| 键 | 定义 / 单位 |
+|---|---|
+| `position_mae` | `mean(e_i)`，米；这里是平均欧氏误差，区别于按坐标分量平均的 MAE |
+| `position_rmse` | `sqrt(mean(e_i²))`，米；与未对齐 `ate` 同值 |
+| `position_p50` / `position_p90` / `position_p95` | 欧氏误差的相应分位数，米；使用 NumPy 默认线性分位插值 |
+| `position_max` / `position_std` | 最大欧氏误差、欧氏误差的总体标准差（`ddof=0`），米 |
+| `position_{x,y,z}_mae` / `_rmse` | 各轴的绝对误差均值 / RMSE，米；二维结果不生成 Z 键 |
+| `endpoint_error` | 最后一个有效样本的绝对位置误差，米；不是首尾相对位移误差 |
+| `valid_position_samples` / `valid_segments` | 有效样本数 / 连续有效片段数；片段至少包含一个样本 |
+| `valid_duration_s` | 每个片段 `(末索引−首索引)/r` 的和；不计无效缺口 |
+| `reference_length_contiguous_m` / `predicted_length_contiguous_m` | 各片段分别每 1 s 采样并补末点的路径长度之和，米；不跨缺口连接 |
+| `reference_length_contiguous_dense_m` / `predicted_length_contiguous_dense_m` | 相同片段逐相邻样本的稠密路径长度之和，米 |
+| `plr_contiguous` | 连续段的 1 s 预测长度 / 1 s 参考长度 |
+| `plr_contiguous_dense` | 连续段的稠密预测长度 / 稠密参考长度；与历史 `plr_dense` 的分子定义不同 |
+| `segment_endpoint_error_sum` | 每个至少两样本片段的首尾相对位移误差范数之和，米 |
+| `normalized_drift` | 上述相对位移误差之和 / `reference_length_contiguous_m × 100`，百分比；参考长度不足 1 m 时为 `NaN` |
+
+`normalized_drift` 消除每个片段起点的常量偏移。它与历史 `pde` 的终点绝对误差定义不同，不更名替换。
+无有效样本的位置统计为 `NaN`，计数及长度为零；静止片段的位置误差仍可算，长度比和归一化漂移为 `NaN`。
+`position_std` 仅描述误差分布，不能用于选模：恒定但很大的偏差也可能有很小的标准差。
+
+### 2.7 连续段相对误差与姿态可用性
+
+`rpe_translation_<τ>s_{rmse,mae,p50,p90,p95,max,std,pairs}` 对每个连续有效片段内所有
+`(i, i + round(τr))` 计算世界坐标系相对位移误差：
+
+```
+e_translation(i, j) = ‖(p̂_j − p̂_i) − (p_j − p_i)‖
+```
+
+默认间隔与 `t_rte`、`rte_delta` 相同，即 1、10、60 s。整个 `[i,j]` 都须参考有效，不能跨缺口。
+不足该间隔的片段不外推、不缩放；没有配对时统计量为 `NaN`、`pairs = 0`。
+这与历史 RTE 仅检查端点、无配对时按跨度换算的公开规则不同，两组键并存。
+
+只提供位置时还可计算 `rpe_point_distance_<τ>s_rmse`，其每对误差为
+`abs(‖p̂_j−p̂_i‖ − ‖p_j−p_i‖)`，对应 [evo 的 point-distance 关系](https://github.com/MichaelGrupp/evo/blob/master/evo/core/metrics.py)。
+此指标对整段刚体旋转不敏感，应与相对位移向量误差一起阅读。
+
+上述 world-displacement 指标不是完整 SE(3) 的 TUM relative-pose-error；
+[evo 的完整 RPE](https://github.com/MichaelGrupp/evo/blob/master/evo/core/metrics.py) 比较相对位姿变换，需要模型预测姿态。
+当前位置预测协议没有这项输出，因此 `rpe_rotation_rmse = NaN`、`rpe_rotation_available = 0`。
+不能把参考姿态、速度方向或初始方向作为预测姿态来伪造旋转 RPE。计数、可用性、长度及比值均不参加选模。
+
 ## 3. 窗口级速度指标
 
 只统计 `w_k = 1` 的窗口，取前 `D` 维。
@@ -137,6 +186,44 @@ oracle ATE 5.37 m，而模型 ATE 3.31 m）。这类序列上的 `ate`/`pde` 度
 
 窗口速度的来源：`avg_velocity` 与 `velocity_at_end` 目标直接是速度；`displacement` 目标除以窗口跨度
 `(T−1)/r` 换算；`gravity_yaw_local` 与 `body` 坐标系先用窗口末端姿态旋回世界系。
+
+### 3.1 条件不确定性接口
+
+`metrics.gaussian_uncertainty_metrics(mean, target, logstd, valid)` 提供高斯不确定性的计算接口。
+三项输入必须属于**同一原始任务、坐标系、单位及输出行布局**，形状为 `N×D`；
+显式各向同性标量头允许 `logstd` 为 `N×1`。只选择有效行，不拟合校准参数、不裁剪模型给出的方差。
+缺少 `logstd` 时返回 `uncertainty_task_available = 0` 和 `NaN`，不能假设单位方差。
+有头但无有效行时 `available = 1`、`num_rows = 0`，各统计量仍为 `NaN`。
+非有限有效预测、不合法正标准差或数值溢出直接报错。
+
+令 `σ = exp(logstd)`、`z = (mean − target)/σ`，采用
+[标准高斯密度](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.multivariate_normal.html) 定义：
+
+| 键（统一前缀 `uncertainty_task_`） | 定义 |
+|---|---|
+| `nll` | `mean_n Σ_d [logσ_nd + z_nd²/2 + log(2π)/2]`，nats；包含归一化常数，按轴求和 |
+| `nees` | `mean_n Σ_d z_nd²`；对声明的对角高斯模型，期望为 `D` |
+| `nees_per_dim` | `nees/D`，理想期望为 1；不能只按越小越好排序 |
+| `standardized_rmse` | `sqrt(mean_nd z_nd²)` |
+| `sigma_mean` | 标准差的分量均值，单位与原始目标相同 |
+| `coverage_1sigma` / `coverage_2sigma` | `mean_nd (abs(z_nd) ≤ 1/2)`，分量覆盖率；标准高斯期望约 0.6827 / 0.9545 |
+| `box_coverage_1sigma` / `box_coverage_2sigma` | 每行**所有**分量同时落入相应区间的比例；不是一维覆盖率或联合椭球覆盖率 |
+| `coverage_ece` | 中央区间覆盖校准误差：对各名义覆盖率 `c`，计算经验 `abs(z) ≤ Φ⁻¹((1+c)/2)` 的覆盖率，与 `c` 的绝对差，再取平均 |
+| `available` / `num_rows` / `dims` / `isotropic` | 头是否存在 / 有效任务行数 / 计算轴数 / 是否显式各向同性标量头 |
+
+覆盖率与 ECE 是 `[0,1]` 的比例。默认名义覆盖率为 0.1、0.2、…、0.9、0.95；
+`Φ⁻¹` 是 [标准正态分位函数](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html)。
+这是回归中央区间覆盖 ECE，不能当作分类概率 ECE。多个输出步骤的有效掩码应按原始输出行展开。
+没有协方差交叉项的方法只声明对角近似，不据此称完整滤波状态一致性或轨迹协方差 NEES。
+
+该接口必须在世界系变换、重叠窗口合并、无效输出填补之前使用匹配的原始均值与标签。
+当前 `SequenceResult.logstd` 是原始窗口布局，而 `vel_pred/vel_target` 已变换及合并，直接配对违反约定。
+在预测器保存完整原始任务三元组和合同元数据之前，此接口仅为计算组件，不能宣称所有正式结果都已包含这些字段。
+从三维原始分布取 XY 时必须同时截取匹配的均值、标签和方差分量；各向同性标量保持不变。
+
+原始速度与位移的 NLL 不能直接混排；仅改变单位 `x→ax` 就会使 NLL 增加 `D·log(a)`。
+正式报告需记录目标类型、坐标系、单位、分量数、覆盖水平以及对角/各向同性假设。
+本组字段不自动用于主协议选模，训练科学损失与 `loss` 键保持原定义。
 
 ## 4. 效率指标
 

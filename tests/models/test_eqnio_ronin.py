@@ -181,8 +181,6 @@ def test_float32_equivariance_is_approximate():
 
 
 def test_configuration_constraints():
-    with pytest.raises(ValueError, match="dims=2"):
-        build(dims=3)
     with pytest.raises(ValueError, match="gravity-aligned"):
         build(frame="body", dims=3)
     cfg = get_cfg({"model": "eqnio_ronin", "recipe": "official"})
@@ -190,6 +188,30 @@ def test_configuration_constraints():
     assert cfg.scheduler == "plateau" and cfg.optimizer == "adam"
     assert cfg.augment == ["time_shift"]   # 等变架构不做随机偏航
     assert get_cfg({"model": "eqnio_ronin"}).augment == ["time_shift"]
+
+
+@pytest.mark.parametrize("kind", ["rotation", "reflection"])
+def test_xyz_adaptation_keeps_o2_xy_equivariance_and_vertical_invariance(kind):
+    torch.manual_seed(0)
+    model = build_model(get_cfg({"model": "eqnio_ronin_3d"})).double().eval()
+    x = windows()[:2]
+    matrix = (rotation_matrix_2d if kind == "rotation" else reflection_matrix_2d)([0.7, -2.3])
+    with torch.no_grad():
+        prediction = model(x)["vel"]
+        transformed = model(act_o2(x, matrix))["vel"]
+    assert prediction.shape == (2, 3)
+    expected = torch.cat([torch.einsum("bij,bj->bi", matrix, prediction[:, :2]),
+                          prediction[:, 2:3]], dim=-1)
+    torch.testing.assert_close(transformed, expected, atol=1e-8, rtol=0)
+    assert prediction[:, 2].abs().sum() > 0
+    out = model(x)
+    target = out["vel"].detach().clone()
+    target[:, 2] += 1.0
+    loss, _ = model.loss(out, {"imu": x, "target": target})
+    loss.backward()
+    assert any(p.grad is not None and p.grad.abs().sum() > 0
+               for p in model.ronin.parameters())
+    assert all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None)
 
 
 @pytest.mark.slow

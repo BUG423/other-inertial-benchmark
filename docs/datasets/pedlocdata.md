@@ -1,7 +1,42 @@
 # PedLocData 数据集卡片
 
 > 转换器：[`converters/pedlocdata.py`](../../src/inertial_benchmark/data/converters/pedlocdata.py)（`pedlocdata@1.1.0`）｜共享自检工具：[`_rig_utils.py`](../../src/inertial_benchmark/data/converters/_rig_utils.py)
-> 数据版本：Zenodo 18149105（2025-11-17）｜最近核验：2026-09-17｜格式规范：[DESIGN.md 第 2 节](../DESIGN.md)
+> 数据版本：Zenodo 18149105（2025-11-17）｜本轮 Demo 验收：2026-10-14（北京时间）｜格式规范：[DESIGN.md 第 2 节](../DESIGN.md)
+
+## 0. 本轮 AutoDL 已取得范围与验收
+
+新服务器直接取得 `SimpleDemo.h5`，**554,702,552 B**，官方 MD5
+`73d0c2cd9a706755094753f7130d3621` 完全匹配，观测 SHA256
+`ecc67c5f77eb603c799933a0f80bf34015b1b99671159c909b8114f92f82a49a`。
+2026-10-13 17:33:31 UTC 实际完成现有 `pedlocdata@1.1.0` 转换、科学测试、完整数组/hash
+及真实任务视图验收：**47 接收 / 0 拒收，3.4324875 h，10,775.685 m**。
+`YT_server_200Hz.h5` 主包仍在服务器有限续传，尚无完整验收；Demo 与主包属于同一独立来源。
+
+| 当前 Demo 项目 | 实际结果 |
+| :--- | :--- |
+| 原生根 | `datasets/ipb-v1/pedlocdata` |
+| 指纹 | `6001c5dcf9af0974ade1c20ea0d3be7aeb04706133ef87b5b41a2d2ea09a6cea` |
+| 默认 grouped train/val/test | 32 / 9 / 6 条；13 录制组按 9 / 2 / 2 分配，三组交集为 0 |
+| 官方原划分 | 32 / 9 / 6 条，保存在 `official_*.txt`；计数相同但成员和分组不同 |
+| full/hash | 0 errors / 3 warnings；warnings 为已声明的官方录制泄漏，默认分组无泄漏 |
+| 科学测试 | AutoDL 7 passed / 0 skipped / 0 failed，4.55 s |
+| 真实任务视图 | 全部 47 条实际 B=2 XYZ/XY、位置导数及 mask 一致；无设备姿态时明确拒绝 device track |
+| 旧数据守卫 | 原先 12 个正式来源的 manifest/split SHA 前后完全相同；未改旧 native |
+| 参考保真 | 发布者未说明参考位置/姿态来源；reference attitude 为特权输入，不声明独立 mocap 真值 |
+
+默认 `test_demo` 是当前 grouped test 的同记录视图，`test_yt` 为空；不增加序列数。
+训练与选模只使用默认 grouped train/val，不能与有录制泄漏的 `official_test` 混用。
+零偏/磁场占位数据不变成模型输入或 GT 标定；没有可部署设备姿态，不用参考姿态暗补。
+
+本轮 native receipt SHA256 为
+`72412c4531c458bfbd8599211f8c5557fb812026361013f07091aad153815c4b`；
+full/hash receipt SHA256 为
+`2a65a457bd5a2bac36d8259e2f2f4c5759c043b32e8936bb8ecfa2819121161c`。
+两者保存于服务器 `.local/acquisition/newserver-pedloc-demo-native/`，科学转换绑定
+immutable source manifest `c832d069f4d6c20d3b8edc7d0a03dfde28ab69acb0cd6f17d7b90b9311fab889`。
+
+**以下 YT+Demo 的 2,161 候选、1,924 接收/237 拒收等统计是 2026-09-17 的历史完整来源卡记录，
+不作为本轮已取得全集、47 条 Demo 的拒收数或当前服务器训练准入声明。**
 
 ## 1. 概览
 

@@ -28,7 +28,9 @@ DT = 1.0 / 200.0
 
 
 def build(**overrides):
-    return build_model(get_cfg({"model": "dive", **overrides}))
+    # Retain the original IPB planar parameter/input fixtures independently of
+    # the restored XYZ default profile.
+    return build_model(get_cfg({"model": "dive_2d", **overrides}))
 
 
 def quat_from_yaw(yaw: float, dtype=torch.float64) -> torch.Tensor:
@@ -236,10 +238,30 @@ def test_configuration_constraints():
     assert cfg.epochs == 100 and cfg.batch == 32 and cfg.lr == 1e-4
     assert cfg.optimizer == "adamw" and cfg.weight_decay == 0.01 and cfg.scheduler == "none"
     assert cfg.frame == "gravity_yaw_local" and cfg.target == "velocity_at_end"
-    assert cfg.dims == 2 and cfg.extra_inputs == ["orientation"]
+    assert cfg.dims == 3 and cfg.extra_inputs == ["orientation"]
     assert cfg.augment == get_cfg({"model": "dive"}).augment
     # 非特权：DIVE 只用逐样本姿态，不用参考真值速度
     assert build().input_spec.privileged_inputs == ()
+
+
+def test_default_xyz_profile_restores_original_dive_output_and_vertical_loss():
+    model = build_model(get_cfg({"model": "dive"})).eval()
+    assert model.input_spec.dims == 3
+    assert model.num_params == FIXTURE["variant_total_params"][
+        "200Hz_1.0s_3d_depth3 (IPB window=200, dims=3)"]
+    imu = torch.randn(2, 6, 200)
+    extra = model.input_spec.dummy_extra(2)
+    for epoch in (0, 10):
+        model.zero_grad(set_to_none=True)
+        out = model(imu, extra)
+        target = out["vel"].detach().clone()
+        target[:, 2] += 1.0
+        out["vel"].retain_grad()
+        loss, _ = model.loss(out, {"imu": imu, "target": target, "extra": extra}, epoch)
+        assert loss.isfinite()
+        loss.backward()
+        assert out["vel"].grad[:, 2].abs().sum() > 0
+        assert model.backbone.mean_head.fc3.weight.grad[2].abs().sum() > 0
 
 
 @pytest.mark.slow

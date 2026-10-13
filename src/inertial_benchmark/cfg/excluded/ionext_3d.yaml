@@ -1,0 +1,45 @@
+# IPB XYZ adaptation of ionext. Original 2D profile/parameter fixture remains available.
+# Target layout, input construction, architecture and algorithm-specific loss are retained.
+# This profile does not claim original-paper 3D accuracy or original 2D checkpoint compatibility.
+name: ionext_3d
+arch: ionext
+paper: https://arxiv.org/abs/2507.17089
+code: none (v2 says the code will be released after peer review)
+license: paper-only re-implementation (no official code)
+commit: n/a
+fidelity: '3d_adapted (learned XYZ output with original target layout and loss; original
+  source fidelity: paper-only)'
+args:
+  depths:
+  - 2
+  - 2
+  - 6
+  - 2
+  widths:
+  - 96
+  - 192
+  - 384
+  - 768
+  stem_kernel: 4
+  downsample_kernel: 2
+  wing0_kernels:
+  - 1
+  - 3
+  - 11
+  wing1_kernels:
+  - 1
+  - 5
+  - 17
+  value_kernel: 3
+  softmax_axis: branch
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse
+recipes:
+  unified:
+    augment: []

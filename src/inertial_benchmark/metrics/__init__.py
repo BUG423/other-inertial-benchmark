@@ -9,6 +9,12 @@ from typing import Iterable, Optional
 
 import numpy as np
 
+from .community import (
+    community_trajectory_metrics,
+    contiguous_spans,
+    relative_translation_statistics,
+)
+
 from .trajectory import (
     align_trajectory,
     ate,
@@ -24,6 +30,7 @@ from .trajectory import (
     valid_span,
 )
 from .velocity import angle_between, window_metrics
+from .uncertainty import CALIBRATION_LEVELS, gaussian_uncertainty_metrics
 
 # 指标名 → (展示名, 单位, 越小越好)。越接近 1 越好的比值指标标记为 None。
 METRIC_INFO = {
@@ -53,13 +60,52 @@ METRIC_INFO = {
     "params": ("Params", "", True),
     "flops": ("FLOPs", "", True),
 }
+METRIC_INFO.update({
+    **{f"position_{name}": (f"Position {name.upper()}", "m", True)
+       for name in ("mae", "rmse", "p50", "p90", "p95", "max", "std")},
+    **{f"position_{axis}_{name}": (f"Position {axis.upper()} {name.upper()}", "m", True)
+       for axis in "xyz" for name in ("mae", "rmse")},
+    "endpoint_error": ("Endpoint error", "m", True),
+    "segment_endpoint_error_sum": ("Segment endpoint error sum", "m", True),
+    "normalized_drift": ("Contiguous normalized drift", "%", True),
+    "valid_position_samples": ("Valid position samples", "", None),
+    "valid_segments": ("Valid segments", "", None),
+    "valid_duration_s": ("Contiguous valid duration", "s", None),
+    "reference_length_contiguous_m": ("Contiguous reference length", "m", None),
+    "predicted_length_contiguous_m": ("Contiguous predicted length", "m", None),
+    "reference_length_contiguous_dense_m": ("Dense contiguous reference length", "m", None),
+    "predicted_length_contiguous_dense_m": ("Dense contiguous predicted length", "m", None),
+    "plr_contiguous": ("Contiguous PLR", "", None),
+    "plr_contiguous_dense": ("Dense contiguous PLR", "", None),
+    "rpe_rotation_rmse": ("Rotation RPE (unavailable)", "deg", None),
+    "rpe_rotation_available": ("Rotation RPE available", "", None),
+    "uncertainty_task_nll": ("Native-task Gaussian NLL", "nats", None),
+    "uncertainty_task_nees": ("Native-task NEES", "", None),
+    "uncertainty_task_nees_per_dim": ("Native-task NEES/D", "", None),
+    "uncertainty_task_standardized_rmse": ("Native-task standardized RMSE", "", None),
+    "uncertainty_task_sigma_mean": ("Native-task mean sigma", "task units", None),
+    "uncertainty_task_coverage_ece": ("Native-task interval coverage ECE", "", None),
+    **{f"uncertainty_task_{name}": (f"Native-task {name.replace('_', ' ')}", "", None)
+       for name in ("coverage_1sigma", "coverage_2sigma", "box_coverage_1sigma",
+                    "box_coverage_2sigma", "available", "num_rows", "dims", "isotropic")},
+})
+for _tau in (1.0, 10.0, 60.0):
+    for _stat in ("mae", "rmse", "p50", "p90", "p95", "max", "std", "pairs"):
+        METRIC_INFO[f"rpe_translation_{_tau:g}s_{_stat}"] = (
+            f"World-displacement RPE@{_tau:g}s {_stat.upper()}",
+            "" if _stat == "pairs" else "m", None if _stat == "pairs" else True,
+        )
+    METRIC_INFO[f"rpe_point_distance_{_tau:g}s_rmse"] = (
+        f"Point-distance RPE@{_tau:g}s RMSE", "m", True,
+    )
 # 默认报表列。``ate_oracle`` 是同一协议下的误差下限（用窗口目标本身积分），必须和 ``ate`` 一起看：
 # 有多秒 valid 缺口的序列上它可以超过模型的 ATE（真实数据实例：RIDI huayi_bag2，
 # oracle 5.37 m 对模型 3.31 m），此时 ATE 度量的是缺口而不是模型。
 MAIN_METRICS = ("ate", "ate_oracle", "rte", "d_rte_10m", "pde", "plr", "vel_rmse",
                 "dir_err_mean")
 # 不能用于模型选择：效率指标不在 val 上计算，oracle 指标与模型无关（选它等于不选）
-NON_FITNESS = ("params", "flops", "ate_oracle")
+NON_FITNESS = ("params", "flops", "ate_oracle", "position_std", "position_z_mae",
+               "position_z_rmse")
 
 
 def display_name(key: str) -> str:
@@ -84,6 +130,10 @@ def fitness_keys(t_rte: Iterable[float] = (1.0, 10.0),
     keys = {k for k, info in METRIC_INFO.items() if info[2] is True and k not in NON_FITNESS}
     keys |= {f"t_rte_{float(tau):g}s" for tau in t_rte}
     keys |= {f"d_rte_{float(dist):g}m" for dist in d_rte}
+    keys |= {f"rpe_translation_{float(tau):g}s_{stat}"
+             for tau in t_rte for stat in ("mae", "rmse", "p50", "p90", "p95", "max")}
+    # Spread by itself can reward a consistently biased predictor.
+    keys = {key for key in keys if not key.endswith("_std")}
     return sorted(keys)
 
 
@@ -111,6 +161,7 @@ def sequence_metrics(
 
 
 __all__ = [
+    "CALIBRATION_LEVELS",
     "FITNESS_STATS",
     "MAIN_METRICS",
     "METRIC_INFO",
@@ -120,13 +171,17 @@ __all__ = [
     "ate",
     "ate_aligned",
     "cumulative_distance",
+    "community_trajectory_metrics",
+    "contiguous_spans",
     "d_rte",
     "display_name",
     "drift",
     "fitness_keys",
+    "gaussian_uncertainty_metrics",
     "length_ratios",
     "path_length",
     "relative_error",
+    "relative_translation_statistics",
     "rte",
     "sequence_metrics",
     "trajectory_metrics",

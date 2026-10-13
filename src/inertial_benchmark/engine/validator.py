@@ -70,7 +70,7 @@ class Validator:
                          calibration=dict(model_cfg.get("calibration") or {}))
 
     def __call__(self, model: Optional[torch.nn.Module] = None, sources: Optional[list] = None,
-                 device: Optional[torch.device] = None, epoch: int = 0,
+                 device: Optional[torch.device] = None, epoch: Optional[int] = None,
                  dataset: Optional[DatasetSpec] = None, split: Optional[str] = None) -> RunResult:
         run_callbacks(self.callbacks, "on_val_start", self)
         standalone = sources is None
@@ -80,6 +80,13 @@ class Validator:
         split = split or self.args.split
         device = device or select_device(self.args.device, verbose=standalone)
         predictor = Predictor(self.args, model=model, device=device)
+        epoch_source = 'explicit_override' if epoch is not None else 'default_zero'
+        if epoch is None:
+            # Independent checkpoint evaluation must use its actual scientific
+            # loss phase. Trainer supplies the current epoch explicitly.
+            epoch = (int(load_checkpoint(self.args.model).get('epoch', 0))
+                     if is_checkpoint(self.args.model) else 0)
+            if is_checkpoint(self.args.model): epoch_source = 'checkpoint'
         handler = None
         if standalone:
             if self.save_dir is None:
@@ -92,6 +99,8 @@ class Validator:
         try:
             t0 = time.time()
             result = self.evaluate(predictor, sources, epoch, spec.name, split)
+            result.cfg['loss_evaluation_epoch'] = epoch
+            result.cfg['loss_evaluation_epoch_source'] = epoch_source if standalone else 'trainer_explicit'
             if self.label:
                 result.model = self.label
             if standalone:

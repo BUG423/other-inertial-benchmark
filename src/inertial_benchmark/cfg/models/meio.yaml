@@ -1,0 +1,32 @@
+name: meio
+arch: meio
+paper: https://ieeexplore.ieee.org/document/11251007
+code: https://github.com/SunXuehang/MEIO-Net
+license: independent mathematical implementation; original released wrappers GPL-3.0
+fidelity: paper-core partial; official training-spec loss; missing official network reconstructed with declared assumptions
+args:
+  patch_len: 10
+  feature_dim: 512
+  layers: 6
+  expansion: 2
+  dropout: 0.5
+  head_layers: 2
+  head_dropout: 0.5
+  variance_threshold: 0.001
+  min_logstd: null
+  force_full_depth: false
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: displacement
+  dims: 3
+loss: meio_multiexit
+loss_kwargs:
+  switch_epoch: 10
+  warmup_epochs: 0
+  mse_power: 1.0
+  covariance_power: 0.5
+recipes:
+  unified: {}

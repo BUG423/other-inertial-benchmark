@@ -108,9 +108,275 @@ def test_integration_helpers():
     v = np.interp(t, tw, [0.0, 2.0])
     expected = np.concatenate([[0.0], np.cumsum(0.5 * (v[1:] + v[:-1]) * 0.005)])
     np.testing.assert_allclose(pos[:, 0] - pos[10, 0], expected - expected[10], atol=1e-12)
+
+
+def test_dynamic_benchmark_keeps_all_active_profiles_and_once_random_seeds(dataset, tmp_path):
+    from inertial_benchmark.cfg import model_yaml_names
+    from inertial_benchmark.engine.benchmark import load_plan, plan_item
+    manifest = json.loads((dataset / 'dataset.json').read_text())
+    registry = tmp_path / 'registry.json'
+    registry.write_text(json.dumps({'datasets': [
+        {'name': 'accepted', 'root': str(dataset), 'fingerprint': manifest['fingerprint'],
+         'accepted': True, 'independent_source_id': 'fixture_source', 'domain': 'human'},
+        {'name': 'partial_raw', 'accepted': False}]}))
+    seeds = tmp_path / 'seeds.json'
+    values = [1735231569, 843628571, 951150512]
+    seeds.write_text(json.dumps({'schema': 'ib.benchmark.random-seeds.v1',
+        'entropy_source': 'operating_system_random_via_python_secrets',
+        'sample_once': True, 'seeds': values}))
+    items = load_plan({'models': 'all_active_profiles', 'datasets': 'accepted_native',
+        'seeds': 'random_record', 'native_registry': str(registry), 'seed_record': str(seeds),
+        'policy': str(tmp_path / 'pending-policy.json'), 'admission': str(tmp_path / 'pending.json')})
+    assert len(items) == len(model_yaml_names()) * 3
+    assert {i.seed for i in items} == set(values)
+    assert {i.label for i in items} == set(model_yaml_names())
+    assert all(i.metadata['dataset_name'] == 'accepted' for i in items)
+    assert all(i.overrides['metric_dims'] == int(i.metadata['scientific_input_spec']['dims']) for i in items)
+    assert any(i.metadata['sequence_calibration'] for i in items)
+    assert any(i.metadata['native_xyz'] and i.metadata['sequence_calibration'] for i in items)
+    assert plan_item(items[0])['coverage']['policy_state'] == 'pending_capacity_measurement_and_freeze'
+
+
+def test_configured_gap_budget_retains_scientific_input_and_actual_sample_count(dataset, tmp_path):
+    cfg = {**TINY, 'data': str(dataset), 'epochs': 1, 'gap_windows': 3,
+           'project': str(tmp_path), 'name': 'configured-gap'}
+    trainer = Trainer(overrides=cfg)
+    trainer.train()
+    report = json.loads((trainer.save_dir / 'metrics.json').read_text())['train_eval_gap']
+    assert report['config']['requested_windows'] == 3
+    assert 0 < report['num_windows'] <= 3
+    assert report['config']['mc_samples'] == 8
+    assert len(report['modes']) == 4
+    assert trainer.model.input_spec.window == TINY['window']
+
+
+def test_early_stop_waits_for_minimum_epochs(dataset, zero_model, tmp_path):
+    trainer = Trainer(overrides={**TINY, 'model': zero_model, 'model_args': {},
+        'data': str(dataset), 'epochs': 5, 'min_epochs': 3, 'patience': 1, 'lr': 0.,
+        'augment': [], 'project': str(tmp_path), 'name': 'minimum-phase-epochs'})
+    trainer.train()
+    assert trainer.epoch + 1 >= 3
+
+
+def test_standalone_checkpoint_evaluation_uses_actual_loss_phase(dataset, tmp_path):
+    from inertial_benchmark.engine.validator import Validator
+    from inertial_benchmark.utils.torch_utils import save_checkpoint
+    cfg = {**TINY, 'model': 'meio', 'data': str(dataset), 'epochs': 1,
+           'model_args': {'feature_dim': 16, 'layers': 2, 'expansion': 2, 'head_layers': 1,
+                          'patch_len': 10, 'force_full_depth': True},
+           'window': 100, 'loss_switch_epoch': 10, 'project': str(tmp_path), 'name': 'phase-checkpoint'}
+    trainer = Trainer(overrides=cfg)
+    trainer.train()
+    checkpoint = load_checkpoint(trainer.best)
+    checkpoint['epoch'] = 10  # Exact saved weights, explicitly testing independent evaluation phase selection.
+    phase_path = tmp_path / 'phase10.pt'
+    save_checkpoint(phase_path, checkpoint)
+    options = {'model': str(phase_path), 'data': str(dataset), 'device': 'cpu', 'split': 'test',
+               'workers': 0, 'val_batch': 16, 'efficiency': False, 'plots': False,
+               'save_predictions': False, 'project': str(tmp_path)}
+    automatic = Validator(overrides={**options, 'name': 'phase-auto'})()
+    switched = Validator(overrides={**options, 'name': 'phase-explicit'}) (epoch=10)
+    warmup = Validator(overrides={**options, 'name': 'phase-warmup'}) (epoch=9)
+    assert automatic.cfg['loss_evaluation_epoch'] == 10
+    assert automatic.metrics['loss'] == pytest.approx(switched.metrics['loss'], rel=1e-7)
+    assert automatic.metrics['ate'] == pytest.approx(warmup.metrics['ate'], rel=1e-7)
+    assert automatic.metrics['loss'] != pytest.approx(warmup.metrics['loss'], rel=1e-5)
+    training_gap = json.loads((trainer.save_dir / 'metrics.json').read_text())['train_eval_gap']
+    assert training_gap['config']['evaluation_epoch'] == checkpoint['training_evidence']['completed_epoch']
+    before = trainer.train_eval_gap(windows=2, repeats=1, epoch=9)
+    after = trainer.train_eval_gap(windows=2, repeats=1, epoch=10)
+    assert before['config']['evaluation_epoch'] == 9 and after['config']['evaluation_epoch'] == 10
+    assert before['modes']['eval']['loss'] != pytest.approx(after['modes']['eval']['loss'], rel=1e-5)
     values = np.array([[1.0], [9.0], [3.0], [9.0]])
     filled = fill_invalid_windows(np.arange(4.0), values, np.array([True, False, True, False]))
     np.testing.assert_allclose(filled[:, 0], [1.0, 2.0, 3.0, 3.0])
+
+
+def test_gap_budget_is_bounded_across_four_validation_sequences(tmp_path):
+    native = make_dataset(tmp_path, n_train=16, duration=3.)
+    trainer = Trainer(overrides={**TINY, 'data': str(native), 'epochs': 1,
+        'name': 'multisequence-gap', 'project': str(tmp_path)})
+    trainer.train()
+    assert len(trainer.val_set.sequence_ids) >= 4
+    for requested in (2, 3, 5):
+        gap = trainer.train_eval_gap(windows=requested, repeats=1)
+        assert gap['num_windows'] == requested
+        assert gap['config']['requested_windows'] == requested
+
+
+@pytest.mark.parametrize('target,source', [('blackbird', 'euroc'), ('uzh_fpv', 'euroc'),
+                                         ('grandtour', 'ridi'), ('subt_mrs', 'ridi')])
+def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, source, monkeypatch):
+    import hashlib
+    import shutil
+    from inertial_benchmark.cfg import INPUT_KEYS
+    from inertial_benchmark.engine.benchmark import (BenchmarkItem, _admit_dynamic, dependency_order,
+        matrix_row_id, matrix_state, run_item, scientific_run_identity, _sha)
+    from inertial_benchmark.utils import CFG_DIR
+    origin_root = tmp_path / source
+    target_root = tmp_path / target
+    shutil.copytree(dataset, origin_root); shutil.copytree(dataset, target_root)
+    for split in ('train', 'val'):
+        (target_root / 'splits' / f'{split}.txt').write_text('')
+    profile = 'mean_speed_heading'
+    options = {**TINY, 'model_args': {'body_axes': {'synthetic_device': [[0., 1., 0.], [1., 0., 0.]]}},
+               'seed': 1735231569, 'epochs': 11, 'min_epochs': 11,
+               'optimizer': 'adamw', 'scheduler': 'cosine', 'weight_decay': .0001,
+               'patience': 3, 'val_interval': 1, 'val_batch': 16, 'amp': False,
+               'cache': True, 'workers': 0, 'gap_windows': 3, 'train_windows_budget': 0,
+               'save_predictions': False, 'orientation': 'reference', 'stride': 10, 'eval_stride': 10}
+    resolved = get_cfg({**options, 'model': profile})
+    capacity = tmp_path / 'unit-fixture-capacity.json'
+    capacity.write_text(json.dumps({'formal_ready': True, 'source_manifest_sha256': 'unit-source',
+        'common_batch_candidate': options['batch'], 'common_val_batch': 16,
+        'common_gap_windows_candidate': 3, 'common_cache': True, 'common_workers': 0, 'common_amp': False,
+        'common_training_stride': 10, 'common_eval_stride': 10}))
+    policy = tmp_path / 'unit-fixture-policy.json'
+    policy.write_text(json.dumps({'status': 'frozen', 'overrides': options,
+        'capacity_receipt': str(capacity), 'capacity_receipt_sha256': _sha(capacity),
+        'checkpoint_retention': 'completed_best_only'}))
+    admission = tmp_path / 'coverage.json'
+    rows, items = [], []
+    for name, native, trainable in ((source, origin_root, True), (target, target_root, False)):
+        row = {'profile': profile, 'dataset': name, 'seed': options['seed'], 'input_track': 'reference_oracle',
+               'dataset_fingerprint': json.loads((native / 'dataset.json').read_text())['fingerprint'],
+               'dataset_manifest_sha256': _sha(native / 'dataset.json'),
+               'split_sha256': {p.name: _sha(p) for p in sorted((native / 'splits').glob('*.txt'))},
+               'profile_config_sha256': _sha(CFG_DIR / 'models' / f'{profile}.yaml'),
+               'taskview_receipt': {'status': 'passed'}, 'model_cpu_accepted': True,
+               'trainable': trainable, 'state': 'pending_admission'}
+        row['id'] = matrix_row_id(profile, name, options['seed'], 'reference_oracle')
+        meta = {**row, 'dataset_name': name, 'scientific_input_spec': {k: getattr(resolved, k) for k in INPUT_KEYS},
+                'source_manifest_sha256': 'unit-source', 'seeds_record_sha256': 'unit-random-seed-record',
+                'policy_path': str(policy), 'policy_sha256': _sha(policy), 'admission_path': str(admission),
+                'sequence_calibration': True, 'checkpoint_training_source': None if trainable else source}
+        rows.append(row)
+        items.append(BenchmarkItem(profile, profile, str(native), options['seed'], options.copy(),
+                                   ['test'], tmp_path / 'runs', meta))
+    admission.write_text(json.dumps({'source': {'source_manifest_sha256': 'unit-source'}, 'coverage': rows}))
+    origin, transfer = items
+    assert dependency_order([transfer, origin]) == [origin, transfer]
+    assert _admit_dynamic(transfer) == 'awaiting_same_profile_track_seed_transfer_checkpoint'
+    trained = run_item(origin)
+    assert trained['train'] == 'trained'
+    saved = matrix_state(admission, rows[0])
+    assert saved['state'] == 'completed'
+    assert json.loads(Path(saved['run_identity_path']).read_text()) == scientific_run_identity(origin)
+    assert not (origin.run_dir / 'train/weights/last.pt').exists()
+    import fcntl
+    from dataclasses import replace
+    from inertial_benchmark.engine.validator import Validator
+    alternate = replace(origin, root=tmp_path / 'different-public-output', metadata=origin.metadata.copy())
+    with monkeypatch.context() as probe:
+        probe.setattr(Trainer, 'train', lambda *_: pytest.fail('completed shared cell was trained again'))
+        probe.setattr(Validator, '__call__', lambda *_args, **_kw: pytest.fail('completed shared cell was evaluated again'))
+        reused = run_item(alternate)
+    assert reused['shared_completed_run'] and reused['checkpoint'] == saved['checkpoint']
+    assert not alternate.run_dir.exists()
+    lock_path = admission.parent / 'run-locks' / f"{rows[0]['id']}.lock"
+    with lock_path.open('a+') as active:
+        fcntl.flock(active.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        busy = run_item(alternate)
+    assert busy['train'] == 'pending_resource'
+    changed = replace(alternate, metadata={**alternate.metadata, 'seeds_record_sha256': 'changed-random-record'})
+    with pytest.raises(RuntimeError, match='completed shared run requested scientific identity changed'):
+        run_item(changed)
+    assert _admit_dynamic(transfer) is None
+    transferred = run_item(transfer)
+    assert transferred['train'] == 'pretrained checkpoint'
+    assert matrix_state(admission, rows[1])['checkpoint_sha256'] == saved['checkpoint_sha256']
+    identity_path = Path(saved['run_identity_path'])
+    original = identity_path.read_bytes()
+    identity = json.loads(original)
+    state_path = admission.parent / 'run-states' / f"{rows[0]['id']}.json"
+    for key, wrong in [('seed', 951150512), ('source_manifest_sha256', 'wrong-source')]:
+        changed = {**identity, key: wrong}; identity_path.write_text(json.dumps(changed))
+        state = json.loads(state_path.read_text()); state['run_identity_sha256'] = _sha(identity_path)
+        state_path.write_text(json.dumps(state))
+        assert _admit_dynamic(transfer) == 'awaiting_matching_transfer_scientific_identity'
+    identity_path.write_bytes(original)
+    state = json.loads(state_path.read_text()); state['run_identity_sha256'] = _sha(identity_path)
+    state_path.write_text(json.dumps(state))
+    Path(saved['checkpoint']).write_bytes(Path(saved['checkpoint']).read_bytes() + b'changed')
+    with pytest.raises(RuntimeError, match='completed run checkpoint changed'):
+        _admit_dynamic(transfer)
+
+
+def test_matrix_resume_checks_manifest_splits_and_measured_policy(dataset, tmp_path):
+    import shutil
+    from inertial_benchmark.engine.benchmark import (_sha, verify_dataset_identity, verify_capacity_policy)
+    native = tmp_path / 'native'; shutil.copytree(dataset, native)
+    record = {'dataset_fingerprint': json.loads((native / 'dataset.json').read_text())['fingerprint'],
+              'dataset_manifest_sha256': _sha(native / 'dataset.json'),
+              'split_sha256': {p.name: _sha(p) for p in sorted((native / 'splits').glob('*.txt'))}}
+    verify_dataset_identity(native, record)
+    split = native / 'splits/train.txt'; split.write_text(split.read_text() + '\n')
+    with pytest.raises(RuntimeError, match='split bytes changed'):
+        verify_dataset_identity(native, record)
+    capacity = tmp_path / 'fixture-capacity.json'
+    receipt = {'formal_ready': True, 'source_manifest_sha256': 'fixture-source',
+        'common_batch_candidate': 64, 'common_val_batch': 64, 'common_gap_windows_candidate': 64,
+        'common_cache': True, 'common_workers': 2, 'common_amp': False,
+        'common_training_stride': 200, 'common_eval_stride': 10,
+        'hardware': {'name': 'fixture GPU', 'total_memory_bytes': 100, 'torch_version': 'x', 'cuda_version': 'y'}}
+    capacity.write_text(json.dumps(receipt))
+    policy = {'capacity_receipt': str(capacity), 'capacity_receipt_sha256': _sha(capacity),
+        'overrides': {'batch': 64, 'val_batch': 64, 'gap_windows': 64, 'cache': True, 'workers': 2, 'amp': False,
+                      'stride': 200, 'eval_stride': 10}}
+    verify_capacity_policy(policy, 'fixture-source', receipt['hardware'])
+    for key, wrong in [('batch', 128), ('val_batch', 128), ('gap_windows', 128), ('amp', True), ('stride', 10), ('eval_stride', 200)]:
+        with pytest.raises(RuntimeError, match='resource knobs'):
+            verify_capacity_policy({**policy, 'overrides': {**policy['overrides'], key: wrong}}, 'fixture-source')
+    with pytest.raises(RuntimeError, match='different source'):
+        verify_capacity_policy(policy, 'changed-source')
+    with pytest.raises(RuntimeError, match='hardware'):
+        verify_capacity_policy(policy, 'fixture-source', {**receipt['hardware'], 'name': 'changed GPU'})
+
+
+def test_ops_inventory_row_identity_matches_public_dataset_guard(dataset, tmp_path, monkeypatch):
+    import importlib.util
+    from types import SimpleNamespace
+    from inertial_benchmark.cfg import model_yaml_names
+    from inertial_benchmark.engine.benchmark import verify_dataset_identity
+    from inertial_benchmark.utils import CFG_DIR
+    source = Path(__file__).resolve().parents[1]
+    module_spec = importlib.util.spec_from_file_location('matrix_ops_inventory', source / 'tools/ops_v1/full_matrix.py')
+    ops = importlib.util.module_from_spec(module_spec); module_spec.loader.exec_module(ops)
+    # Run the real inventory/accepted-native/parser path; only the immutable
+    # deployment guard is replaced for this temporary scientific fixture.
+    monkeypatch.setattr(ops, 'framework', lambda root: torch)
+    monkeypatch.setattr(ops, 'source_identity', lambda root: {'source_manifest_sha256': 'unit-source'})
+    registry = tmp_path / 'registry.json'
+    registry.write_text(json.dumps({'datasets': [{'name': 'fixture', 'root': str(dataset),
+        'accepted': True, 'fingerprint': json.loads((dataset / 'dataset.json').read_text())['fingerprint']}]}))
+    seeds = tmp_path / 'seeds.json'
+    seeds.write_text(json.dumps({'schema': 'ib.benchmark.random-seeds.v1',
+        'entropy_source': 'operating_system_random_via_python_secrets', 'sample_once': True,
+        'seeds': [1735231569, 843628571, 951150512]}))
+    report = ops.inventory(SimpleNamespace(source_root=source, registry=registry, seeds=seeds, output=tmp_path / 'matrix'))
+    assert len(report['coverage']) == 3 * len(model_yaml_names())
+    for row in report['coverage']:
+        verify_dataset_identity(row['data_root'], row)
+        assert all(key.endswith('.txt') for key in row['split_sha256'])
+
+
+def test_common_sampling_retains_real_scientific_windows_and_targets(dataset):
+    from inertial_benchmark.data.build import build_dataset
+    original = get_cfg({'model': 'ronin_resnet18_3d', 'data': str(dataset),
+                        'recipe': 'unified', 'cache': False, 'augment': []})
+    common = get_cfg({**original.to_dict(), 'stride': 200, 'eval_stride': 10})
+    dense = build_dataset(original, 'train', training=True)
+    sampled = build_dataset(common, 'train', training=True)
+    assert sampled.view == dense.view
+    assert 0 < len(sampled) < len(dense)
+    dense_starts = {tuple(int(v) for v in row) for row in dense.index}
+    assert all(tuple(int(v) for v in row) in dense_starts for row in sampled.index)
+    k, start = (int(v) for v in sampled.index[0])
+    first, same = sampled.load_window(k, start), dense.load_window(k, start)
+    np.testing.assert_array_equal(first['imu'], same['imu'])
+    np.testing.assert_array_equal(first['target'], same['target'])
+    assert common.window == original.window == 200
+    assert common.eval_stride == original.eval_stride == 10
 
 
 def test_window_center_timestamps_make_oracle_exact(zero_model):
@@ -627,6 +893,9 @@ def test_resume_reproduces_uninterrupted_weights(dataset, tmp_path):
     full = load_checkpoint(tmp_path / "train" / "full" / "weights" / "last.pt")
     resumed = load_checkpoint(tmp_path / "train" / "part" / "weights" / "last.pt")
     assert full["epoch"] == resumed["epoch"] == 2
+    assert full['training_evidence'] == resumed['training_evidence']
+    assert full['training_evidence']['completed_epoch'] == 2
+    assert full['training_evidence']['total_optimizer_updates'] > full['training_evidence']['epoch_optimizer_updates'] > 0
     for k, v in full["model"].items():
         assert torch.equal(v, resumed["model"][k]), k
 

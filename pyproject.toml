@@ -12,6 +12,8 @@ dependencies = ["h5py>=3.8", "numpy>=1.23", "scipy>=1.9", "pyyaml>=6.0", "pandas
 
 [project.optional-dependencies]
 idol = ["pyarrow>=10"]  # IDOL 的 .feather 文件
+grandtour = ["numcodecs>=0.11"]  # GrandTour 原始 Zarr-v2 Blosc/LZ4 chunks
+ridi = ["scikit-learn>=1.2"]  # RIDI train-only SVM/SVR baseline
 train = ["torch>=2.0", "pandas>=1.5", "matplotlib>=3.6"]
 test = ["pytest>=7"]
 ops = ["paramiko>=3"]
