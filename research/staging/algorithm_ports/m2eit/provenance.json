@@ -1,0 +1,71 @@
+{
+  "schema": "ib.staging.algorithm-port.provenance.v1",
+  "checked_utc": "2026-10-13T17:55:11.130314+00:00",
+  "method": "m2eit",
+  "title": "M2EIT: Multi-Domain Mixture of Experts for Robust Neural Inertial Tracking",
+  "venue": "ICCV 2025 main",
+  "published": true,
+  "authors": [
+    "Yan Li",
+    "Yang Xu",
+    "Changhao Chen",
+    "Zhongchen Shi",
+    "Wei Chen",
+    "Liang Xie",
+    "Hongbo Chen",
+    "Erwei Yin"
+  ],
+  "excluded_author": "Shanshan Zhang",
+  "excluded_author_match": false,
+  "primary": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_M2EIT_Multi-Domain_Mixture_of_Experts_for_Robust_Neural_Inertial_Tracking_ICCV_2025_paper.html",
+  "full_paper": {
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Li_M2EIT_Multi-Domain_Mixture_of_Experts_for_Robust_Neural_Inertial_Tracking_ICCV_2025_paper.pdf",
+    "bytes": 2212012,
+    "sha256": "29f067488f76e6b3e692f0fc1fcfdb9ba7926f1aac8e7de53bad277f80c7f2d0",
+    "private_path": ".local/research/algorithm-primary/expansion-20261014/m2eit-paper.pdf"
+  },
+  "official_method_network_source": null,
+  "source_status": "not_verified_in_bounded_primary_and_exact_title_search",
+  "fidelity": "independent paper-only reconstruction draft with explicit assumptions",
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "server_scientific_tests": "not_run",
+  "server_default_profile_lifecycle": "not_run",
+  "new_method_distinct_from_active_21": true,
+  "profile_dimensions": [
+    2,
+    3
+  ],
+  "output_contract": {
+    "raw_layout": "window (B,D)",
+    "raw_quantity": "average velocity",
+    "unit": "m/s",
+    "frame": "gravity_world",
+    "native_channel_order": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "xy_rule": "same raw XYZ[:2] for XYZ runs; dedicated 2D reference is a different declared run"
+  },
+  "scientific_review_blockers": [
+    "FDE concat axis/residual shape missing; standard Haar low/high convention differs from printed filter labels",
+    "S symbol overloading in expert input equations",
+    "Unspecified block strides/widths/head width; no author parameter match",
+    "CPU reference selective scan needs value/gradient validation and default-width capacity measurement"
+  ],
+  "supplement": {
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/supplemental/Li_M2EIT_Multi-Domain_Mixture_ICCV_2025_supplemental.pdf",
+    "bytes": 1223082,
+    "sha256": "52fbc2189873549668e1781c35efa8f351857ed24657def5ac50cc47f397e47b",
+    "pages": 4
+  },
+  "standard_component_reference": {
+    "url": "https://api.github.com/repos/state-spaces/mamba/commits/main",
+    "role": "upstream mathematical primitive reference, not official M2EIT source",
+    "error": "HTTP Error 403: rate limit exceeded"
+  }
+}

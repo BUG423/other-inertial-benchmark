@@ -1,0 +1,27 @@
+# Unregistered draft. The positive auxiliary head is NOT logstd or calibrated sigma.
+name: diffusionimu_2d_staging
+arch: diffusionimu
+paper: https://www.ijcai.org/proceedings/2025/0977.pdf
+code: null
+license: independent mathematical implementation; no official DiffusionIMU network code verified
+fidelity: paper-equation reconstruction draft; attention/pooling/inference assumptions declared
+args:
+  hidden: 128
+  decoder_steps: 3
+  diffusion_timesteps: 100
+  dropout: 0.2
+  attention_heads: 4
+  local_radius: 3
+  stem_width: 64
+  initial_alpha: 0.5
+  evaluation_timestep: 0
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 2
+loss: diffusionimu_multitask
+recipes:
+  unified: {}

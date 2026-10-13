@@ -1,0 +1,61 @@
+{
+  "schema": "ib.staging.algorithm-port.provenance.v1",
+  "checked_utc": "2026-10-13T17:55:11.139805+00:00",
+  "method": "diffusionimu",
+  "title": "DiffusionIMU: Diffusion-Based Inertial Navigation with Iterative Motion Refinement",
+  "venue": "IJCAI 2025 main",
+  "published": true,
+  "authors": [
+    "Xiaoqiang Teng",
+    "Chenyang Li",
+    "Shibiao Xu",
+    "Zhihao Hao",
+    "Deke Guo",
+    "Jingyuan Li",
+    "Haisheng Li",
+    "Weiliang Meng",
+    "Xiaopeng Zhang"
+  ],
+  "excluded_author": "Shanshan Zhang",
+  "excluded_author_match": false,
+  "primary": "https://www.ijcai.org/proceedings/2025/977",
+  "full_paper": {
+    "url": "https://www.ijcai.org/proceedings/2025/0977.pdf",
+    "bytes": 507546,
+    "sha256": "c0f1b1c7441c1bac535e6062f3dc9e982a4f7ee6d59ce4c29b8bfdf123834ba1",
+    "private_path": ".local/research/algorithm-primary/expansion-20261014/diffusionimu-paper.pdf"
+  },
+  "official_method_network_source": null,
+  "source_status": "not_verified_in_bounded_primary_and_exact_title_search",
+  "fidelity": "independent paper-only reconstruction draft with explicit assumptions",
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "server_scientific_tests": "not_run",
+  "server_default_profile_lifecycle": "not_run",
+  "new_method_distinct_from_active_21": true,
+  "profile_dimensions": [
+    2,
+    3
+  ],
+  "output_contract": {
+    "raw_layout": "window (B,D)",
+    "raw_quantity": "average velocity",
+    "unit": "m/s",
+    "frame": "gravity_world",
+    "native_channel_order": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "xy_rule": "same raw XYZ[:2] for XYZ runs; dedicated 2D reference is a different declared run"
+  },
+  "scientific_review_blockers": [
+    "Exact local/global attention replacement and ResNet18 bottleneck topology missing",
+    "Original window target/output dimension not uniquely specified",
+    "Alpha constraint/init and eval timestep policy assumed; stochastic evaluation identity needs RNG policy",
+    "Positive auxiliary head minimizes norm independently of residual; NOT calibrated covariance"
+  ]
+}

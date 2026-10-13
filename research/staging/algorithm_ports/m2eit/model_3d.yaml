@@ -1,0 +1,26 @@
+# Explicit XYZ adaptation of the paper's planar head. Not an original-paper 3D claim.
+name: m2eit_3d_staging
+arch: m2eit
+paper: https://openaccess.thecvf.com/content/ICCV2025/papers/Li_M2EIT_Multi-Domain_Mixture_of_Experts_for_Robust_Neural_Inertial_Tracking_ICCV_2025_paper.pdf
+code: null
+license: independent mathematical implementation; no official M2EIT network code verified
+fidelity: paper-only XYZ adapted draft; pending server acceptance
+args:
+  feature_dim: 256
+  temporal_layers: 2
+  frequency_layers: 2
+  state_dim: 16
+  conv_kernel: 2
+  expansion: 2
+  attention_heads: 4
+  head_hidden: 128
+input:
+  window: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse_sum
+recipes:
+  unified: {}
