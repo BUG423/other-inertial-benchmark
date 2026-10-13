@@ -23,7 +23,7 @@
 | 组件 | 当前能力 | 入口与边界 |
 | :--- | :--- | :--- |
 | **统一数据层** | IPB v1 HDF5、200 Hz 时间轴、单位/坐标系、来源、有效掩码、分组划分与检查 | [设计规范](docs/DESIGN.md) · [数据集目录](docs/DATASETS.md) |
-| **核心转换器** | 已有 RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 八个转换器；RIDI/RoNIN/IDOL 完整数据已验收，可训练 | [数据卡](docs/datasets/) · [代码](src/inertial_benchmark/data/converters/)；划分、拒收与指纹见[本轮状态](docs/DEV_V1_INTEGRATION.md) |
+| **核心转换器** | 已有 RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 八个转换器；RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD 六个完整数据集已验收，可训练 | [数据卡](docs/datasets/) · [代码](src/inertial_benchmark/data/converters/)；划分、拒收与指纹见[本轮状态](docs/DEV_V1_INTEGRATION.md) |
 | **算法库** | 29 个注册架构、34 份模型配置（含三份 `3d_adapted`）、21 个算法包；含 RoNIN、TLIO、RNIN、IMUNet、EqNIO、AirIO、DIVE 和经典基线 | [规格与忠实性](docs/ALGORITHMS.md) · [模型配置](src/inertial_benchmark/cfg/models/) |
 | **训练与推理** | `NIO` / `ipb`，统一 Trainer、Validator、Predictor；窗口、逐帧、多步和序列级接口 | [命令与配置](docs/CLI.md)；统一流程保留算法必要的布局和损失；导出 API 尚待建设 |
 | **评价与报告** | ATE、独立对齐诊断、时间/距离 RTE、终点漂移、长度比、速度/方向、效率；CSV/Markdown/LaTeX、统计与图表 | [指标定义](docs/METRICS.md)；短序列换算、oracle、对齐诊断按各自定义解释 |
@@ -85,7 +85,7 @@ ipb check data=ridi full=true hash=true
 
 输出包含 `sequences/*.h5`、`splits/*.txt`、`dataset.json` 和 `conversion_report.json`。配置在 [cfg/datasets/](src/inertial_benchmark/cfg/datasets/)。官方 seen/unseen 标签可以保留，不强制其他数据集使用同一标签。
 
-已完成本轮验收的 AutoDL 仓库中，完整 RIDI/RoNIN/IDOL 位于 `datasets/ipb-v1/full-core/`。在该服务器仓库根目录使用：
+已完成本轮验收的 AutoDL 仓库中，完整 RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD 位于 `datasets/ipb-v1/full-core/`。在该服务器仓库根目录使用：
 
 ```bash
 export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"
@@ -130,7 +130,11 @@ APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://
 
 ## 🔬 研究与验证状态
 
-当前 AutoDL 已完整转换并验收 **RIDI 94 / RoNIN 151 / IDOL 130** 条序列，共 **375 份原生 v1 HDF5、1,914,869,600 字节**；full/hash 检查零 errors，三者均 `train_ready=true`。RoNIN 另有一条物理检查拒收；官方 known/seen 分组重叠与警告保留。EuRoC/Blackbird 新增的 31 份文件独立记录。TLIO/IMUNet 下载受 Google 网络超时影响，OxIOD 官方表单访问受网络限制，RNIN 百度匿名媒体下载入口有登录门槛；本轮这些 raw 均未实收，详见[项目状态](docs/DEV_V1_INTEGRATION.md)。
+当前 AutoDL 已完整转换并验收 **RIDI 94 / RoNIN 151 / IDOL 130 / RNIN 300 / TLIO 354 / OxIOD 126** 条序列：六个核心数据集共 **1,155 份原生 v1 HDF5、99.40744861 小时、725 条 train 序列**，full/hash 检查零 errors，均 `train_ready=true`。本轮新增 RNIN/TLIO/OxIOD 共 **780 条、53.695518 小时**；拒收、官方分组重叠和物理警告保留。RNIN 使用混合参考：75 条来自 VICON 或其他外部定位系统、225 条来自 BVIO，9 条 test 全为 VIO；TLIO 使用 VIO 参考，OxIOD 使用外部 Vicon 参考；OxIOD 的 Tango、syn 和独立 test 目录不在本轮接入范围。EuRoC 11 条已完成原生转换，Blackbird 20 个发布片段仅用于 test 审计，独立于六核心总数。IMUNet 等待用户登录浏览器下载，PedLocData 慢速下载仅留下未验收的部分文件，详见[项目状态](docs/DEV_V1_INTEGRATION.md)。
+
+2026-10-13 20:02（北京时间）磁盘清点：服务器保存的归档、解压 raw、原生与历史副本共 **71.288 GB（66.3925 GiB）**，可用空间约 **130.83 GiB**；当前八个非空原生数据集共 **1,186 条、99.99289 小时、730 条 train**，包含 EuRoC 和仅 test 的 Blackbird，并非八个都可训练。当前原生格式占约 **4.15 GB**，其余为来源与副本；本地三个归档的 **5.8723 GB** 不计入服务器。该体积对应已取得的版本或子集，不代表所有公开全集均已下载。分层及逐数据集体积见[项目状态](docs/DEV_V1_INTEGRATION.md)。
+
+`dev/v1@2c1f57f` 的新增三维协议与容量准入目标测试已在服务器 CPU 上 **144 passed / 0 skipped / 0 failed**；RNIN/TLIO/OxIOD 的真实 XYZ 任务视图和 XY 截取也已分别验收。这些工程检查不证明充分训练精度，不计入下列历史测试总数。实际 GPU 探测尚未执行，正式预算未冻结，训练队列未 armed。
 
 此前 RIDI/RoNIN 短 CPU NIO 闭环已完成（各 1 epoch / 2 updates），充分训练与正式排名待 GPU 阶段。原冻结 719 个测试节点去重覆盖为 **665 passed / 52 skipped / 2 resource_unverified**，两项未验证为 CTIN 训练/验证闭环测试。`6d44573` 的独立目标验收 **81 项全部通过**，包含有效维度时间图/CDF与超过八模型分页的五项测试；这批计数不叠加到原 719 项。2026-09-24 交接中的 **705 项测试**、旧机器成绩及 AMP/dropout 观察属于历史记录。
 
@@ -148,7 +152,7 @@ APP 源码、APK、`.iplab` 转换与构建统一见 [app-inertial-lab](https://
 | 阶段 | 交付与验收 |
 | :--- | :--- |
 | **已有主干** | v1 序列/任务视图、八个核心转换器、多算法接口、训练/验证/预测、指标与报告 |
-| **当前 CPU 阶段** | RIDI/RoNIN/IDOL 完整数据可训练，EuRoC/Blackbird 接入已验收；科学 suite 覆盖与限制、目标测试和执行环境验收分别记录 |
+| **当前 CPU 阶段** | 六个核心数据集完整可训练，EuRoC 接入与 Blackbird test 审计已验收；新增三维目标测试 144 passed，历史 suite 范围与限制分别记录 |
 | **评价增量** | 有效维度时间图/CDF与多模型分页已验收；继续输入权限 track、NA/覆盖、3D 轨迹、六面板与静态 HTML |
 | **GPU 阶段** | 单 seed 验证配方与充分训练，再扩展矩阵；最终关键实验最多三个 seed |
 | **研究交付** | 可审计 benchmark、收缩机制与受控实验、可复现发布；论文目标 ICRA / IEEE RA-L |

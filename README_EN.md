@@ -23,7 +23,7 @@ The deliverable is an extensible benchmark: dataset-specific converters produce 
 | Component | Current capability | Entry and scope |
 | :--- | :--- | :--- |
 | **Data layer** | IPB v1 HDF5, 200 Hz, units/frames, provenance, masks, grouped splits and checks | [Design](docs/DESIGN.md) · [Dataset catalog](docs/DATASETS.md) |
-| **Core converters** | Eight existing converters: RoNIN, RIDI, OxIOD, TLIO, IDOL, RNIN, IMUNet and PedLocData; full RIDI/RoNIN/IDOL data accepted and ready for training | [Cards](docs/datasets/) · [Code](src/inertial_benchmark/data/converters/); splits, rejections and fingerprints in [current status](docs/DEV_V1_INTEGRATION.md) |
+| **Core converters** | Eight existing converters: RoNIN, RIDI, OxIOD, TLIO, IDOL, RNIN, IMUNet and PedLocData; full RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD data accepted and ready for training | [Cards](docs/datasets/) · [Code](src/inertial_benchmark/data/converters/); splits, rejections and fingerprints in [current status](docs/DEV_V1_INTEGRATION.md) |
 | **Algorithms** | 29 registered architectures, 34 model configurations (including three `3d_adapted` profiles) and 21 packages; RoNIN, TLIO, RNIN, IMUNet, EqNIO, AirIO, DIVE and classical baselines | [Specifications/fidelity](docs/ALGORITHMS.md) · [Configurations](src/inertial_benchmark/cfg/models/) |
 | **Training/prediction** | `NIO` / `ipb`, shared Trainer/Validator/Predictor; window/frame/multi-step/sequence interfaces | [Commands](docs/CLI.md); retain required layouts and losses; an export API is still pending |
 | **Evaluation/reports** | ATE, separate aligned diagnostics, time/distance RTE, endpoint drift, length ratios, velocity/direction, efficiency; CSV/Markdown/LaTeX, statistics and plots | [Definitions](docs/METRICS.md); scaling, oracle and aligned diagnostics have distinct meanings |
@@ -85,7 +85,7 @@ ipb check data=ridi full=true hash=true
 
 Outputs include `sequences/*.h5`, `splits/*.txt`, `dataset.json` and `conversion_report.json`. Configuration lives in [cfg/datasets/](src/inertial_benchmark/cfg/datasets/). Retain official seen/unseen labels without imposing them on every dataset.
 
-The AutoDL checkout accepted in this round contains full RIDI/RoNIN/IDOL under `datasets/ipb-v1/full-core/`. From that server checkout root, use:
+The AutoDL checkout accepted in this round contains full RIDI/RoNIN/IDOL/RNIN/TLIO/OxIOD under `datasets/ipb-v1/full-core/`. From that server checkout root, use:
 
 ```bash
 export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"
@@ -130,7 +130,11 @@ APP source, APKs, `.iplab` conversion and builds belong to [app-inertial-lab](ht
 
 ## 🔬 Research and Validation Status
 
-The current AutoDL server has completed conversion and acceptance of **94 RIDI / 151 RoNIN / 130 IDOL** sequences: **375 native v1 HDF5 files, 1,914,869,600 bytes**. Full/hash checks report zero errors and all three datasets have `train_ready=true`. One additional RoNIN recording was rejected by physical checks; official known/seen group overlaps and warnings are retained. The 31 new EuRoC/Blackbird files are recorded separately. TLIO/IMUNet downloads encounter Google network timeouts, the OxIOD official form is restricted by network access, and RNIN's Baidu anonymous media download entry has a login gate; none of these raw datasets was received in this round. See [project status](docs/DEV_V1_INTEGRATION.md).
+The current AutoDL server has accepted **94 RIDI / 151 RoNIN / 130 IDOL / 300 RNIN / 354 TLIO / 126 OxIOD** sequences: six core datasets with **1,155 native v1 HDF5 files, 99.40744861 hours and 725 training sequences**. Full/hash checks report zero errors and all six have `train_ready=true`. The newly accepted RNIN/TLIO/OxIOD contribute **780 sequences and 53.695518 hours**; rejections, official group overlaps and physical warnings remain recorded. RNIN has mixed references: 75 sequences from VICON or other external positioning systems and 225 from BVIO, with all nine test sequences using VIO. TLIO uses a VIO reference, while OxIOD uses an external Vicon reference; its Tango, syn and standalone test directories are outside this intake. EuRoC has 11 accepted native recordings; Blackbird has 20 published segments for test-only auditing, counted separately from the six core datasets. IMUNet awaits a download through the user's signed-in browser; the slow PedLocData download left only unverified partial files. See [project status](docs/DEV_V1_INTEGRATION.md).
+
+The storage inventory at 20:02 Beijing time on 2026-10-13 found **71.288 GB (66.3925 GiB)** of server archives, extracted raw data, native outputs and historical copies, with about **130.83 GiB** free. Eight nonempty current native datasets contain **1,186 sequences, 99.99289 hours and 730 training sequences**, including EuRoC and test-only Blackbird; this does not mean all eight support training. Current native-format data occupies about **4.15 GB**. The **5.8723 GB** of three local archives is excluded from server totals. These sizes cover acquired versions or subsets, without claiming that every public full dataset has been downloaded. See the storage breakdown in [project status](docs/DEV_V1_INTEGRATION.md).
+
+Targeted server CPU acceptance for the new 3D protocol and capacity admission at `dev/v1@2c1f57f` passed **144 tests / 0 skipped / 0 failed**. Real XYZ task views and XY slicing were also accepted separately for RNIN/TLIO/OxIOD. These engineering checks do not establish full-training accuracy and are not added to the historical test totals below. The actual GPU probe has not run, formal budgets are not frozen and the training queue is not armed.
 
 Earlier short RIDI/RoNIN CPU NIO runs completed the engineering loop (one epoch / two updates each); full training and rankings await the GPU stage. Unique coverage of the 719 frozen test nodes is **665 passed / 52 skipped / 2 resource_unverified**; the two unverified cases are CTIN end-to-end train/validation tests. Separate targeted acceptance of `6d44573` passed **all 81 tests**, including five tests for dimension-consistent time/CDF plots and paging beyond eight models; this count is not added to the original 719. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results.
 
@@ -148,7 +152,7 @@ Shrinkage should be tested through target/integration oracles, time/length resol
 | Stage | Deliverable and acceptance |
 | :--- | :--- |
 | **Existing foundation** | v1 sequences/views, eight core converters, algorithm interfaces, train/validate/predict, metrics and reports |
-| **Current CPU stage** | Full RIDI/RoNIN/IDOL data ready for training; EuRoC/Blackbird intake accepted; scientific-suite coverage/limits, targeted tests and environment acceptance recorded separately |
+| **Current CPU stage** | Six full core datasets ready for training; EuRoC intake and Blackbird test audit accepted; 144 new 3D targeted tests passed, with historical suite scope and limits recorded separately |
 | **Evaluation increments** | Dimension-consistent time/CDF plots and model paging accepted; continue permission tracks, NA/coverage, 3D trajectories, six panels and static HTML |
 | **GPU stage** | One seed to validate recipes/full training, then expand the matrix; at most three seeds for final key experiments |
 | **Research delivery** | Auditable benchmark, shrinkage mechanisms and controlled experiments, reproducible release; ICRA / IEEE RA-L target |
