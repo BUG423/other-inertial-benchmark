@@ -69,6 +69,19 @@ def dataset(tmp_path_factory):
     return make_dataset(tmp_path_factory.mktemp("engine"))
 
 
+@pytest.fixture
+def capture_ipb_logs(caplog):
+    """Capture the nonpropagating project logger directly and restore handlers."""
+    attached = caplog.handler not in LOGGER.handlers
+    if attached:
+        LOGGER.addHandler(caplog.handler)
+    try:
+        yield
+    finally:
+        if attached:
+            LOGGER.removeHandler(caplog.handler)
+
+
 @pytest.fixture(scope="module")
 def zero_model():
     @register_model("test_zero_model")
@@ -729,6 +742,7 @@ def test_view_config_from_model_spec(zero_model):
     assert res.pos_pred.shape[1] == 3
 
 
+@pytest.mark.usefixtures("capture_ipb_logs")
 def test_train_eval_gap_is_recorded_and_warns(dataset, tmp_path, caplog):
     """四模式诊断落盘；dropout 的 MC 期望显著抬高幅值时必须触发守卫。"""
     over = {**TINY, "data": str(dataset), "epochs": 1, "project": str(tmp_path),
@@ -942,6 +956,7 @@ def test_train_windows_budget_equalises_the_budget_across_dataset_sizes(tmp_path
         assert budget <= gap["planned_windows"] < budget + gap["windows_per_epoch"]
 
 
+@pytest.mark.usefixtures("capture_ipb_logs")
 def test_train_windows_budget_respects_the_epoch_cap(dataset, tmp_path, caplog):
     """预算需要的轮数超过 ``budget_max_epochs`` 时截断，并记下未截断的轮数与告警。"""
     over = {**TINY, "data": str(dataset), "train_windows_budget": 10**9,
