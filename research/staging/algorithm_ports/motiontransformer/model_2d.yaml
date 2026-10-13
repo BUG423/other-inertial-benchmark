@@ -1,0 +1,29 @@
+# Unregistered, not directly runnable by the current single-domain NIO Trainer.
+name: motiontransformer_world_velocity_2d_staging
+arch: motiontransformer_staging
+paper: https://ojs.aaai.org/index.php/AAAI/article/view/4802
+code: null
+fidelity: paper-only sequence-GAN reconstruction with explicit gravity-world velocity adaptation
+args:
+  hidden: 128 # Unpublished author width; declared assumption.
+  layers: 1 # Unpublished author depth; declared assumption.
+  decimation: 2
+  inference_domain: 1
+input:
+  window: 400
+  rate: 200.0
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 2
+loss: motiontransformer_five_objectives_staging
+recipes:
+  unified: {}
+staging_training:
+  protocol: labelled_source_plus_unpaired_unlabelled_target
+  optimizer_partitions: [encoder_generators_decoder_predictor, two_discriminators]
+  update_order_assumption: [discriminator_once, joint_generator_once]
+  target_domain_train_only: true
+  target_domain_label_access: forbidden
+  ordinary_single_domain_trainer_supported: false

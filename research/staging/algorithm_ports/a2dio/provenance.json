@@ -1,0 +1,91 @@
+{
+  "schema": "ib.staging.algorithm-port.provenance.v1",
+  "checked_utc": "2026-10-13T19:28:02.002409+00:00",
+  "method": "a2dio",
+  "title": "A2DIO: Attention-Driven Deep Inertial Odometry for Pedestrian Localization based on 6D IMU",
+  "venue": "ICRA 2022",
+  "pages": "819-825",
+  "published": true,
+  "doi": "10.1109/ICRA46639.2022.9811714",
+  "authors": [
+    "Yingying Wang",
+    "Hu Cheng",
+    "Max Q.-H. Meng"
+  ],
+  "excluded_author": "Shanshan Zhang",
+  "excluded_author_match": false,
+  "primary": "https://ieeexplore.ieee.org/abstract/document/9811714",
+  "author_primary": [
+    "https://www.ee.cuhk.edu.hk/~yywang/CV_yingying.pdf",
+    "https://www.ee.cuhk.edu.hk/~hcheng/"
+  ],
+  "author_page_spelling_note": "Some HTML entries say Yinging or Max Qing-Hu; publisher and author CV identify Yingying Wang and Max Q.-H. Meng.",
+  "state": "blocked_primary_full_text_and_scientific_specification",
+  "implementation_exists": false,
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "formal_2067_rows_changed": false,
+  "full_paper": null,
+  "official_method_network_source": null,
+  "server_scientific_tests": "not_run_no_model",
+  "server_default_profile_lifecycle": "not_run_no_model",
+  "verified_abstract_only": {
+    "input": "six-axis IMU",
+    "target": "velocity, dimension not verified from full text",
+    "structure": "CNN with channel/spatial attention plus LSTM temporal softmax attention",
+    "dataset": "RoNIN"
+  },
+  "acquisition_evidence": [
+    {
+      "url": "https://www.ee.cuhk.edu.hk/~yywang/",
+      "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)>",
+      "elapsed_s": 0.2340814919953118
+    },
+    {
+      "url": "https://www.ee.cuhk.edu.hk/~hcheng/",
+      "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)>",
+      "elapsed_s": 0.23240607399930013
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9811714",
+      "error": "HTTP Error 418: Unknown Code",
+      "elapsed_s": 0.6067547400016338
+    },
+    {
+      "url": "http://www.ee.cuhk.edu.hk/~yywang/",
+      "route": "per_request_household_proxy",
+      "http": 200,
+      "bytes": 16233,
+      "sha256": "9bd5b07e1bdb9079a4265e579a46caa28d05beff25c02809110588a54a5cef70",
+      "content_type": "text/html; charset=UTF-8",
+      "elapsed_s": 0.20921422699757386
+    },
+    {
+      "url": "http://www.ee.cuhk.edu.hk/~hcheng/",
+      "route": "per_request_household_proxy",
+      "http": 200,
+      "bytes": 15427,
+      "sha256": "c0786e7bff4be2239b3091d68df29561f317e20101e6d1f512f559968fd61c5f",
+      "content_type": "text/html; charset=UTF-8",
+      "elapsed_s": 0.20602746900112834
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9811714",
+      "route": "per_request_household_proxy",
+      "error": "HTTP Error 418: Unknown Code",
+      "elapsed_s": 0.48168047899525845
+    }
+  ],
+  "author_html_audit": "Both public author pages point A2DIO only to IEEE9811714, with no linked full paper or method-network code.",
+  "blockers": [
+    "lawfully accessible complete ICRA seven-page primary text",
+    "exact preprocessing/window/rate and output dimensionality",
+    "CNN kernel/stride/residual/channel-spatial attention placement",
+    "LSTM depth/width/readout and temporal attention formula",
+    "original loss, phase and optimizer settings",
+    "full-text comparison to same-author TIM2022 article9808172 DOI10.1109/TIM.2022.3186704 to avoid method duplication"
+  ],
+  "xyz_adaptation": "not designed; original dimensions unknown until full text available",
+  "next_action": "Obtain a lawful publisher or author full text, then reconstruct and propose server-only scientific/lifecycle acceptance. Do not substitute generic CBAM-LSTM.",
+  "full_text_fetch_scope": "bounded official routes ended; no cookies, credentials, paywall bypass or repeated background retry"
+}

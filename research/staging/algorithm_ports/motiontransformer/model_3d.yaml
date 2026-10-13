@@ -1,0 +1,29 @@
+# Separate declared XYZ adaptation. Original AAAI 2019 method is planar polar DR.
+name: motiontransformer_world_velocity_xyz_staging
+arch: motiontransformer_staging
+paper: https://ojs.aaai.org/index.php/AAAI/article/view/4802
+code: null
+fidelity: paper-only sequence-GAN reconstruction with learned vertical velocity and changed world-velocity labels
+args:
+  hidden: 128
+  layers: 1
+  decimation: 2
+  inference_domain: 1
+input:
+  window: 400
+  rate: 200.0
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: motiontransformer_five_objectives_staging
+recipes:
+  unified: {}
+staging_training:
+  protocol: labelled_source_plus_unpaired_unlabelled_target
+  optimizer_partitions: [encoder_generators_decoder_predictor, two_discriminators]
+  update_order_assumption: [discriminator_once, joint_generator_once]
+  target_domain_train_only: true
+  target_domain_label_access: forbidden
+  ordinary_single_domain_trainer_supported: false

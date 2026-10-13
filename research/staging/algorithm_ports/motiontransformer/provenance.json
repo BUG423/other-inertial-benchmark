@@ -1,0 +1,130 @@
+{
+  "schema": "ib.staging.algorithm-port.provenance.v1",
+  "checked_utc": "2026-10-13T19:28:02.001939+00:00",
+  "method": "motiontransformer",
+  "title": "MotionTransformer: Transferring Neural Inertial Tracking between Domains",
+  "venue": "AAAI 2019 main robotics track",
+  "published": true,
+  "authors": [
+    "Changhao Chen",
+    "Yishu Miao",
+    "Chris Xiaoxuan Lu",
+    "Linhai Xie",
+    "Phil Blunsom",
+    "Andrew Markham",
+    "Niki Trigoni"
+  ],
+  "excluded_author": "Shanshan Zhang",
+  "excluded_author_match": false,
+  "primary": "https://ojs.aaai.org/index.php/AAAI/article/view/4802",
+  "full_paper": {
+    "url": "https://www.cs.ox.ac.uk/files/10408/motiontransformer-transferring-neural%20%283%29.pdf",
+    "http": 200,
+    "bytes": 1319986,
+    "sha256": "b2bbc117ae18b85e6e57bd35db47b68417f6d62fac25c89a50308b40c6addf87",
+    "elapsed_s": 3.8245311379941995,
+    "local_small_paper_only": true,
+    "publisher_pdf": "https://ojs.aaai.org/index.php/AAAI/article/view/4802/4680",
+    "private_path": ".local/research/algorithm-primary/expansion-a2dio-motiontransformer/motiontransformer-paper.pdf",
+    "public_pdf_committed": false
+  },
+  "official_method_network_source": null,
+  "source_status": "No official network source verified in bounded publisher, author-project and exact-title repository searches; unrelated MTR/forecasting repositories are not sources",
+  "fidelity": "independent paper-only sequence-GAN reconstruction with declared architecture, reduction and optimizer-stage assumptions",
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "formal_2067_rows_changed": false,
+  "server_scientific_tests": "not_run",
+  "server_default_profile_lifecycle": "not_run",
+  "server_gpu_capacity": "not_run",
+  "paper_contract": {
+    "sample_rate_hz": 100,
+    "time_steps": 200,
+    "duration_seconds": 2,
+    "input_channels": [
+      "acc_x",
+      "acc_y",
+      "acc_z",
+      "gyro_x",
+      "gyro_y",
+      "gyro_z"
+    ],
+    "frame": "sensor_body",
+    "input_axes": 6,
+    "output": [
+      "delta_length_m",
+      "delta_heading_rad"
+    ],
+    "neural_family": "recurrent sequence GAN; not self-attention",
+    "domains": "labelled source train plus unpaired unlabelled target train",
+    "target_labels": "evaluation_only; absent from all train APIs",
+    "loss_weights": {
+      "gan": 1,
+      "reconstruction": 0.01,
+      "prediction": 100,
+      "cycle": 0.1,
+      "perceptual": 1
+    }
+  },
+  "equation_map": {
+    "2": "shared domain-conditioned encoder",
+    "3_4": "two domain-specific aligned generators",
+    "5": "shared decoder, unit normal latent noise and domain vector",
+    "6": "shared predictor",
+    "8_9": "two discriminators and printed minimax GAN objective",
+    "10": "both noisy reconstructions",
+    "11": "source labels on source and source-translated-to-target predictions",
+    "12": "both L1 cycles",
+    "13": "both squared latent perceptual constraints",
+    "7": "weighted complete five objectives",
+    "14": "stateful original planar polar integration"
+  },
+  "unreported_assumptions": [
+    "one-layer unidirectional LSTMs with hidden128 and linear readouts",
+    "last-hidden-state window predictor/discriminator readout",
+    "fixed two-way one-hot domain vectors",
+    "sum norm across non-batch coordinates then mean over batch",
+    "one discriminator step then one joint generator step; optimizer and warm-up unknown",
+    "no undocumented input normalization"
+  ],
+  "adaptation_contract": {
+    "distinct_profiles": [
+      2,
+      3
+    ],
+    "native_sample_rate_hz": 200,
+    "native_time_steps": 400,
+    "explicit_pair_average_decimation": 2,
+    "prepared_sample_rate_hz": 100,
+    "prepared_time_steps": 200,
+    "duration_seconds": 2,
+    "input_frame": "gravity_world using declared reference orientation",
+    "input_channel_order": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "target": "average world velocity m/s",
+    "horizontal_labels": "horizontal speed plus absolute world velocity direction, replacing original displacement/increment labels",
+    "vertical": "separate learned vertical velocity; no zero padding",
+    "raw_layout": "window B,D",
+    "xy_rule": "same XYZ[..., :2] for an XYZ run; dedicated 2D run remains separate"
+  },
+  "standard_nio_training_supported": false,
+  "integration_blockers": [
+    "single-labelled-batch Trainer has no reviewed unpaired target-train loader contract",
+    "Trainer needs disjoint two-optimizer stage and checkpoint/resume sampler-RNG support",
+    "paper body-frame polar target and stateful heading integration need separate native task protocol",
+    "validation loss policy must be explicit without introducing target labels into adaptation"
+  ],
+  "not_claimed": [
+    "official parameter equality",
+    "paper reported accuracy",
+    "complete default NIO lifecycle",
+    "GPU acceptance",
+    "current formal matrix membership"
+  ]
+}
