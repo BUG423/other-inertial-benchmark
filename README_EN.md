@@ -120,7 +120,7 @@ APP source, APKs, `.iplab` conversion and builds belong to [app-inertial-lab](ht
 
 ## 🔬 Research and Validation Status
 
-On the current AutoDL server, three RIDI and three RoNIN recordings were converted to native v1, and short CPU NIO runs completed the engineering loop (one epoch / two updates each). The 31 new native v1 files passed data acceptance. Unique coverage of the 719 frozen test nodes is **665 passed / 52 skipped / 2 resource_unverified**; the two unverified cases are CTIN end-to-end train/validation tests. The new plotting patch awaits separate targeted server acceptance. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results. See [project status](docs/DEV_V1_INTEGRATION.md) for current evidence and limits.
+On the current AutoDL server, three RIDI and three RoNIN recordings were converted to native v1, and short CPU NIO runs completed the engineering loop (one epoch / two updates each). The 31 new native v1 files passed data acceptance. Unique coverage of the 719 frozen test nodes is **665 passed / 52 skipped / 2 resource_unverified**; the two unverified cases are CTIN end-to-end train/validation tests. Separate targeted acceptance of `6d44573` passed **all 81 tests**, including five tests for dimension-consistent time/CDF plots and paging beyond eight models; this count is not added to the original 719. The **705 tests**, scores and AMP/dropout observations in the 2026-09-24 handoff are historical results. See [project status](docs/DEV_V1_INTEGRATION.md) for current evidence and limits.
 
 Shrinkage should be tested through target/integration oracles, time/length resolution, speed/direction, train/eval mode differences, precision and generalization. Existing length decomposition and mode guards provide a starting point; conclusions require sufficiently trained algorithms and controlled experiments.
 
@@ -136,8 +136,8 @@ Shrinkage should be tested through target/integration oracles, time/length resol
 | Stage | Deliverable and acceptance |
 | :--- | :--- |
 | **Existing foundation** | v1 sequences/views, eight core converters, algorithm interfaces, train/validate/predict, metrics and reports |
-| **Current CPU stage** | EuRoC/Blackbird conversion and checks accepted; finish full-suite and environment acceptance on the current server |
-| **Evaluation increments** | Permission tracks, NA/coverage, consistent 3D plots, paging/facets beyond eight models, six panels and static HTML |
+| **Current CPU stage** | EuRoC/Blackbird conversion and checks accepted; scientific-suite coverage/limits, targeted tests and environment acceptance recorded separately |
+| **Evaluation increments** | Dimension-consistent time/CDF plots and model paging accepted; continue permission tracks, NA/coverage, 3D trajectories, six panels and static HTML |
 | **GPU stage** | One seed to validate recipes/full training, then expand the matrix; at most three seeds for final key experiments |
 | **Research delivery** | Auditable benchmark, shrinkage mechanisms and controlled experiments, reproducible release; ICRA / IEEE RA-L target |
 
