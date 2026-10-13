@@ -1,0 +1,128 @@
+{
+  "schema": "ipb.algorithm.staging.ai-imu-dr.source-derived.v1",
+  "method": "ai_imu_dr",
+  "status": "static_implementation_not_runtime_qualified",
+  "registered": false,
+  "formal_rows_added": 0,
+  "publication": {
+    "title": "AI-IMU Dead-Reckoning",
+    "authors": [
+      "Martin Brossard",
+      "Axel Barrau",
+      "Silvère Bonnabel"
+    ],
+    "venue": "IEEE Transactions on Intelligent Vehicles",
+    "year": 2020,
+    "doi": "10.1109/TIV.2020.2980758",
+    "full_authors_primary_checked": true,
+    "excluded_Shanshan_Zhang_match": false,
+    "journal_VoR_obtained": false
+  },
+  "primary_urls": [
+    "https://arxiv.org/html/1904.06064v1",
+    "https://doi.org/10.1109/TIV.2020.2980758",
+    "https://github.com/mbrossar/ai-imu-dr"
+  ],
+  "official_source": {
+    "commit": "32967812139af82cf12654c93438bf9065b7a241",
+    "tree": "168fba39be752b0fd4612258efdf0736849eaf15",
+    "license": "MIT",
+    "all_source_files_acquired_on_AutoDL": 9,
+    "source_bytes": 85169,
+    "source_manifest_sha256": "7c317f0d8288ba533d97478117bd2ef54e4b036f515cf591d4cca0c22ae792f1",
+    "audited_findings_sha256": "30d757675af65ab8d19b1f24b20576be59330b5c5a1f53273c9210dacd96e8cf",
+    "server_root": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/algorithm-primary/ai-imu-dr-stage1-32967812",
+    "used_files": [
+      "src/utils_torch_filter.py",
+      "src/utils_numpy_filter.py",
+      "src/main_kitti.py",
+      "src/train_torch_filter.py",
+      "src/dataset.py"
+    ],
+    "upstream_license_file": "LICENSE.upstream"
+  },
+  "scientific_track": {
+    "name": "official-source-derived_modern_engineering_port",
+    "propagation": "released_nominal_half_acceleration_and_Taylor3_Phi_Gdt",
+    "covariance_update": "Phi(P+Gdt_Q_GdtT)PhiT_Joseph_symmetrize_no_error_reset",
+    "observation_bias_sign": "released_NumPy_negative_skew_t",
+    "initialization": "explicit_reference_assisted_R_v_local_p_and_state",
+    "parameters_CNN": 6210,
+    "parameters_learned_P0_Q_scales": 12,
+    "input": {
+      "channels": [
+        "gyro_x",
+        "gyro_y",
+        "gyro_z",
+        "specific_force_x",
+        "specific_force_y",
+        "specific_force_z"
+      ],
+      "frame": "sensor_body",
+      "original_rate_hz": 100,
+      "clock": "original_int64_nanoseconds_caller_provenance_required",
+      "dtype": "float64"
+    },
+    "outputs": [
+      "R_world_from_IMU",
+      "v_world_XYZ",
+      "p_world_XYZ",
+      "gyro_bias",
+      "accel_bias",
+      "R_IMU_from_car",
+      "tci",
+      "P_21x21",
+      "N_car_lateral_up"
+    ],
+    "error_coordinates": "SE2(3)_left_group_plus_bias_and_leverarm_additive_Rci_left",
+    "CNN_receptive_field": 17,
+    "future_samples": 8,
+    "delay_ms_at_100Hz": 80,
+    "RPE_path_lengths_m": [
+      100,
+      200,
+      300,
+      400,
+      500,
+      600,
+      700,
+      800
+    ],
+    "loss": "reference_chord_normalized_relative_displacement_MSE_SUM",
+    "N_is_XYZ_prediction_sigma": false,
+    "world_Z_padded": false,
+    "vehicle_applicability": "wheeled_nonholonomic_car_only"
+  },
+  "engineering_adaptations": [
+    "gradient_safe_float64_skew_Exp",
+    "modern_Cholesky_solve",
+    "B2_B_T_2_layout",
+    "NumPy_negative_Hbg_for_train_and_inference",
+    "explicit_eval_vs_MC_mode",
+    "persistent_train_only_normalization_and_physics",
+    "float64_label_pair_construction"
+  ],
+  "unresolved_fidelity": [
+    "journal_VoR_unavailable",
+    "printed_leverarm_frame_mapping_not_claimed_resolved",
+    "release_Torch_vs_NumPy_periodic_normalization",
+    "paper_causal_history_Euler_position_and_reported_drift_vs_released_differences"
+  ],
+  "pending_integration": [
+    "real_KITTI_100Hz_OXTS_clock_calibration",
+    "train_only_normalization_split_binding",
+    "6000_sample_recording_sampler",
+    "full_sequence_Trainer_and_result_protocol",
+    "training_resume_optimizer_sampler_RNG",
+    "native_export",
+    "CUDA_and_formal_results"
+  ],
+  "tests": {
+    "local_framework_executed": false,
+    "server_executed": false,
+    "estimated_nodes_static_AST": 51,
+    "actual_collected_nodes": null,
+    "passed_nodes": null,
+    "scope": "synthetic_scientific_formulas_and_source_parity_only"
+  }
+}
