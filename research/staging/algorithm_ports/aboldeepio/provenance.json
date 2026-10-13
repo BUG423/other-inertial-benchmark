@@ -1,0 +1,172 @@
+{
+  "schema": "ib.staging.algorithm-port.provenance.v1",
+  "prepared_utc": "2026-10-13T20:32:12.568834+00:00",
+  "method": "aboldeepio",
+  "track": "original_scalar",
+  "state": "static_only_pending_scientific_server_acceptance",
+  "title": "AbolDeepIO: A Novel Deep Inertial Odometry Network for Autonomous Vehicles",
+  "authors": [
+    "Mahdi Abolfazli Esfahani",
+    "Han Wang",
+    "Keyu Wu",
+    "Shenghai Yuan"
+  ],
+  "venue": "IEEE Transactions on Intelligent Transportation Systems",
+  "online_year": 2019,
+  "issue_year": 2020,
+  "volume": 21,
+  "issue": 5,
+  "pages": "1941–1950",
+  "doi": "10.1109/TITS.2019.2909064",
+  "excluded_author": "Shanshan Zhang",
+  "excluded_author_match": false,
+  "authors_primary_verified": true,
+  "primary": [
+    "https://doi.org/10.1109/TITS.2019.2909064",
+    "https://hdl.handle.net/10356/155329",
+    "https://www.ntu.edu.sg/csie/research-capabilities/publications"
+  ],
+  "fulltext_evidence": {
+    "type": "First-author doctoral thesis official DSpace TEXT bitstream, not journal version of record",
+    "record": "https://hdl.handle.net/10356/152280",
+    "url": "https://dr.ntu.edu.sg/server/api/core/bitstreams/7684b0ca-52df-480c-9e9f-a16be870baf6/content",
+    "locator": "Chapter6 §6.3 pp132–143; §6.3.1 pp133–137; §6.3.2 pp137–143; Table6.1 p138; Table6.2 p139; Eqs6.6–6.10 pp136–137",
+    "bytes": 378516,
+    "sha256": "db2e18d7518fd61950bde653b7412a2a04e38dadbd4c4fa13e922bedccc76af2",
+    "official_md5": "8c7cfc4c015e23fd4f18daed89ec11fd",
+    "official_md5_verified": true,
+    "thesis_names_same_method": true,
+    "journal_version_of_record_acquired": false,
+    "journal_parameter_equivalence_verified": false,
+    "paper_content_committed": false
+  },
+  "internal_contract_sha256": "93647ce5545c95556a6e79a6ee4d8558dbf719ddf9cac83d5e7bef53e816030f",
+  "official_network_source_verified": false,
+  "original_source_license": null,
+  "software_implementation": "independent new staging code from method description; no source copied",
+  "fidelity": "same-named primary-author thesis scalar-core reconstruction with explicit assumptions; not exact journal reproduction",
+  "input": {
+    "frame": "body",
+    "acc_channels": 3,
+    "gyro_channels": 3,
+    "acc_units": "m/s^2 specific force",
+    "gyro_units": "rad/s",
+    "dt_units": "nanoseconds",
+    "dt_source": "actual per-reading backward timestamp differences",
+    "clock_dtype": "int64 or float64 before conversion to network dtype",
+    "gt_pose_at_inference": false,
+    "time_normalization": null,
+    "noise_training_only": true,
+    "nominal_clock_fill_policy": "forbidden by caller original-clock provenance admission; numeric tensor checks cannot distinguish artificial nominal fill from real uniform acquisition",
+    "clock_provenance_verified_by_tensor_checks": false,
+    "clock_numeric_checks": [
+      "original timestamp adjacency strictly increasing before subtraction",
+      "difference finite and positive after subtraction; catches integer overflow"
+    ]
+  },
+  "architecture": {
+    "variant": "AbolDeepIO1",
+    "acc_widths": [
+      100,
+      150,
+      100
+    ],
+    "gyro_widths": [
+      100,
+      150,
+      100
+    ],
+    "time_widths": [
+      100
+    ],
+    "fusion_widths": [
+      150,
+      100,
+      50
+    ],
+    "dropout": 0.25,
+    "noise_variance_acc": 0.2,
+    "noise_variance_gyro": 0.02,
+    "noise_stddev": "sqrt of reported variance",
+    "two_heads": "assumed linear 50->2 per timestep"
+  },
+  "indexing_assumption": {
+    "window_n": [
+      10,
+      20
+    ],
+    "supervised_samples": "N",
+    "imu_samples": "N+1",
+    "previous_timestamp_context_samples": 1,
+    "reference_label_samples": "preceding pose + N target poses",
+    "target_readings": "s .. s+N-1",
+    "input_readings": "s .. s+N",
+    "feature_for_target_i": "feature i+1",
+    "lookahead_samples": 1,
+    "lookahead_latency": "actual next timestamp minus target timestamp",
+    "future_pose_labels_read": false,
+    "printed_inclusive_0_to_N_equivalence_verified": false
+  },
+  "task": {
+    "path_length": "within-window prefix sum of Euclidean position step lengths, meters",
+    "orientation_chord": "within-window prefix sum of quaternion R4 coordinate-chord lengths, dimensionless",
+    "raw_layout": "each scalar B,N",
+    "not_xyz_displacement": true,
+    "not_so3_angle": true,
+    "hemisphere_default": "raw; sign-flip artifacts retained",
+    "hemisphere_continuous": "explicit alternate adaptation",
+    "trajectory_integration_supported": false,
+    "gt_direction_trajectory_assembly": false
+  },
+  "loss": {
+    "equation": "thesis6.10",
+    "type": "weighted absolute-error SUM",
+    "lambda_length_default": 1.0,
+    "lambda_orientation_default": 1.0,
+    "numeric_lambdas_reported": false,
+    "reduction": "SUM across batch and supervised time; batch reduction unreported",
+    "supervision_variants": [
+      "many_to_many",
+      "many_to_one"
+    ],
+    "variants_are_one_paper": true
+  },
+  "frozen_assumptions": [
+    "N supervised rows, N+1 real IMU readings; i+1 feature predicts i target; printed indexing unresolved",
+    "unidirectional PyTorch LSTM gates and default initialization, not proven historical Keras equivalents",
+    "element-wise post-LSTM output dropout; input/recurrent Keras masks unreported",
+    "linear outputs with no hidden positivity transform/cumulative output layer",
+    "lambda1=lambda2=1 and batch SUM are staging defaults, not recovered numeric author settings",
+    "literal raw quaternion coordinates default; optional hemisphere continuity is a named adaptation",
+    "acc-noise then gyro-noise then acc/gyro/time/fusion dropout RNG order",
+    "no raw-nanosecond scaling; input dtype cast can round large dt and saturate time gates",
+    "optimizer/LR/batch/epochs/validation recipe unresolved; no OriNet parameters borrowed",
+    "caller must admit original acquisition-clock provenance; dtype/monotonic checks cannot prove that a uniform clock was genuinely acquired"
+  ],
+  "remaining_blockers": [
+    "journal VoR/author accepted manuscript and exact network/head/window/Keras details",
+    "raw-clock preservation: uniform native200Hz timestamps cannot restore original sensor jitter",
+    "scalar task data/metrics and standard lifecycle are not integrated",
+    "raw nanosecond LSTM saturation and any explicit normalized-time ablation need measured study",
+    "any XYZ output needs a different learned direction/vector head and task/loss contract"
+  ],
+  "acceptance": {
+    "active_registered": false,
+    "active_method_increment": 0,
+    "active_profile_increment": 0,
+    "formal_rows_changed": false,
+    "actual_collected_nodes": null,
+    "server_scientific_tests": "not_run",
+    "server_cpu_lifecycle": "not_run",
+    "server_gpu": "not_run",
+    "xyz_ready": false,
+    "scalar_paper_accuracy_reproduced": false
+  },
+  "not_claimed": [
+    "journal parameter equality",
+    "original accuracy",
+    "standard NIO scalar lifecycle",
+    "XYZ/ATE/RPE readiness",
+    "current formal matrix membership"
+  ]
+}
