@@ -10,7 +10,7 @@
 | :--- | :--- |
 | v1 代码 | 29 个注册架构、31 份模型配置、21 个算法包、八个核心转换器与 train/val/predict/report 主干；导出 API 尚缺 |
 | 历史结果 | HANDOFF 的 705 tests、旧机器成绩和 AMP/dropout 观察为 2026-09-24 历史，不等于当前 AutoDL 复验 |
-| 当前 AutoDL | RIDI / RoNIN 各三条录制已用原生转换器接收，均 0 拒绝；短 CPU NIO 闭环已完成；原冻结 719 节点覆盖为 665 passed / 52 skipped / 2 resource_unverified；`6d44573` 独立目标验收 81 passed |
+| 当前 AutoDL | RIDI/RoNIN/IDOL 完整转换得到 375 份原生 HDF5，full/hash 零 errors，三者 train_ready=true；此前短 CPU NIO 闭环已完成；原冻结 719 节点覆盖为 665 passed / 52 skipped / 2 resource_unverified；`6d44573` 独立目标验收 81 passed |
 | 旧候选评价 | 另一接口的服务器检查与代表预测，不计入 v1 当前测试或排行榜 |
 | GPU 阶段 | CPU 准入、预算/配方冻结后开展充分训练，目前不发布正式算法排名 |
 
@@ -18,12 +18,36 @@
 
 | 数据 / 资产 | 本轮事实 | 下一步 |
 | :--- | :--- | :--- |
-| 八个核心转换器 | RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 已有代码 | 当前 raw/canonical 存量与 receipt 分别核对，不冒认历史大规模转换数量 |
+| 八个核心转换器 | RoNIN、RIDI、OxIOD、TLIO、IDOL、RNIN、IMUNet、PedLocData 已有代码；RIDI/RoNIN/IDOL 完整数据已验收 | 用 full-core 原生数据开展 GPU pilot，来源指纹、划分和警告见下表 |
 | [EuRoC](datasets/euroc.md) | 11 条录制转换为 11 份原生 v1 HDF5，full/hash check 零 errors；correction 未应用 | 整录制 5 train / 1 val / 5 test，reference/oracle；部署输入权限仍需分 track |
 | [Blackbird](datasets/blackbird.md) | 20 个发布片段转换为 20 份原生 v1 HDF5，full/hash check 零 errors | route 保守同组，仅 test 审计目录，不等于独立 20 次飞行或训练/验证划分 |
 | [Pegasus](datasets/pegasus.md) / [ADVIO](datasets/advio.md) | 实际识别并拒收 7 / 3 个来源资产，两者均 0 canonical | 输出审计拒收报告；待来源姿态/帧契约证实后再接入 |
 | [TartanIMU 2025 来源审计](datasets/tartanimu_2025.md) | 新增审计卡，无本轮 converter 注册 | 不把来源卡计为可训练数据或转换器 |
-| TLIO / IMUNet | 原生转换器已有，本轮 raw 未实收 | 服务器网络限制，继续核验 AutoDL 公开下载入口；实收后记录资产哈希并按 v1 转换/校验，已有数据与其他工作继续 |
+| TLIO / IMUNet | 原生转换器已有，本轮 raw 均未实收；AutoDL Google 下载入口网络超时 | 实收后按 v1 转换/校验，已有数据与其他工作继续 |
+| OxIOD | 原生转换器已有；本轮 raw 未实收，官方表单访问受服务器网络限制 | 保留官方入口与来源卡，不冒认下载完成 |
+| RNIN | 原生转换器已有；本轮 raw 未实收，百度匿名媒体下载入口触发登录门槛 | 准入与下载状态独立记录，不把 IDOL 数据计为 RNIN raw |
+
+### RIDI / RoNIN / IDOL 全量转换验收
+
+| 数据 | 接收 / 拒收 | 实际划分（条） | HDF5 字节 / 检查 warnings |
+| :--- | :--- | :--- | :--- |
+| [RIDI](datasets/ridi.md) | 94 / 0 | train 45、val 4、官方 test 23，另 test_unseen_subject 11、test_unlisted_seen_subject 11；五项合计 94 | 117,002,894 / 3 |
+| [RoNIN](datasets/ronin.md) | 151 / 1 | train 71、val 16、test 64（test_seen 32 + test_unseen 32）；另 test_ood_device_id 为 test 的诊断子集 | 964,361,898 / 7 |
+| [IDOL](datasets/idol.md) | 130 / 0 | train 38、val 5、test 87（test_known 51 + test_unknown 36）；building 子集与这些集合有交集，不重复累加 | 833,504,808 / 34 |
+
+共 **375 份 HDF5、1,914,869,600 字节**，三个 full/hash 检查均返回 0、零 errors，`train_ready=true`；这证明数据契约和划分可进入训练，不是已完成充分训练或论文精度验证。作者官方 known/seen 划分允许 subject/group 共享，RIDI/RoNIN/IDOL 的 3/7/34 条 warning 均保存；没有序列重复不等于所有 train/test 主体独立。RoNIN `a011_3` 使用官方选择的 gyro_integration 姿态后，重力平均倾角 4.1° 导致物理检查失败，明确拒收。
+
+服务器仓库根目录的相对位置为 `datasets/ipb-v1/full-core/{ridi,ronin,idol}`。使用 `export IPB_DATASETS="$PWD/datasets/ipb-v1/full-core"` 后，现有 `data=ridi` / `data=ronin` / `data=idol` 配置直接指向本轮完整数据；不再把 `ridi_smoke` / `ronin_smoke` 当正式训练数据。
+
+| 数据 | 实际 dataset fingerprint |
+| :--- | :--- |
+| RIDI | `b4f38fa9a5fef00f0c5f91e73436524a16a3e36843f9dce9868dc5dba8801aa2` |
+| RoNIN | `b2b88e29ccad818bf2dc7de3e93fcc44c8f59982e8aa66affd04e4d74f72968c` |
+| IDOL | `895b5618a295eae3b34d445929c23f679fbedc8b8ec092f9e6a186f8bba39e5c` |
+
+全量转换执行绑定源码 `0ae5ea3`，manifest SHA256 `7573a39dbe62a4fdeda0ac6eb6a67aee9c6d4da19c426f0cf211ec2d0b9689f3` 前后不变。执行 receipt SHA256 `52238c2b45f28a2a6a2f486f297dd8cb266db5021a4ab2fdf7bcf04a707eff80`；`full-core-completion-summary.json` SHA256 `f96229f385e46dd9bd9dcaf2297f719c50bfb4ee97f90810840ae3312a25d877` 汇总了 raw 来源哈希、conversion reports、full/hash reports、划分与拒收原因。此数据验收与下面的旧科学 suite、81 项目标测试分别记录。
+
+`cc6554b` 对此前 16 个 converted-data 节点另作诊断，结果为 3 split-policy passed / 10 missing-dataset skipped / 3 historical-release fingerprint failed。后三项的 converter、200 Hz、序列数、时长和距离断言已通过，但新生成数据的 fingerprint 未匹配历史 release 前缀；新 HDF5 的 full/hash 检查通过不等于历史发布物逐字节复现。独立 receipt 为 `cc6554b-fresh-release-receipt.json`，SHA256 `10fc43218031702316b83171cbb1370f1d3c9fc3598556bb4101aa120642e4d4`，不改变下面旧验收计数，也不据此宣称 CI 全绿。
 
 新增共四个 converter 注册入口：EuRoC/Blackbird 两个原生转换器、Pegasus/ADVIO 两个审计拒收入口；TartanIMU 2025 只有来源卡。逐数据集细节见 [datasets/](datasets/)。本轮新增合计 31 份原生 v1 文件、24,158,461 字节：EuRoC 15,790,930 字节 / 1,348.34 s；Blackbird 8,367,531 字节 / 759.25 s，保守划为 10 个 route groups。转换器针对四个文件的服务器测试为 10 passed（5.60 s），ruff 通过；两数据集 full/hash 检查均零 errors；保留 EuRoC 两条原官方集合重叠 warning，以及 Blackbird 缺少 train/val 和三个 egg 片段重力 marginal 共五条 warning，不隐去边界信息。验收记录为 `new-datasets-v1.json`，SHA256 `1b5f9d393804ef5fe898cb9ab9fa064ad724f9fbc4915735a9f49a35c066d4a5`；科学 suite 与目标验收范围分别记录如下。
 
