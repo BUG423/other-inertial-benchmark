@@ -1,0 +1,212 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "binary_attention_velocity_float_reference",
+  "architecture_id": "binary_attention_velocity",
+  "class_name": "BinaryAttentionVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "official_inertial_implementation": false,
+  "paper_training_fidelity_claim": false,
+  "complete_paper_reproduction": false,
+  "source_specific_auxiliary_losses": false,
+  "source_evidence": {
+    "path": "../candidate_backbones.json",
+    "sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+    "candidate_id": "binary_attention",
+    "qualification_scope": "Five source-qualified CVPR2026 main papers; source qualification is not runtime/capacity/legal redistribution approval."
+  },
+  "paper": {
+    "title": "BinaryAttention: One-Bit QK-Attention for Vision and Diffusion Transformers",
+    "authors": [
+      "Chaodong Xiao",
+      "Zhengqiang Zhang",
+      "Lei Zhang"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "12106-12117",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xiao_BinaryAttention_One-Bit_QK-Attention_for_Vision_and_Diffusion_Transformers_CVPR_2026_paper.html",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Xiao_BinaryAttention_One-Bit_QK-Attention_for_Vision_and_Diffusion_Transformers_CVPR_2026_paper.pdf",
+    "pdf_bytes": 1484632,
+    "pdf_sha256": "d5667d360701541b0a1fc06321a48dac887efda148f8c0975c9c30386cb231e1"
+  },
+  "repository": {
+    "url": "https://github.com/EdwardChasel/BinaryAttention",
+    "commit": "a8e0268ffc63ed4bb26bceac5fa015d358732055",
+    "license": {
+      "spdx": "Apache-2.0",
+      "notice_review_status": "upstream_appendix_contains_unresolved_conflict_markers; preserve_exact_bytes_and_hold_legal_notice_admission",
+      "path": "LICENSE",
+      "bytes": 11435,
+      "sha256": "c20669c3fcd39ca552015568b5958af5ed6b4f75faaa9ffca5b03d470ae75ab5"
+    },
+    "official_link_evidence": "Primary CVF/complete PDF and author repository qualification recorded in candidate_backbones.json; reused fixed source evidence, not a new author inertial implementation."
+  },
+  "core_sources": [
+    {
+      "path": "models.py",
+      "bytes": 25771,
+      "sha256": "0af0f3863076ed6d0aa3b8e764559c21d86acf267b2b64a6f21aa9d223baf229",
+      "symbols": [
+        "Attention",
+        "Block",
+        "VisionTransformer",
+        "round_ste"
+      ]
+    },
+    {
+      "path": "utils.py",
+      "bytes": 9979,
+      "sha256": "56668b4e072660759e579866eda635092eaea58b4870f829fb107fad002558d4",
+      "symbols": [
+        "binary_sign",
+        "binarize",
+        "SymQuantizer",
+        "symquantize"
+      ]
+    }
+  ],
+  "fixed_raw_base_url": "https://raw.githubusercontent.com/EdwardChasel/BinaryAttention/a8e0268ffc63ed4bb26bceac5fa015d358732055/",
+  "source_recheck": {
+    "date": "2026-10-14",
+    "method": "Each actual core raw file SHA/byte count verified and AST parsed, no upstream module imported. Fixed root LICENSE raw bytes fetched/hash matched and saved unmodified using apply_patch. Prior complete primary PDF qualification reused from source evidence; no datasets/weights fetched."
+  },
+  "adaptation": {
+    "identity": "architecture_core_port",
+    "selected_core": "Projected Q/K scaled-sign quantization and learned compensation bias; optional P/V 8-bit floating fake-quant reference. Not a bit-packed CUDA implementation.",
+    "complete_paper_reproduction": false,
+    "adapter_draft_args": {
+      "d_model": 32,
+      "num_heads": 4,
+      "depth": 2,
+      "patch_size": 4,
+      "mlp_ratio": 2,
+      "pv_quant": true,
+      "pretrained": false
+    },
+    "draft_recipe_status": "Explicit compact width/depth/patch/operator/initialization hypotheses; not original full visual-model profile, measured capacity, accuracy, latency or final-initialization parity.",
+    "initialization": "Temporal CLS/learned positions/relative bias truncated-normal std0.02; compact stem/Transformer/XYZ head use PyTorch defaults. No source pretrained, teacher or full vision final-init parity.",
+    "readout": "Final LayerNorm, CLS token, one Linear(d_model,3) XYZ head; explicitly not shared temporal GAP.",
+    "keep": [
+      "Per-sample/per-head absolute-mean Q/K scale over token and feature axes, differentiable scale multiplied by source STE sign",
+      "Source sign convention: zero maps to +1",
+      "Source utils.py lines291/292 backward zero only for x.gt(1) or x.lt(-1), preserving gradients at BOTH exact boundaries -1,+1",
+      "Scaled projected-sign QK scores, learned relative compensation bias, softmax and floating attention/value matmul",
+      "Explicit pv_quant switch (draft true): probability round_ste UINT8 clamp0..255 and source symmetric 8-bit value quantization",
+      "Symmetric value scale127/(token-axis absmax.detach+1e-6), round/rescale; forward does not clip input; backward passes only open(-2,+2)",
+      "Pre-LN residual Transformer with floating V/residual/MLP and source-compatible CLS bias cases"
+    ],
+    "replace": [
+      "RGB patches -> ordered Conv1d(6,32,p4,stride4) temporal patches, never binarizing raw physical six-axis input",
+      "2D relative position table ->1D time-distance table plus CLS-to-token/token-to-CLS/CLS-to-CLS cases",
+      "Image learned positions/CLS -> temporal learned positions/CLS; classification/teacher head -> true XYZ Linear MSE head",
+      "Source fine-tuning/distillation/pretrained setup -> compact scratch-supervised D32/H4/depth2/MLP2 draft"
+    ],
+    "omitted": [
+      "Teacher distillation/classification objectives and any external image pretrained weights",
+      "Bit-packed binary CUDA/packed integer matmul implementation",
+      "Source low-bit hardware efficiency counters or BOP/64 interpreted as measured runtime FLOPs",
+      "Full vision/diffusion architecture wrappers and task losses"
+    ],
+    "paper_code_adapter_differences": [
+      "Closed [-1,+1] sign STE is the fixed source rule; an asymmetric interval or strict-open sign clipping is not this identity.",
+      "Value-quantizer backward open(-2,+2) is a separate source rule and must not be confused with sign STE bounds.",
+      "All sign/fake-quant values still use floating tensors/matmul, as released reference code. No paper binary-kernel acceleration transfers.",
+      "CLS readout differs from GAP candidates and must be explicitly reported.",
+      "D32/H4/depth2/p4/PVquant=true is a compact unmeasured adapter; no paper fine-tuning recipe or initialization equivalence claim."
+    ],
+    "hardware_implementation": "floating_fake_quant_reference_no_bitpacked_CUDA",
+    "sign_backward_interval": "closed[-1,+1]; gradients survive x==+1 and x==-1, source gt/lt lines291/292",
+    "value_backward_interval": "open(-2,+2); zero at/outside both boundaries",
+    "objective": "Shared plain supervised MSE over actual learned XYZ whole-window average velocity only; set_loss rejects non-MSE or kwargs. No source-task/SSL/teacher losses mixed into this identity.",
+    "input_permissions": "Same admitted reference_oracle six-axis task view as controls; no image/text/skeleton/geography/initial velocity/extra sensor/targets in forward/per-test fitting.",
+    "temporal_scope": "window_noncausal; only admitted T200 samples, no outside-window context or persistent fast weights/hidden state/maps.",
+    "risks": [
+      "Projected Q/K quantization discards magnitude detail except learned scales; V/residual mitigation is unverified for inertial velocity.",
+      "Quantizer boundary gradients and fake-quant switches require explicit tests.",
+      "Only measured real reference runtime may be reported, not transferred low-bit speed/BOP claims."
+    ]
+  },
+  "scientific_contract": {
+    "input_shape": "B,6,200",
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "window": 200,
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "input_track": "reference_oracle_not_deployable",
+    "remove_gravity": false,
+    "history": 0,
+    "history_stride": 0,
+    "output_steps": 0,
+    "overlap": "mean",
+    "extra_inputs": [],
+    "target": "avg_velocity",
+    "output_layout": "window",
+    "dims": 3,
+    "output": "vel:B,3 real supervised XYZ average velocity in m/s; no zero-padded Z",
+    "xy_semantics": "XY is the slice of the same XYZ prediction, no second XY model/head",
+    "task_head": "Final LayerNorm, CLS token, one Linear(d_model,3) XYZ head; explicitly not shared temporal GAP.",
+    "loss": "mse",
+    "training_initialization": "scratch_supervised",
+    "optional_ssl_or_auxiliary_recipe": "Not selected; any future source-specific loss requires separately named preregistered identity and budget."
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "provenance": "provenance.json",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified fixed-commit root license bytes, including upstream copyright/appendix.",
+    "upstream_path": "LICENSE",
+    "bytes": 11435,
+    "sha256": "c20669c3fcd39ca552015568b5958af5ed6b4f75faaa9ffca5b03d470ae75ab5",
+    "raw_url": "https://raw.githubusercontent.com/EdwardChasel/BinaryAttention/a8e0268ffc63ed4bb26bceac5fa015d358732055/LICENSE",
+    "notices": [
+      "Facebook 2015-present source quantizer notice and Chaodong Xiao modifications retained; Apache root text unchanged"
+    ],
+    "redistribution_boundary": "Source/license evidence only, not Owner/Legal approval for all repository code, dependencies, weights, datasets or derivative redistribution.",
+    "upstream_notice_caveat": "The exact upstream LICENSE has complete Apache-2.0 terms but leftover <<<<<<< / ======= / >>>>>>> markers around appendix copyright placeholder versus Copyright2026 Chaodong Xiao. No legal validity conclusion is made; do not resolve/alter the author's notice locally. Owner/Legal notice review or a separately pinned author-corrected release is required before reuse admission/distribution."
+  },
+  "verification": {
+    "completed": [
+      "Prior primary-source qualification reused with fixed evidence SHA",
+      "Actual fixed-core raw SHA and AST rechecked without execution",
+      "Current class/constructor args/model YAML read and matched statically",
+      "Exact root LICENSE fetched/hash verified/copied",
+      "Independent adaptation/initialization/readout differences recorded"
+    ],
+    "not_completed": [
+      "Framework/model/pytest import or collection",
+      "CPU/GPU forward/backward/tests or scientific numeric acceptance",
+      "Native lifecycle/checkpoint reload",
+      "Parameter/MAC/VRAM/latency measurements or capacity admission",
+      "Pilot/three-seed training/val/test/formal matrix admission"
+    ],
+    "pending_server_tests": [
+      "Sign values including zero and STE gradients at/inside/outside BOTH -1,+1 boundaries",
+      "Token/channel scale and bias-compensated QK/reference attention values and gradients",
+      "P UINT8 rounding/clamp and V token-absmax 8-bit forward/no-forward-clamp/backward open(-2,+2)",
+      "Real Z supervision, ordered six-axis contract/plainMSE and deterministic eval/reload",
+      "Native lifecycle and measured floating-reference capacity after tail"
+    ],
+    "execution_order": "Every new model import, scientific test, CPU lifecycle, GPU capacity probe, training or evaluation only on AutoDL AFTER ALL original and previously queued tasks with audited tail-readiness and resource-handoff receipt; no automatic launch.",
+    "tail_guard": "Parent conftest.py requires audited IPB_CVPR2026_TAIL_READINESS; guard itself is an unexecuted draft, no pytest --collect-only bypass.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "runtime_actions_performed": [],
+  "formal_rows_added": 0
+}

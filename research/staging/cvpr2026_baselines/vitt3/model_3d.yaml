@@ -1,0 +1,32 @@
+# Static draft only: execute after all original tasks, under new server receipt.
+name: vitt3_velocity_3d_staging
+arch: vitt3_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Han_ViT3_Unlocking_Test-Time_Training_in_Vision_CVPR_2026_paper.html
+code: https://github.com/LeapLabTHU/ViTTT/tree/36eb23bfe2eca5cd4ad9ce01ef93bf8a89c6020f
+license: MIT; LICENSE.upstream retained
+registered: false
+implementation_kind: architecture_core_port
+training: supervised_from_scratch
+causality: window_noncausal
+args:
+  d_model: 32
+  num_heads: 4
+  depth: 2
+  patch_size: 4
+  mlp_ratio: 2
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  history: 0
+  history_stride: 0
+  output_steps: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

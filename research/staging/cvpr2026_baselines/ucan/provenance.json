@@ -1,0 +1,211 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "ucan_velocity_architecture",
+  "architecture_id": "ucan_velocity",
+  "class_name": "UCANVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "official_inertial_implementation": false,
+  "paper_training_fidelity_claim": false,
+  "complete_paper_reproduction": false,
+  "source_specific_auxiliary_losses": false,
+  "source_evidence": {
+    "path": "../candidate_backbones.json",
+    "sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+    "candidate_id": "ucan",
+    "qualification_scope": "Five source-qualified CVPR2026 main papers; source qualification is not runtime/capacity/legal redistribution approval."
+  },
+  "paper": {
+    "title": "UCAN: Unified Convolutional Attention Network for Expansive Receptive Fields in Lightweight Super-Resolution",
+    "authors": [
+      "Cao Thien Tan",
+      "Phan Thi Thu Trang",
+      "Do Nghiem Duc",
+      "Ho Ngoc Anh",
+      "Hanyang Zhuang",
+      "Nguyen Duc Dung"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "23409-23418",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tan_UCAN_Unified_Convolutional_Attention_Network_for_Expansive_Receptive_Fields_in_CVPR_2026_paper.html",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Tan_UCAN_Unified_Convolutional_Attention_Network_for_Expansive_Receptive_Fields_in_CVPR_2026_paper.pdf",
+    "pdf_bytes": 10566433,
+    "pdf_sha256": "105f9a285cfccfcd292d1f98beeab6add6b752d9cc7fc9eca1b34544cace70e0"
+  },
+  "repository": {
+    "url": "https://github.com/hokiyoshi/UCAN",
+    "commit": "b812c0adb8ce70d442973db5c87bab7d1e8c3333",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "official_link_evidence": "Primary CVF/complete PDF and author repository qualification recorded in candidate_backbones.json; reused fixed source evidence, not a new author inertial implementation."
+  },
+  "core_sources": [
+    {
+      "path": "basicsr/archs/ucan_arch.py",
+      "bytes": 57779,
+      "sha256": "d1673486ad78b9a80e46741d94e4267c45e2e763be93b3a25fc5466ec5b1ad3a",
+      "symbols": [
+        "HedgehogFeatureMap",
+        "SDFL",
+        "DFRL",
+        "WindowsAttention",
+        "SharedWindowsAttention",
+        "HybridBlock",
+        "LKSA"
+      ]
+    }
+  ],
+  "fixed_raw_base_url": "https://raw.githubusercontent.com/hokiyoshi/UCAN/b812c0adb8ce70d442973db5c87bab7d1e8c3333/",
+  "source_recheck": {
+    "date": "2026-10-14",
+    "method": "Each actual core raw file SHA/byte count verified and AST parsed, no upstream module imported. Fixed root LICENSE raw bytes fetched/hash matched and saved unmodified using apply_patch. Prior complete primary PDF qualification reused from source evidence; no datasets/weights fetched."
+  },
+  "adaptation": {
+    "identity": "architecture_core_port",
+    "selected_core": "Compact same-forward local attention map plus raw-Q/K sharing/receiving, Hedgehog global/channel dual fusion and selective first16-channel LKSA; NOT the complete UCAN SR architecture.",
+    "complete_paper_reproduction": false,
+    "adapter_draft_args": {
+      "d_model": 32,
+      "local_heads": 4,
+      "global_heads": 2,
+      "pairs": 1,
+      "patch_size": 4,
+      "window_size": 10,
+      "mlp_ratio": 2,
+      "pretrained": false
+    },
+    "draft_recipe_status": "Explicit compact width/depth/patch/operator/initialization hypotheses; not original full visual-model profile, measured capacity, accuracy, latency or final-initialization parity.",
+    "initialization": "Hedgehog eye/zero bias intentionally retained despite source full-model trunc-normal override; Fourier coefficients source-style Xavier normal gain0.5+structured offsets; LayerScale1e-4; other temporal layer defaults. Initialization parity is explicitly not claimed.",
+    "readout": "Final LayerNorm, temporal mean of patch tokens, one Linear(d_model,3) XYZ head.",
+    "keep": [
+      "Sender local-window QKV attention, learned relative-time bias and receiver's own V/projection using the sender map",
+      "Same-forward unmodified raw Q/K shared to receiving dual-fusion; each group keeps its own V, Hedgehog maps, Fourier position module and projection",
+      "Hedgehog feature map concat(2*Linear(x),-2*Linear(x)).softmax, positive/negative symmetric features",
+      "Global linear fusion: non-positioned mean-key normalizer+1e-6, Fourier-positioned Q/K, length^-0.5 K/V factors and local depthwise V contribution",
+      "Channel fusion from time-normalized raw Q/K, learned per-channel temperature, softmax and V readout",
+      "Source-style receiving/sharing residual placement, spatial-gate FFNs and LayerScale1e-4",
+      "Selective first sixteen channels for large-kernel spatial refinement (remaining channels pass through), residual merge"
+    ],
+    "replace": [
+      "2D windows/relative bias ->1D temporal windows with explicit zero padding and invalid-key masks; original six sensor axes remain channels",
+      "2D SGFN/depthwise local V/LKSA convolutions -> explicit 1D temporal counterparts",
+      "Source k23 2D factorization -> temporal k5 followed by k5 dilation2, effective RF13; not a23-tap temporal kernel",
+      "External/spatial Fourier coordinates -> internal temporal token positions; frequency tensor registered as device-following buffer instead of released automatic-CUDA/unregistered tensor",
+      "Signed Fourier coefficient-sum denominator -> signed epsilon safeguard abs(sum).clamp_min(1e-6), preserving sign and minus rotation; source one-padding retained",
+      "Source full depth4 groups -> one sender/receiver pair, each with one selective LKSA in compact draft",
+      "RGB normalization/SR stem/reconstruction -> ordered Conv1d6->32,p4,stride4, GAP and one XYZ velocity head/plainMSE"
+    ],
+    "omitted": [
+      "HPA/large-attention branches, MBConv/ESA wrappers and extra full architecture stages",
+      "RGB means, upsampler/PixelShuffle/SR reconstruction and image acquisition wrappers",
+      "L1/LDL/wavelet and other original SR losses",
+      "FlashAttention/native spatial kernel speed paths or paper quality/latency claims",
+      "Any cross-forward or cross-window cache carry"
+    ],
+    "paper_code_adapter_differences": [
+      "Sharing maps/rawQK is NOT all-layer weight tying: receiving modules have independent V/FOPE/Hedgehog/proj weights.",
+      "Current port intentionally keeps Hedgehog module's identity Linear initialization. Source top-level self.apply(_init_weights) overwrites that eye with Linear truncated-normal std0.02; identity-featuremap initialization is an explicit adapter hypothesis, not source final-init parity.",
+      "Fourier signed-epsilon guard changes near-zero-sum behavior and CPU-safe buffer/device semantics; this must stay part of implementation identity.",
+      "Fourier source minus rotation and missing-frequency one-padding retained; these features are positional mixing, not FFT denoising of IMU.",
+      "One pair/compact D32/p4/window10 draft and removal of HPA/MBConv/SR wrappers make this a source-qualified COMPONENT architecture port, not full UCAN reproduction.",
+      "Temporal RF13 follows explicit collapsed factors, not original2D k23 geometry or an unmeasured expansive-receptive-field claim."
+    ],
+    "fourier_safeguard": "coefficient / (sign(sum)*abs(sum).clamp_min(1e-6)); sum==0 uses positive sign",
+    "large_kernel_scope": "source k23 factors collapsed to temporal5 then5/dilation2, effective RF13; first16 latent channels only",
+    "objective": "Shared plain supervised MSE over actual learned XYZ whole-window average velocity only; set_loss rejects non-MSE or kwargs. No source-task/SSL/teacher losses mixed into this identity.",
+    "input_permissions": "Same admitted reference_oracle six-axis task view as controls; no image/text/skeleton/geography/initial velocity/extra sensor/targets in forward/per-test fitting.",
+    "temporal_scope": "window_noncausal; only admitted T200 samples, no outside-window context or persistent fast weights/hidden state/maps.",
+    "risks": [
+      "Compact source-qualified core is not full UCAN/HPA/MBConv/SR replication.",
+      "Map/QK caches must be function-local and never persist across windows; sharing is not parameter tying.",
+      "Padding/Fourier normalization and large-kernel smoothing may alter temporal behavior and need independent value/gradient tests.",
+      "No SR quality, FlashAttention speed or physics/IMU denoising claim."
+    ]
+  },
+  "scientific_contract": {
+    "input_shape": "B,6,200",
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "window": 200,
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "input_track": "reference_oracle_not_deployable",
+    "remove_gravity": false,
+    "history": 0,
+    "history_stride": 0,
+    "output_steps": 0,
+    "overlap": "mean",
+    "extra_inputs": [],
+    "target": "avg_velocity",
+    "output_layout": "window",
+    "dims": 3,
+    "output": "vel:B,3 real supervised XYZ average velocity in m/s; no zero-padded Z",
+    "xy_semantics": "XY is the slice of the same XYZ prediction, no second XY model/head",
+    "task_head": "Final LayerNorm, temporal mean of patch tokens, one Linear(d_model,3) XYZ head.",
+    "loss": "mse",
+    "training_initialization": "scratch_supervised",
+    "optional_ssl_or_auxiliary_recipe": "Not selected; any future source-specific loss requires separately named preregistered identity and budget."
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "provenance": "provenance.json",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified fixed-commit root license bytes, including upstream copyright/appendix.",
+    "upstream_path": "LICENSE",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "raw_url": "https://raw.githubusercontent.com/hokiyoshi/UCAN/b812c0adb8ce70d442973db5c87bab7d1e8c3333/LICENSE",
+    "notices": [
+      "Upstream root copyright/license text unchanged; root license does not erase third-party source/dependency notices."
+    ],
+    "redistribution_boundary": "Source/license evidence only, not Owner/Legal approval for all repository code, dependencies, weights, datasets or derivative redistribution."
+  },
+  "verification": {
+    "completed": [
+      "Prior primary-source qualification reused with fixed evidence SHA",
+      "Actual fixed-core raw SHA and AST rechecked without execution",
+      "Current class/constructor args/model YAML read and matched statically",
+      "Exact root LICENSE fetched/hash verified/copied",
+      "Independent adaptation/initialization/readout differences recorded"
+    ],
+    "not_completed": [
+      "Framework/model/pytest import or collection",
+      "CPU/GPU forward/backward/tests or scientific numeric acceptance",
+      "Native lifecycle/checkpoint reload",
+      "Parameter/MAC/VRAM/latency measurements or capacity admission",
+      "Pilot/three-seed training/val/test/formal matrix admission"
+    ],
+    "pending_server_tests": [
+      "Hedgehog symmetric positive map, intended identity init versus source full-init difference",
+      "Fourier coefficient normalization/sign/epsilon, minus rotation, one-padding and device/dtype behavior",
+      "Local window padding/key masks, shared map/rawQK versus own V/proj and no cross-forward cache",
+      "Global/channel dual-fusion equations, selective first16 LKSA RF13 and residual/SGFN paths",
+      "True XYZ/plainMSE/canonical permissions/deterministic reload and native lifecycle/capacity after tail"
+    ],
+    "execution_order": "Every new model import, scientific test, CPU lifecycle, GPU capacity probe, training or evaluation only on AutoDL AFTER ALL original and previously queued tasks with audited tail-readiness and resource-handoff receipt; no automatic launch.",
+    "tail_guard": "Parent conftest.py requires audited IPB_CVPR2026_TAIL_READINESS; guard itself is an unexecuted draft, no pytest --collect-only bypass.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "runtime_actions_performed": [],
+  "formal_rows_added": 0
+}

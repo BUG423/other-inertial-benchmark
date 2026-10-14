@@ -1,0 +1,61 @@
+{
+  "schema": "ib.research.cvpr2026.static-metadata-check.v1",
+  "status": "passed",
+  "qualified_primary_sources": 10,
+  "evidence_files_checked": [
+    "candidate_backbones.json",
+    "candidate_structured.json",
+    "candidate_temporal.json"
+  ],
+  "python_ast_files": [
+    "binary_attention/model.py",
+    "binary_attention/test_scientific_contract.py",
+    "check_static_manifest.py",
+    "conftest.py",
+    "csan_vit/model.py",
+    "csan_vit/test_scientific_contract.py",
+    "edge_recvit/model.py",
+    "edge_recvit/test_scientific_contract.py",
+    "mixercseg/model.py",
+    "mixercseg/test_scientific_contract.py",
+    "mstemba/model.py",
+    "mstemba/test_scientific_contract.py",
+    "pfgnet/model.py",
+    "pfgnet/test_scientific_contract.py",
+    "specscalpel/model.py",
+    "specscalpel/test_scientific_contract.py",
+    "tessera_v1/model.py",
+    "tessera_v1/test_scientific_contract.py",
+    "test_native_lifecycle.py",
+    "ucan/model.py",
+    "ucan/test_scientific_contract.py",
+    "vitt3/model.py",
+    "vitt3/test_scientific_contract.py"
+  ],
+  "adapter_file_presence_required": true,
+  "framework_imported": false,
+  "model_runtime_or_scientific_acceptance": false,
+  "execution_enabled": false,
+  "tail_barrier_evaluated": false,
+  "observed_utc": "2026-10-14 16:24:25 UTC",
+  "plan_sha256": "72e5db6e9ad910cc23fc73dc6635dc34333562214b873d02ee886a3b3f49a277",
+  "command": "python3 research/staging/cvpr2026_baselines/check_static_manifest.py --require-adapters",
+  "adapter_files_checked": 50,
+  "shared_python_artifacts_checked": 3,
+  "independent_reviewers": [
+    "modern_tcn_port",
+    "patchtst_review",
+    "s4d_port",
+    "root"
+  ],
+  "guard_runtime_verified": false,
+  "scientific_tests_executed": 0,
+  "training_started_count": 0,
+  "formal_matrix_rows_changed": false,
+  "scope": "Static preparation evidence only; not full G1/scientific parity, G2 lifecycle, CPU/CUDA capacity, train/val/test or Legal redistribution admission.",
+  "license_notice_holds": [
+    "binary_attention"
+  ],
+  "legal_reuse_or_distribution_accepted": false,
+  "upstream_evidence_whitespace_exception": "Only binary_attention/LICENSE.upstream: exact fixed-author bytes contain existing copyright-appendix conflict markers; preserved, documented, notice-review HOLD; all other staged source checked normally."
+}

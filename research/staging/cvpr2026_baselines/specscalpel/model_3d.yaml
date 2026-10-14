@@ -1,0 +1,45 @@
+# Static isolated draft; runtime/capacity admission has NOT occurred.
+# No automatic registration. All execution waits for original tasks and resource handoff.
+name: specscalpel_spectral_core_velocity_3d_staging
+arch: specscalpel_spectral_core_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.html
+paper_pdf: https://openaccess.thecvf.com/content/CVPR2026/papers/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.pdf
+code: https://github.com/HaoyuJi/SpecScalpel/tree/01adb1ed708d410023b8482c52270cac358c8525
+license: MIT upstream; compact source-qualified adaptation
+implementation_kind: spectral_architecture_core_port
+implementation_status: static_draft
+runtime_verified: false
+capacity_accepted: false
+formal_matrix_enrolled: false
+registered: false
+training: supervised_from_scratch
+causality: window_noncausal
+input_channels: [gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z]
+target_semantics: actual_learned_whole_window_average_XYZ_velocity_m_per_s
+metric_xy_semantics: slice_same_XYZ_prediction_no_second_head
+source_fidelity: MASF_FACM_fft_dynamic_static_weights_shared_real_imag_transforms
+feature_location: singleton_V1_not_skeleton_joints
+omitted_objectives: action_text_boundary_AADL
+args:
+  channels: 64
+  layers: 10
+  heads: 4
+  dropout: 0.5
+  attention_dropout: 0.05
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  output_steps: 0
+  overlap: mean
+  history: 0
+  history_stride: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

@@ -1,0 +1,33 @@
+name: csan_vit_velocity_3d_staging
+arch: csan_vit_velocity_staging_unregistered
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Cai_Selection-as-Nonlinearity_Bridging_Attention_and_Activation_via_a_Joint_Game-Decision_Lens_CVPR_2026_paper.html
+code: https://github.com/SudongCAI/CSaN/tree/a07175ffb9fa82ec58eca397e80aa63027c5d73f
+license: Apache-2.0
+fidelity: source_qualified_csan_vit_temporal_architecture_port_not_paper_reproduction
+registered: false
+training: supervised_from_scratch
+recipe_status: draft_unmeasured_width_depth_pending_tail_server_acceptance
+input_channels: [gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z]
+args:
+  d_model: 96
+  n_layers: 4
+  num_heads: 4
+  mlp_ratio: 4.0
+  dropout: 0.0
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  overlap: mean
+  history: 0
+  history_stride: 0
+  output_steps: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

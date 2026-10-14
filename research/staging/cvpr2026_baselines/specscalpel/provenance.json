@@ -1,0 +1,207 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "specscalpel_spectral_core_velocity_xyz",
+  "architecture_id": "specscalpel_spectral_core_velocity",
+  "class_name": "SpectralScalpelVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "paper": {
+    "title": "Spectral Scalpel: Amplifying Adjacent Action Discrepancy via Frequency-Selective Filtering for Skeleton-Based Action Segmentation",
+    "authors": [
+      "Haoyu Ji",
+      "Bowen Chen",
+      "Zhihao Yang",
+      "Wenze Huang",
+      "Yu Gao",
+      "Xueting Liu",
+      "Weihong Ren",
+      "Zhiyong Wang",
+      "Honghai Liu"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "12849-12859",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.html",
+    "cvf_html_sha256": "03b73bb5a278a10e787a1eea95a653e497d6c5501f0c29f785fedb22334da50e",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.pdf",
+    "pdf_sha256": "437cc9f5d13fc820ea16c73a3562ad22c433962a040c685f0d89b5c213649f80",
+    "pdf_bytes": 5349071,
+    "pdf_pages": 11,
+    "primary_pdf_text_read": true,
+    "supplement_url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Ji_Spectral_Scalpel_Amplifying_CVPR_2026_supplemental.pdf"
+  },
+  "repository": {
+    "url": "https://github.com/HaoyuJi/SpecScalpel",
+    "commit": "01adb1ed708d410023b8482c52270cac358c8525",
+    "branch_observed": "main",
+    "official_link_evidence": "CVF abstract/PDF directly names author repo; README identifies actual libs model implementation",
+    "license": {
+      "spdx": "MIT",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+          "sha256": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278",
+          "bytes": 1065,
+          "role": "root MIT copyright2025 Haoyu Ji"
+        }
+      ],
+      "attribution_risk": "Retain reused MS-TCN/graph module attributions if any such source is later ported."
+    }
+  },
+  "core_sources": [
+    {
+      "path": "libs/models/SpecScalpel.py",
+      "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+      "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+      "sha256": "8c9a8fcde61ef6c1026713eda630c8d7f8570b3e9a9d6fd7831aa1b2ec43f2ff",
+      "bytes": 15106,
+      "role": "FFT_filter(MASF) lines117-171; FFT_conv_filter(FACM)65-96; Linear_Attention/AttModule/STI"
+    },
+    {
+      "path": "libs/models/tcn.py",
+      "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+      "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+      "sha256": "9379f749c1b9cbd3f0a0b3c01268d57cbf231b17d025aa7320977525e37b1798",
+      "bytes": 3113,
+      "role": "legacy2019 MS-TCN helpers; NOT an independent2026 novelty"
+    },
+    {
+      "path": "train.py",
+      "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+      "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+      "sha256": "744a9432c84a010eefecdc3e5bbcfa76b7470f01df4bab1f5d2ab0fc2583a2eb",
+      "bytes": 18209,
+      "role": "links actual libs.models/helper/loss modules"
+    }
+  ],
+  "adaptation": {
+    "identity": "spectral_architecture_core_port",
+    "complete_paper_reproduction": false,
+    "initialization": "scratch_supervised_no_weights_download_or_load",
+    "objective": "MSE(mean over actual learned XYZ whole-window average velocity), no auxiliary losses",
+    "source_default_args": {
+      "channels": 64,
+      "layers": 10,
+      "heads": 4,
+      "dropout": 0.5,
+      "attention_dropout": 0.05,
+      "pretrained": false
+    },
+    "source_width_capacity_measured": false,
+    "diagnostic_small_configuration": "Only explicitly selected server scientific tests may use reduced widths/depths. Such tests do not admit the full profile or silently replace it.",
+    "model_inputs": {
+      "shape": [
+        "B",
+        6,
+        200
+      ],
+      "channels": [
+        "gyro_x",
+        "gyro_y",
+        "gyro_z",
+        "acc_x",
+        "acc_y",
+        "acc_z"
+      ],
+      "rate_hz": 200,
+      "frame": "gravity_world",
+      "orientation": "reference",
+      "remove_gravity": false,
+      "history": 0,
+      "history_stride": 0,
+      "extra_inputs": []
+    },
+    "outputs": {
+      "key": "vel",
+      "shape": [
+        "B",
+        3
+      ],
+      "semantic": "real learned XYZ window-average velocity in m/s",
+      "target": "avg_velocity",
+      "output_steps": 0,
+      "overlap": "mean",
+      "xy_metric": "slice the same XYZ prediction; no separate XY model or zero Z"
+    },
+    "causality": "window_noncausal_only_inside_admitted_T200_no_cross_window_hidden_state",
+    "permissions": "Existing six-axis IMU and train average-velocity labels only. Reference orientation is the admitted task-view rotation, not a separate model input. No runtime calibration/scaling statistics, pose, image, text, initial velocity, extra sensor or test-driven choice.",
+    "loss_identity_policy": "set_loss rejects all non-MSE losses and nonempty kwargs; adding source auxiliary or SSL terms requires a separately named pre-registered identity and budget.",
+    "retained": [
+      "ordered Conv1d6->64 task adapter, no arbitrary-axis averaging",
+      "MASF four learned spectral filters40/48/56/64, temporal rFFT/irFFT n=T, nearest interpolation to actual FFT bins",
+      "source CustomProcessing pooled64-time/V=1 dynamic logits with Linear1->4, Linear64->4 and Linear16->4; softmax across4 filters",
+      "static logits4x1x64x1x1, dynamic/static weighted sums averaged, then source residual mean",
+      "ten temporal encoder blocks with dilations2^i, Conv/ReLU, non-running InstanceNorm, sigmoid-positive linear attention with source epsilon inside key-sum vector, Conv/dropout/residual",
+      "FACM temporal FFT, concatenate real+imag along BATCH, two shared biased pointwise convs, split/irFFT n=T/residual",
+      "window-time mean and learned Linear64->XYZ"
+    ],
+    "omitted": [
+      "skeleton MultiScale_GraphConv/SP stem, joint graph and body-joint claims",
+      "spatial SFI fusion and its branches; singleton V=1 is a latent feature location only",
+      "action-text/BERT, action segmentation/refinement/boundary heads and ASRF",
+      "action smoothing/AADL/boundary/classification losses and temporal action labels",
+      "source FACM's allocated-but-unused BN/ReLU modules; no ghost parameters"
+    ],
+    "paper_code_differences": [
+      "Port is only the spectral and temporal architectural core, not the complete skeleton-STAS pipeline or its losses.",
+      "Removing graph/SFI and projecting genuine IMU channels into64 latent features is the explicit task adaptation, not a source skeleton reproduction.",
+      "Source linear attention method is named elu but actually applies sigmoid; port follows the executable code.",
+      "FACM source executes neither its allocated BatchNorm nor ReLU; port retains executed real/imag algebra only.",
+      "Reduced diagnostic channel counts generalize only the hardcoded static-logit64 feature axis and are not the admitted source-width profile.",
+      "Source masks become all-valid admitted T200 features, not action/boundary or hidden pose supervision."
+    ],
+    "dependency_scope": "Standard torch FFT/nn only; no graph/text acquisition pipeline, NumPy/einops/timm imports or external parameters.",
+    "runtime_risks": [
+      "MASF starts with identical all-ones filters; dynamic/static selector gradients may initially be zero until filter weights diverge. Future tests deliberately perturb filters before selector-gradient assertions.",
+      "FFT precision/device support and all-source-depth full B128/stride200 capacity unmeasured."
+    ]
+  },
+  "local_artifact_sha256": {
+    "model.py": "78b9b42e1e914dc5e0ab9adba97d983a3916a2df7e63e06bd9234f120745d22e",
+    "model_3d.yaml": "135f71e26c30bb6622bbc77aae06480ac15dd110ac98880dc9326a20f10d86bd",
+    "LICENSE.upstream": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278",
+    "test_scientific_contract.py": "6606720df7ce93429bc9461826acd6aaffe7eb5c4a06c4c7ab987a125b870ba1"
+  },
+  "static_inspection": {
+    "stdlib_ast_json_profile_input_constructor_keys": "pass",
+    "parameterized_test_cases_written_not_collected_or_run": 52,
+    "execution": "NOT performed; no framework imports, pytest collection, model execution, CPU/GPU or training"
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "verification": {
+    "completed": [
+      "read fixed primary-source paper/code/license evidence",
+      "write isolated implementation and server-only test drafts",
+      "stdlib AST/JSON static inspection only"
+    ],
+    "not_completed": [
+      "framework import",
+      "pytest collection or test execution",
+      "CPU/GPU model forward/backward",
+      "source numeric parity",
+      "native lifecycle",
+      "capacity including full-source widths B128/stride200",
+      "pilot",
+      "training",
+      "checkpoint or formal matrix admission"
+    ],
+    "tail_guard": "Parent conftest.py fails closed without an audited AutoDL private original-queue terminal/resource-handoff receipt. No runtime allowed until this barrier is satisfied.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified root MIT LICENSE text from the pinned repository.",
+    "upstream_sha256": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278",
+    "copyright": "Copyright (c) 2025 Haoyu Ji"
+  }
+}

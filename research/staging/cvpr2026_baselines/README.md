@@ -1,7 +1,7 @@
 # CVPR 2026 十方法：惯性速度架构适配与末尾执行
 
 > 用户范围更新：2026-10-14。十个独立 CVPR 2026 **主会**论文来源；全部新模型执行排在现有实验及此前已授权排队实验之后。
-> 当前阶段：来源证据已闭合，隔离适配源码准备中。**0 个运行验收、0 个训练启动、0 个正式方法新增**。
+> 当前阶段：十个隔离适配源码草稿与有限范围静态交叉审查完成。**0 个运行验收、0 个训练启动、0 个正式方法新增**。
 
 最终交付是十个可追溯、可复现的惯性速度参考 baseline，以及同条件精度、稳定性和效率比较，
 不是复现它们的视觉/遥感任务分数，也不是把十个论文名填入结果表。
@@ -10,7 +10,7 @@
 
 ## 十个来源及核心
 
-下表锁定来源和拟议迁移核心，不是已通过测试的模型清单。
+下表锁定来源和迁移核心，不是已通过模型测试的清单。
 正文依据为 CVF 主会页面、完整原论文与作者固定 commit 的实际核心代码；
 许可证、PDF 和关键源码 SHA256 见三份机器证据文件。Workshops、Findings、仅 README、未核代码/许可者不计数。
 
@@ -31,6 +31,14 @@
 [backbones](candidate_backbones.json)、[temporal](candidate_temporal.json)、[structured](candidate_structured.json)；
 其 `not_implemented` / `actions=false` 描述证据采集时点，当前静态适配状态另由 [tail queue](tail_queue.json) 记录。
 论文来源不等于作者提供了官方惯导实现；十项均需本项目适配。不声称首次用于惯导或保证更优。
+
+每项目录已有 `model.py`、`model_3d.yaml`、`provenance.json`、`LICENSE.upstream` 和待执行科学单测，
+共 50 个适配文件。三个子 agent 做交叉源码复审，Root 汇总修正并绑定字节；
+实际完成范围和未完成项见[静态交接](STATIC_HANDOFF.md)。
+
+BinaryAttention 原样 `LICENSE.upstream` 的 Apache 条款后，版权附录残留上游 merge conflict markers。
+原字节和 SHA 保留，不替作者消解版权声明；该项另标 `hold_notice_review`，执行/再分发准入前
+需 Owner/Legal 复核或另行固定作者修正版。其余候选的许可证记录同样不是整个项目再分发批准。
 
 ## 共同任务契约与不可混淆的变更
 
@@ -60,9 +68,9 @@ MixerCSeg 明确只移植 TransMixer 时域核心，二维 HOG/SRF/分割网络�
 | 工作包 | 执行者 | 当前/退出条件 |
 | :--- | :--- | :--- |
 | 来源、原理和 keep/replace | 三个来源子 agent；Root 复核 | 十篇主会、完整 PDF、作者代码、固定 commit、许可与核心哈希已记录；依赖 notice 后续逐文件核对 |
-| ViT³ / Edge-RecViT / PFGNet / BinaryAttention / UCAN 静态适配 | `modern_tcn_port` | 隔离 `model.py`、3D 草案、provenance、许可、待执行科学测试；不 import 模型 |
-| MS-Temba / Spectral Scalpel / TESSERA 架构静态适配 | `patchtst_review` | 核心忠实、SSL/aux 损失身份明确；不能实现的核心报 HOLD |
-| CSaN / MixerCSeg 静态适配 | `s4d_port` | 校准变体、逐 token 路由与 1D scan 的边界可核对 |
+| ViT³ / Edge-RecViT / PFGNet / BinaryAttention / UCAN 静态适配 | `modern_tcn_port`；`s4d_port` 支援 provenance/许可 | 五项静态草稿已完成；`patchtst_review` 独立源码对照；未 import/运行模型 |
+| MS-Temba / Spectral Scalpel / TESSERA 架构静态适配 | `patchtst_review` | 三项静态草稿已完成；`s4d_port` 独立对照；SSL/aux 损失身份明确 |
+| CSaN / MixerCSeg 静态适配 | `s4d_port` | 两项静态草稿已完成；Root / `modern_tcn_port` 独立源码对照 |
 | 统筹、独立审查、现任务监控 | Root | 保持冻结身份；静态完整性不冒充运行通过；汇报实际阶段与阻塞 |
 | CPU 生命周期、CUDA 容量、训练/评测 | 原任务终结后编排 | tail barrier、新源码/策略/coverage/seed、资源准入与运行收据缺一不可 |
 
@@ -71,11 +79,14 @@ MixerCSeg 明确只移植 TransMixer 时域核心，二维 HOG/SRF/分割网络�
 源码草案不自动注册公开 registry，不追加冻结矩阵，不热部署运行 snapshot。
 
 仅元数据/语法检查可在本地用 `python3 research/staging/cvpr2026_baselines/check_static_manifest.py`；
-它只解析 JSON/AST，不导入任何模型，不是科学或容量验收。
-[科学单测草案](test_native_lifecycle.py) 之外，各目录将保留核心数学/输入权限测试。
+它只解析 JSON/AST，不导入任何模型，不是科学或容量验收；加 `--require-adapters` 核十项文件、类名、配置键和精确字节绑定。
+[原生生命周期草案](test_native_lifecycle.py) 之外，各目录保留核心数学/输入权限测试。
 公共 [collection guard](conftest.py) 要求 AutoDL 私有 `IPB_CVPR2026_TAIL_READINESS` 收据，
 绑定原队列终态和资源交接证据及本清单哈希；没有该收据时拒绝收集模型测试。
+收据链还现场核 50 个适配文件及三个共享 Python 文件的 SHA，防止代码变化后复用旧准备身份。
+metadata/夹具读取均有大小上限和 resolve 后目录约束；这仍不能代替独立 source、CPU 资源和科学准入。
 这个守卫本身尚未执行验收，`pytest --collect-only` 也不能绕过后置约束。
+尾部获得准入后，服务器 pytest 须使用 `--import-mode=importlib`，避免十个目录同名单测模块冲突。
 
 ## 末尾执行与验收顺序
 
@@ -83,6 +94,7 @@ MixerCSeg 明确只移植 TransMixer 时域核心，二维 HOG/SRF/分割网络�
 2. 释放并重新取得共享 CPU/GPU 资源租约；形成 tail readiness 收据。瞬时空闲显存不是准入。
 3. 十项独立 source/fidelity 审查 → 服务器 CPU 科学与原生生命周期 → CUDA 容量。
    依赖不可用或失败如实 HOLD；不偷偷用通用骨干、改 batch/宽深或换 loss。
+   BinaryAttention 的版权附录异常须在执行准入前关闭；未关闭则处理来源或替换候选，不带 HOLD 启动十方法批次。
 4. 独立冻结新 profile、coverage、capacity/policy、source、数据与 seed 身份，以及 control、停止规则和选模规则。
 5. 拟议小规模 pilot 为十方法 × RIDI/EuRoC 两来源 × 三 seed = **60 个候选单元**；
    对照、预算和来源适用性仍待冻结，不是已注册的 60 个训练，也不自动展开到 13 来源。

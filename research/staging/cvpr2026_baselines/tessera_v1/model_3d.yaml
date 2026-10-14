@@ -1,0 +1,47 @@
+# Static isolated draft; runtime/capacity admission has NOT occurred.
+# No automatic registration. All execution waits for original tasks and resource handoff.
+name: tessera_v1_dualstream_architecture_velocity_3d_staging
+arch: tessera_v1_dualstream_architecture_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.html
+paper_pdf: https://openaccess.thecvf.com/content/CVPR2026/papers/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.pdf
+code: https://github.com/ucam-eo/tessera/tree/e368539f7c4711e5f16fdd09801573830e34baf9
+license: MIT upstream; compact source-qualified adaptation
+implementation_kind: dualstream_architecture_core_port
+implementation_status: static_draft
+runtime_verified: false
+capacity_accepted: false
+formal_matrix_enrolled: false
+registered: false
+training: supervised_from_scratch
+causality: window_noncausal
+input_channels: [gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z]
+target_semantics: actual_learned_whole_window_average_XYZ_velocity_m_per_s
+metric_xy_semantics: slice_same_XYZ_prediction_no_second_head
+ssl_objectives: omitted
+fusion_order: gyro_features_then_acc_features
+source_configuration: v1_code_512wide_8layers_ff4096_not_paper_4layers
+external_calendar_geography_views_mix: omitted
+args:
+  width: 512
+  layers: 8
+  heads: 8
+  feedforward_width: 4096
+  latent_dim: 128
+  dropout: 0.1
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  output_steps: 0
+  overlap: mean
+  history: 0
+  history_stride: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

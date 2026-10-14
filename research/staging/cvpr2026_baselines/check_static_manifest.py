@@ -151,11 +151,83 @@ def check(require_adapters: bool = False) -> dict:
     for path in sorted(HERE.rglob("*.json")):
         json.loads(path.read_text())
     if require_adapters:
+        cfg_tree = ast.parse((REPO / "src/inertial_benchmark/cfg/__init__.py").read_text())
+        allowed_input_keys = None
+        for node in cfg_tree.body:
+            if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and
+                    target.id == "INPUT_KEYS" for target in node.targets):
+                allowed_input_keys = set(ast.literal_eval(node.value))
+        require(allowed_input_keys is not None, "cannot statically read canonical cfg INPUT_KEYS")
+        lifecycle_tree = ast.parse((HERE / "test_native_lifecycle.py").read_text())
+        lifecycle_classes = None
+        for node in lifecycle_tree.body:
+            if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and
+                    target.id == "CLASSES" for target in node.targets):
+                lifecycle_classes = ast.literal_eval(node.value)
+        require(lifecycle_classes is not None and set(lifecycle_classes) == FOLDERS,
+                "native lifecycle class mapping must cover exactly these ten adapters")
         for row in candidates:
             for filename in ("model.py", "model_3d.yaml", "provenance.json",
                              "LICENSE.upstream", "test_scientific_contract.py"):
                 require((HERE / row["folder"] / filename).is_file(),
                         f"missing adapter artifact: {row['folder']}/{filename}")
+            provenance = json.loads((HERE / row["folder"] / "provenance.json").read_text())
+            require(provenance["implementation_status"] == "static_draft", "adapter stage")
+            for field in ("runtime_verified", "capacity_accepted", "formal_matrix_enrolled",
+                          "registered"):
+                require(provenance[field] is False, "adapter must not claim runtime admission")
+            for filename, expected_sha in provenance.get("local_artifact_sha256", {}).items():
+                require(filename in {"model.py", "model_3d.yaml", "LICENSE.upstream",
+                                     "test_scientific_contract.py"}, "unknown local artifact hash path")
+                require(digest(HERE / row["folder"] / filename) == expected_sha,
+                        "provenance internal local-artifact hash drift")
+            source_reference = provenance.get("source_evidence")
+            if source_reference:
+                require((HERE / row["folder"] / source_reference["path"]).resolve(strict=True) ==
+                        (HERE / row["evidence_file"]).resolve(strict=True) and
+                        source_reference["sha256"] == row["evidence_file_sha256"],
+                        "provenance source-evidence reference drift")
+            model_tree = ast.parse((HERE / row["folder"] / "model.py").read_text())
+            base_classes = [node.name for node in model_tree.body if isinstance(node, ast.ClassDef)
+                            and any(isinstance(base, ast.Name) and base.id == "BaseModel"
+                                    for base in node.bases)]
+            require(base_classes == [lifecycle_classes[row["folder"]]] ==
+                    [provenance["class_name"]], "exported adapter/native-lifecycle class mismatch")
+            require(not any(isinstance(node, ast.Name) and node.id == "register_model"
+                            for node in ast.walk(model_tree)), "unexpected model registration")
+            # Limited line-level check, not a complete YAML/schema parser. All
+            # drafts use a flat input mapping; never import cfg (it uses Torch).
+            in_input = False
+            input_keys = set()
+            for line in (HERE / row["folder"] / "model_3d.yaml").read_text().splitlines():
+                if line == "input:":
+                    in_input = True
+                    continue
+                if in_input and line and not line[0].isspace() and not line.startswith("#"):
+                    in_input = False
+                if in_input:
+                    match = re.match(r"^  ([a-z_]+):", line)
+                    if match:
+                        input_keys.add(match.group(1))
+            require(bool(input_keys) and input_keys <= allowed_input_keys,
+                    f"{row['folder']} draft input has unknown cfg keys {input_keys - allowed_input_keys}")
+            artifacts = row.get("adapter_artifacts", [])
+            expected = {f"{row['folder']}/{name}" for name in
+                        ("model.py", "model_3d.yaml", "provenance.json", "LICENSE.upstream",
+                         "test_scientific_contract.py")}
+            require(len(artifacts) == 5 and {a["path"] for a in artifacts} == expected,
+                    "adapter byte bindings must cover the exact five files")
+            for artifact in artifacts:
+                target = (HERE / artifact["path"]).resolve(strict=True)
+                require(target.is_relative_to(HERE) and target.is_file(), "adapter path escape")
+                require(HEX64.fullmatch(artifact["sha256"]) is not None and
+                        digest(target) == artifact["sha256"], "adapter byte drift")
+        shared = plan.get("shared_adapter_artifacts", [])
+        require(len(shared) == 3 and {a["path"] for a in shared} ==
+                {"conftest.py", "test_native_lifecycle.py", "check_static_manifest.py"},
+                "shared runtime-gate/lifecycle/checker bindings")
+        for artifact in shared:
+            require(digest(HERE / artifact["path"]) == artifact["sha256"], "shared artifact drift")
     return {
         "schema": "ib.research.cvpr2026.static-metadata-check.v1",
         "status": "passed",
@@ -163,6 +235,9 @@ def check(require_adapters: bool = False) -> dict:
         "evidence_files_checked": sorted(checked_sources),
         "python_ast_files": parsed,
         "adapter_file_presence_required": require_adapters,
+        "license_notice_holds": [row["folder"] for row in candidates
+                                 if row.get("license_notice_status") == "hold_notice_review"],
+        "legal_reuse_or_distribution_accepted": False,
         "framework_imported": False,
         "model_runtime_or_scientific_acceptance": False,
         "execution_enabled": False,

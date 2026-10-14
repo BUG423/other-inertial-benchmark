@@ -1,0 +1,107 @@
+{
+  "schema": "ib.staging-architecture-port.provenance.v1",
+  "candidate_id": "csan_vit",
+  "class_name": "CSaNVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "paper_training_fidelity_claim": false,
+  "official_inertial_implementation": false,
+  "execution_order": "All runtime/imports/tests/CPU lifecycle/GPU probes/training only on AutoDL after all original tasks and an independently accepted tail-readiness receipt",
+  "source": {
+    "title": "Selection-as-Nonlinearity: Bridging Attention and Activation via a Joint Game-Decision Lens for Interpretable, Discriminative Visual Representations",
+    "venue": "CVPR 2026 main conference",
+    "pages": "11621-11631",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cai_Selection-as-Nonlinearity_Bridging_Attention_and_Activation_via_a_Joint_Game-Decision_Lens_CVPR_2026_paper.html",
+    "cvf_html_sha256": "cf9e9a09ce51f6d795b375c42088a201c6dabb972f4abdf47a67feb22247525e",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Cai_Selection-as-Nonlinearity_Bridging_Attention_and_Activation_via_a_Joint_Game-Decision_Lens_CVPR_2026_paper.pdf",
+    "pdf_bytes": 1254501,
+    "pdf_sha256": "b7cf0d1340db0aabc942c65211a1807224392d8f75b239c44c9ed5979d027d7e",
+    "official_repository": "https://github.com/SudongCAI/CSaN",
+    "official_link_evidence": "CVF primary PDF first-page author project URL",
+    "commit": "a07175ffb9fa82ec58eca397e80aa63027c5d73f",
+    "core_files": [
+      {
+        "path": "MODELS/vit_csan.py",
+        "bytes": 128775,
+        "sha256": "db47f5d9026cd433758ed2751765776765653e42a832516776a0dba338472459",
+        "url": "https://raw.githubusercontent.com/SudongCAI/CSaN/a07175ffb9fa82ec58eca397e80aa63027c5d73f/MODELS/vit_csan.py",
+        "selected_symbols": ["last top-level Attention (297-390)", "SoftGShift (279-294)", "ordinary pre-LN Block", "Mlp"]
+      }
+    ],
+    "license": {
+      "spdx": "Apache-2.0",
+      "upstream_path": "LICENSE",
+      "local_copy": "LICENSE.upstream",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "url": "https://raw.githubusercontent.com/SudongCAI/CSaN/a07175ffb9fa82ec58eca397e80aa63027c5d73f/LICENSE"
+    },
+    "fixed_core_and_license_rechecked": "2026-10-14; raw bytes SHA verified, AST/source read without importing upstream code",
+    "attribution": "Architecture expressions adapted from authors' Apache-2.0 CSaN ViT code; upstream uses timm ViT conventions. No upstream model factory, timm package, weights, or pretrained loader is vendored or imported. This file identifies modifications; retain author/upstream notices with any later distribution."
+  },
+  "identity": {
+    "implementation_kind": "architecture_port",
+    "source_architecture": "csan_vit_last_attention_softgshift_linear_calibration",
+    "not_selected": "Earlier shadowed tanh/GELU Attention definition; Swin/Hiera/parallel or res-post variants",
+    "keep": [
+      "source QKV without bias and scaled QK",
+      "quasi-linear row importance with eta=0.25 and source's protective exp argument clamp only",
+      "input u sigmoid, reduced importance and SoftGShift activation",
+      "unbounded linear row temperature+1, column magnitude+1, public gain ka+1 and private same-token v*kv",
+      "public attention pathway plus private budget pathway",
+      "ordinary pre-LN residual blocks and GELU MLP",
+      "linear truncated-normal initialization std=0.02, zero bias"
+    ],
+    "replace": [
+      "RGB image patch embedding -> one ordered six-axis Linear token projection per IMU sample",
+      "2D image position/classification token -> learned 1D T200 positions, no CLS token",
+      "classification/CE -> final token normalization, temporal mean and exactly one learned linear XYZ velocity head",
+      "model factory/registry/pretrained loading -> unregistered BaseModel implementation"
+    ],
+    "declared_recipe_choices": {
+      "source_vit_tiny_reference": {"d_model": 192, "n_layers": 12, "num_heads": 3},
+      "adapter_draft": {"d_model": 96, "n_layers": 4, "num_heads": 4, "mlp_ratio": 4.0, "dropout": 0.0, "pretrained": false},
+      "LayerScale": "disabled source option",
+      "DropPath": "disabled source option",
+      "qk_norm": "disabled source option",
+      "width_depth_status": "adapter hypothesis only; no parameter/MAC/accuracy/capacity admission measured"
+    },
+    "gain_guard": "No silent gain clamp, tanh substitution, budget normalization, or variant switch. Only original quasi-linear exp branch has its original clamp(max=eta).",
+    "complexity": "QK and attention remain quadratic in the 200 window tokens; no linear-time or source speed claim"
+  },
+  "scientific_contract": {
+    "input_shape": "B,6,200",
+    "channels": ["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"],
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "input_track": "reference_oracle; same privileges as controls, not deployable orientation inference",
+    "remove_gravity": false,
+    "extra_inputs": [],
+    "history": 0,
+    "output_steps": 0,
+    "target": "avg_velocity",
+    "overlap": "mean",
+    "dims": 3,
+    "output": "vel: B,3 real supervised XYZ window-average velocity (m/s), no zero-filled Z",
+    "head": "temporal mean -> one Linear(d_model,3)",
+    "loss": "plain common supervised MSE only, no auxiliary/source-task losses",
+    "initialization": "supervised from scratch",
+    "temporal_scope": "window_noncausal; no outside-window inputs, target access in forward, test fitting or cross-window state"
+  },
+  "pending_server_tests": [
+    "independent complete compensated-attention values and all parameter/input gradients",
+    "large direct calibration biases distinguish last linear+1 definition from early tanh",
+    "row-temperature/column-magnitude orientation and private pathway sensitivity",
+    "default B2,T200 scratch finite loss/backward/optimizer update",
+    "real Z-only supervision, ordered-channel sensitivity and exactly one linear readout",
+    "deterministic eval, batch/window independence, state_dict reload",
+    "canonical specification, args and runtime-shape rejection",
+    "root-owned native lifecycle and independently measured capacity"
+  ],
+  "runtime_actions_performed": [],
+  "formal_rows_added": 0
+}

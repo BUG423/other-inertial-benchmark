@@ -27,6 +27,7 @@ from inertial_benchmark.utils.torch_utils import load_checkpoint
 
 
 HERE = Path(__file__).resolve().parent
+FIXTURE_MANIFEST_SHA = "3d8a676f45ec7b93a0365eadddee45ec1bad7025deb212a6dcecddc922bd8c53"
 # Names must match the static drafts; independent review precedes execution.
 CLASSES = {
     "vitt3": "ViT3Velocity",
@@ -47,6 +48,13 @@ def _parameter_hashes(model):
             for name, value in model.named_parameters()}
 
 
+def _bounded_bytes(path, limit):
+    with path.open("rb") as stream:
+        value = stream.read(limit + 1)
+    assert len(value) <= limit, "engineering fixture exceeds explicit small-file budget"
+    return value
+
+
 @pytest.mark.parametrize("method", list(CLASSES))
 def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
     value = os.environ.get("IPB_CROSS_DOMAIN_FIXTURE")
@@ -54,13 +62,27 @@ def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
         pytest.fail("set IPB_CROSS_DOMAIN_FIXTURE to the admitted AutoDL engineering excerpt")
     fixture = Path(value).resolve(strict=True)
     assert str(fixture).startswith("/root/autodl-tmp/other-inertial-benchmark-v1/.local/")
-    manifest = json.loads((fixture / "dataset.json").read_text())
+    manifest_path = (fixture / "dataset.json").resolve(strict=True)
+    assert manifest_path.is_relative_to(fixture) and manifest_path.is_file()
+    manifest_bytes = _bounded_bytes(manifest_path, 1024 * 1024)
+    assert hashlib.sha256(manifest_bytes).hexdigest() == FIXTURE_MANIFEST_SHA
+    manifest = json.loads(manifest_bytes)
     assert manifest["engineering_only"] is True and len(manifest["sequences"]) == 3
     assert all(len(manifest["splits"][split]) == 1 for split in ("train", "val", "test"))
     ids = [manifest["splits"][split][0] for split in ("train", "val", "test")]
     assert len(set(ids)) == 3
-    for row in manifest["sequences"].values():
-        assert hashlib.sha256((fixture / row["file"]).read_bytes()).hexdigest() == row["sha256"]
+    fixture_paths = {}
+    used = 0
+    for sid, row in manifest["sequences"].items():
+        relative = Path(row["file"])
+        assert not relative.is_absolute() and ".." not in relative.parts
+        path = (fixture / relative).resolve(strict=True)
+        assert path.is_relative_to(fixture) and path.is_file()
+        value = _bounded_bytes(path, min(32 * 1024 * 1024, 96 * 1024 * 1024 - used))
+        used += len(value)
+        assert hashlib.sha256(value).hexdigest() == row["sha256"]
+        fixture_paths[sid] = path
+    assert len(set(fixture_paths.values())) == 3
     spec = importlib.util.spec_from_file_location("cvpr2026_lifecycle_" + method,
                                                 HERE / method / "model.py")
     module = importlib.util.module_from_spec(spec)
@@ -88,7 +110,8 @@ def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
 
         def setup(trainer):
             state["initial"] = _parameter_hashes(trainer.model)
-            sequence = load_sequence(fixture / manifest["sequences"][ids[0]]["file"])
+            assert len(trainer.train_set) == 4 and len(trainer.val_set) == 2
+            sequence = load_sequence(fixture_paths[ids[0]])
             view = SequenceView(sequence, trainer.model.input_spec)
             targets = view.targets(view.starts(10))
             assert targets.shape[-1] == 3 and np.isfinite(targets).all()
@@ -96,13 +119,15 @@ def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
 
         def step(trainer):
             state["updates"] += 1
-            gradients = [p.grad for p in trainer.model.parameters() if p.grad is not None]
-            assert gradients and all(torch.isfinite(g).all() for g in gradients)
+            for name, parameter in trainer.model.named_parameters():
+                if parameter.requires_grad:
+                    assert parameter.grad is not None, f"missing gradient: {name}"
+                    assert torch.isfinite(parameter.grad).all(), f"nonfinite gradient: {name}"
 
         nio.add_callback("on_pretrain_routine_end", setup)
         nio.add_callback("on_train_batch_end", step)
         nio.train(**options)
-        assert state["updates"] > 0
+        assert state["updates"] == 2
         after = _parameter_hashes(nio.model)
         assert any(digest != after[name] for name, digest in state["initial"].items())
         checkpoint = load_checkpoint(nio.trainer.last)
@@ -112,7 +137,7 @@ def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
         validation = nio.val(**{**options, "split": "val", "name": "before_reload_val"})
         assert len(validation.sequences) == 1 and not validation.sequences[0].skipped
         assert np.isfinite(validation.metrics["ate"])
-        test_path = fixture / manifest["sequences"][ids[2]]["file"]
+        test_path = fixture_paths[ids[2]]
         nio.predict(test_path, **{**options, "name": "before_reload_predict"}, save=True)
         before = nio.results[0]
         assert not before.skipped and before.vel_pred.shape[-1] == 3

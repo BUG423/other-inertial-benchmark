@@ -1,0 +1,45 @@
+# Static isolated draft; runtime/capacity admission has NOT occurred.
+# No automatic registration. All execution waits for original tasks and resource handoff.
+name: mstemba_architecture_core_velocity_3d_staging
+arch: mstemba_architecture_core_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.html
+paper_pdf: https://openaccess.thecvf.com/content/CVPR2026/papers/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.pdf
+code: https://github.com/thearkaprava/MS-Temba/tree/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22
+license: Apache-2.0 upstream; compact source-qualified adaptation
+implementation_kind: architecture_core_torch_reference
+implementation_status: static_draft
+runtime_verified: false
+capacity_accepted: false
+formal_matrix_enrolled: false
+registered: false
+training: supervised_from_scratch
+causality: window_noncausal
+input_channels: [gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z]
+target_semantics: actual_learned_whole_window_average_XYZ_velocity_m_per_s
+metric_xy_semantics: slice_same_XYZ_prediction_no_second_head
+scan_backend: torch_reference_no_fused_CUDA
+auxiliary_losses: omitted_C_alignment_and_scale_heads
+source_fidelity: sequential_dilations_1_2_3_independent_phases_zero_pad_inverse_interleave_SSM_fuser
+args:
+  embed_dims: [256, 384, 576]
+  state_size: 16
+  conv_size: 4
+  drop_path: 0.1
+  backend: torch_reference
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  output_steps: 0
+  overlap: mean
+  history: 0
+  history_stride: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

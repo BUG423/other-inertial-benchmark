@@ -1,0 +1,241 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "mstemba_temporal_core_velocity_xyz",
+  "architecture_id": "mstemba_architecture_core_velocity",
+  "class_name": "MSTembaVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "paper": {
+    "title": "MS-Temba: Multi-Scale Temporal Mamba for Understanding Long Untrimmed Videos",
+    "authors": [
+      "Arkaprava Sinha",
+      "Monish Soundar Raj",
+      "Pu Wang",
+      "Ahmed Helmy",
+      "Hieu Le",
+      "Srijan Das"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "9815-9826",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.html",
+    "cvf_html_sha256": "d7a54d99c2f90ba781b55074804f10be23b6b0a8b17ecf970f2db167b67e1000",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.pdf",
+    "pdf_sha256": "a4a7c789cef654afe4af00e95641c2f8bd22abd2c08c894afc1fe778d8da7b7a",
+    "pdf_bytes": 2472123,
+    "pdf_pages": 12,
+    "primary_pdf_text_read": true
+  },
+  "repository": {
+    "url": "https://github.com/thearkaprava/MS-Temba",
+    "commit": "d42b4606d03884bfe2591d0bed1ed7a1dd01ab22",
+    "branch_observed": "main",
+    "official_link_evidence": "CVF PDF project https://mstemba.github.io and author-owned official repo title/README; actual pinned model code read",
+    "license": {
+      "spdx": "Apache-2.0",
+      "files": [
+        {
+          "path": "LICENSE.txt",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+          "sha256": "760939b000194d04548ede6a857bbe735d1695d8422ec85955c8e2bd7f4b95c5",
+          "bytes": 11348,
+          "role": "root Mamba attribution/license"
+        },
+        {
+          "path": "vim/LICENSE",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+          "sha256": "b208c52b00a2df2c8f4c3298c34407bf2bfe409968213372251c91fcc737a1a5",
+          "bytes": 11354,
+          "role": "Vim/Facebook code license"
+        }
+      ],
+      "attribution_risk": "Retain upstream Mamba/Vim/timm notices; root license is not a claim every vendored subtree has identical provenance."
+    }
+  },
+  "core_sources": [
+    {
+      "path": "vim/models_MSTemba.py",
+      "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+      "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+      "sha256": "2259c792f72fb1ebe5be48ff308e61d723a4ca34f7e0f26f04b156fa5f2056ce",
+      "bytes": 34991,
+      "role": "MSTemba, VisionMamba, branch slicing/reinterleave, fuser, C-state alignment"
+    },
+    {
+      "path": "mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+      "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+      "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+      "sha256": "cbfa6819a9126eda8afdf4cfa8d49288afe0c66037d334d07a569a2ace560807",
+      "bytes": 18775,
+      "role": "bidirectional selective SSM exposes C states"
+    },
+    {
+      "path": "vim/MSTemba_main.py",
+      "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+      "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+      "sha256": "336ece7f18812053302de84ae54d2a7880f01ec77226268a14c1d1cda020a86f",
+      "bytes": 26726,
+      "role": "actual training loss composition lines353-376"
+    },
+    {
+      "path": "mamba-1p1p1/mamba_ssm/ops/selective_scan_interface_getC.py",
+      "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/ops/selective_scan_interface_getC.py",
+      "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/ops/selective_scan_interface_getC.py",
+      "sha256": "6d14793c979a816fd9d6b9013dcf6b2a8a69843a010a1e30cbd2b98601b15d90",
+      "bytes": 36599,
+      "role": "source selective_scan_ref algebra; input-dependent real B/C, softplus dt and Euler input term"
+    }
+  ],
+  "adaptation": {
+    "identity": "architecture_core_torch_reference",
+    "complete_paper_reproduction": false,
+    "initialization": "scratch_supervised_no_weights_download_or_load",
+    "objective": "MSE(mean over actual learned XYZ whole-window average velocity), no auxiliary losses",
+    "source_default_args": {
+      "embed_dims": [
+        256,
+        384,
+        576
+      ],
+      "state_size": 16,
+      "conv_size": 4,
+      "drop_path": 0.1,
+      "backend": "torch_reference",
+      "pretrained": false
+    },
+    "source_width_capacity_measured": false,
+    "diagnostic_small_configuration": "Only explicitly selected server scientific tests may use reduced widths/depths. Such tests do not admit the full profile or silently replace it.",
+    "model_inputs": {
+      "shape": [
+        "B",
+        6,
+        200
+      ],
+      "channels": [
+        "gyro_x",
+        "gyro_y",
+        "gyro_z",
+        "acc_x",
+        "acc_y",
+        "acc_z"
+      ],
+      "rate_hz": 200,
+      "frame": "gravity_world",
+      "orientation": "reference",
+      "remove_gravity": false,
+      "history": 0,
+      "history_stride": 0,
+      "extra_inputs": []
+    },
+    "outputs": {
+      "key": "vel",
+      "shape": [
+        "B",
+        3
+      ],
+      "semantic": "real learned XYZ window-average velocity in m/s",
+      "target": "avg_velocity",
+      "output_steps": 0,
+      "overlap": "mean",
+      "xy_metric": "slice the same XYZ prediction; no separate XY model or zero Z"
+    },
+    "causality": "window_noncausal_only_inside_admitted_T200_no_cross_window_hidden_state",
+    "permissions": "Existing six-axis IMU and train average-velocity labels only. Reference orientation is the admitted task-view rotation, not a separate model input. No runtime calibration/scaling statistics, pose, image, text, initial velocity, extra sensor or test-driven choice.",
+    "loss_identity_policy": "set_loss rejects all non-MSE losses and nonempty kwargs; adding source auxiliary or SSL terms requires a separately named pre-registered identity and budget.",
+    "retained": [
+      "ordered Linear6->256 task input adapter",
+      "three SEQUENTIAL scales Linear/LayerNorm/GELU with widths256/384/576, dilations1/2/3 and separate phase weights",
+      "zero padding to dilation multiple, exact phase interleave and removal before pooling; T200 third scale pads one token",
+      "depth1 VisionMamba residual/RMSNorm/BiMamba-v2/final DropPath/RMSNorm",
+      "independent forward/backward causal depthwise-conv and selective dt/A/B/C/D cores; shared x/z input projection, reverse entire x/z, reverse output and average before shared output projection",
+      "project all scale outputs to576, share a single LayerNorm across scales, SUM then a depth1 bidirectional SSM interaction fuser",
+      "source final outer initializer: all Linear weights truncated normal std0.02, every Linear bias ZERO (including dt_proj), LayerNorm weight1/bias0",
+      "true time-mean pooling and a learned Linear576->XYZ"
+    ],
+    "omitted": [
+      "dense multilabel classification and unused image/block heads",
+      "C-state cosine alignment objective; its source function 'diversity' means1-cosine ALIGNMENT, not repulsion",
+      "auxiliary scale heads/BCE/action labels and all loss coefficients",
+      "inference cache/step/persistent cross-window state",
+      "fused CUDA selective scan, causal-conv1d extension, Triton fused RMSNorm/addnorm and timm dependency"
+    ],
+    "scan_reference": {
+      "backend": "pure_torch_eager_reference_no_fused_CUDA_acceleration",
+      "equation": "dt=softplus(delta+bias); h_t=exp(dt_t*A)*h_(t-1)+dt_t*B_t*u_t; y_t=(C_t dot h_t+D*u_t)*silu(z_t)",
+      "A": "negative exp(A_log); A_log initialized log(1..N), independent forward/backward parameters",
+      "B_C": "input-dependent projections (B,N,T), not fixed S4D matrices; shared over inner channels exactly as the source branch",
+      "initialization": "zero state every invocation; source outer final Linear initializer supersedes generic Mamba log-uniform dt_proj initialization",
+      "numeric_scope": "FP32 accumulator for fp16/bf16/fp32, FP64 when explicitly given double tensors; source ref casts to FP32. Real A/B/C subset used by pinned BiMamba-v2 only.",
+      "low_precision_parity": "NOT verified. Default scientific/native validation requires AMP=false/FP32. Eager TembaSSMBlock uses native addition with no explicit FP32 residual cast: FP32 selective-scan accumulation is NOT source residual_in_fp32 or fused addnorm parity. Changing this later requires separately specified arithmetic and scientific tests.",
+      "unsupported": [
+        "complex/grouped scan variants not used by this pinned model",
+        "fused-kernel numerical identity or speed claim",
+        "generic Mamba/S4D substitution",
+        "torch.compile/CUDA graph performance acceptance"
+      ],
+      "asymptotic_risk": "Python recurrence creates an autograd chain per phase/sample. Default B128/T200/full widths unmeasured; an eager reference may be too slow for budget and is not capacity GO."
+    },
+    "paper_code_differences": [
+      "MSE-only architecture identity deliberately omits source C alignment/scale BCE/classification.",
+      "Fused add+RMSNorm is expressed by eager algebra; no bitwise equivalence or extension performance claim.",
+      "Final outer initializer is followed, rather than the intermediate generic Mamba dt initialization.",
+      "Explicit float64 diagnostic support extends the FP32-only source reference, without changing advertised fp32 training.",
+      "Upstream residual_in_fp32 low-precision/fused behavior is not implemented as an explicit residual cast; no AMP or low-precision source parity is claimed. Default future scientific/native validation is FP32/AMP=false."
+    ]
+  },
+  "local_artifact_sha256": {
+    "model.py": "17a703108e9e580b2ad5f7ed4276b71a6a303bc931c6f0867886b2eaf4cacb20",
+    "model_3d.yaml": "3731a5cebf8e118441c63d51a139c9d84b5355ab30d770add57c039c9491421b",
+    "LICENSE.upstream": "d25d3e71207ec2f2871ee47f3b73b3fa16a078a3839cb8c3148c438bfa5041dd",
+    "test_scientific_contract.py": "042ad997b2b397f33c5d5ec6c7e4ae22762c956f725a99920b3c8ec7d0b5512f"
+  },
+  "static_inspection": {
+    "stdlib_ast_json_profile_input_constructor_keys": "pass",
+    "parameterized_test_cases_written_not_collected_or_run": 57,
+    "execution": "NOT performed; no framework imports, pytest collection, model execution, CPU/GPU or training"
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "verification": {
+    "completed": [
+      "read fixed primary-source paper/code/license evidence",
+      "write isolated implementation and server-only test drafts",
+      "stdlib AST/JSON static inspection only"
+    ],
+    "not_completed": [
+      "framework import",
+      "pytest collection or test execution",
+      "CPU/GPU model forward/backward",
+      "source numeric parity",
+      "source residual_in_fp32, low-precision and AMP parity",
+      "native lifecycle",
+      "capacity including full-source widths B128/stride200",
+      "pilot",
+      "training",
+      "checkpoint or formal matrix admission"
+    ],
+    "tail_guard": "Parent conftest.py fails closed without an audited AutoDL private original-queue terminal/resource-handoff receipt. No runtime allowed until this barrier is satisfied.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Unmodified source vim/LICENSE and LICENSE.txt texts, each preceded by a source-path/commit/SHA label. Both Apache-2.0 copyright blocks preserved.",
+    "attribution": [
+      "Facebook, Inc. and its affiliates (Vim LICENSE)",
+      "2023 Tri Dao, Albert Gu (root Mamba LICENSE)"
+    ],
+    "source_hashes": [
+      "760939b000194d04548ede6a857bbe735d1695d8422ec85955c8e2bd7f4b95c5",
+      "b208c52b00a2df2c8f4c3298c34407bf2bfe409968213372251c91fcc737a1a5"
+    ]
+  }
+}

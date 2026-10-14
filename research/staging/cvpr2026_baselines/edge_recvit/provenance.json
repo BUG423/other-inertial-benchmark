@@ -1,0 +1,202 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "edge_recvit_velocity_architecture",
+  "architecture_id": "edge_recvit_velocity",
+  "class_name": "EdgeRecViTVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "official_inertial_implementation": false,
+  "paper_training_fidelity_claim": false,
+  "complete_paper_reproduction": false,
+  "source_specific_auxiliary_losses": false,
+  "source_evidence": {
+    "path": "../candidate_backbones.json",
+    "sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+    "candidate_id": "edge_recvit",
+    "qualification_scope": "Five source-qualified CVPR2026 main papers; source qualification is not runtime/capacity/legal redistribution approval."
+  },
+  "paper": {
+    "title": "Edge-RecViT: Efficient Vision Transformer via Semantic-Refined Dynamic Recursion",
+    "authors": [
+      "YiZhou Li",
+      "Jinyi Xu",
+      "Mingyu Yin",
+      "Xianyi Zhao"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "12987-12996",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Edge-RecViT_Efficient_Vision_Transformer_via_Semantic-Refined_Dynamic_Recursion_CVPR_2026_paper.html",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Li_Edge-RecViT_Efficient_Vision_Transformer_via_Semantic-Refined_Dynamic_Recursion_CVPR_2026_paper.pdf",
+    "pdf_bytes": 19261856,
+    "pdf_sha256": "23f438f95f2749cb00bda47b85b96f0216988f8e80d2100a30e8bd16fe621bfd"
+  },
+  "repository": {
+    "url": "https://github.com/RicardoLee510520/Edge-RecViT",
+    "commit": "9d0d34a8b3029d62955c9a1cf54ff7e4409ff934",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "official_link_evidence": "Primary CVF/complete PDF and author repository qualification recorded in candidate_backbones.json; reused fixed source evidence, not a new author inertial implementation."
+  },
+  "core_sources": [
+    {
+      "path": "optimum/mor_vit/modeling_mor_vit.py",
+      "bytes": 43815,
+      "sha256": "5b6c88a299efe4afce45db6190a8d660accfdbec0d9191e93cdc763a4693b792",
+      "symbols": [
+        "MoRViTBlock",
+        "MoRViT",
+        "MoRViTForImageClassification",
+        "get_routing_losses"
+      ]
+    },
+    {
+      "path": "optimum/mor_vit/token_choice_router.py",
+      "bytes": 4904,
+      "sha256": "5b9f658e7bee03ec2f94069c7ee2587dd0288954af49851eed918a016973153b",
+      "symbols": [
+        "TokenChoiceRouter"
+      ]
+    }
+  ],
+  "fixed_raw_base_url": "https://raw.githubusercontent.com/RicardoLee510520/Edge-RecViT/9d0d34a8b3029d62955c9a1cf54ff7e4409ff934/",
+  "source_recheck": {
+    "date": "2026-10-14",
+    "method": "Each actual core raw file SHA/byte count verified and AST parsed, no upstream module imported. Fixed root LICENSE raw bytes fetched/hash matched and saved unmodified using apply_patch. Prior complete primary PDF qualification reused from source evidence; no datasets/weights fetched."
+  },
+  "adaptation": {
+    "identity": "architecture_core_port",
+    "selected_core": "Released-code three-layer token-depth router plus distinct head/tail and one truly reused middle transformer; not an unshared ordinary ViT.",
+    "complete_paper_reproduction": false,
+    "adapter_draft_args": {
+      "d_model": 32,
+      "num_heads": 4,
+      "depth": 4,
+      "patch_size": 4,
+      "mlp_ratio": 2,
+      "pretrained": false
+    },
+    "draft_recipe_status": "Explicit compact width/depth/patch/operator/initialization hypotheses; not original full visual-model profile, measured capacity, accuracy, latency or final-initialization parity.",
+    "initialization": "Router linear weights use source normal std0.02; temporal CLS/position truncated-normal std0.02. Remaining compact temporal transformer/stem/head defaults are an adapter recipe, not source full-model pretrained/final-init parity.",
+    "readout": "Final LayerNorm, CLS token (index0), one Linear(d_model,3) XYZ head. CLS is NOT unified temporal GAP.",
+    "keep": [
+      "One temporal token stream including a learned CLS token and learned within-window positions",
+      "Released three-linear router: D->2D GELU->2D ReLU->depth, no linear biases",
+      "Training clamped-uniform Gumbel-Softmax at temperature1 with straight-through hard depth; eval argmax",
+      "CLS forced to full depth, token survival gates formed from selected depth",
+      "Independent first/head and last/tail transformer units, a single middle unit called repeatedly with shared parameters",
+      "Released masked-residual writes at each step, pre-LN attention/MLP and final LayerNorm"
+    ],
+    "replace": [
+      "RGB image patches/2D positions -> Conv1d(6,32,p4,stride4) temporal patches and learned 1D position table",
+      "Source image classification head -> one learned CLS-to-XYZ velocity head and plain supervised MSE",
+      "Full visual size/recursion profile -> explicit compact D32/H4/depth4/MLP2 draft"
+    ],
+    "omitted": [
+      "Classification confidence/CE and source routing regularizers or balancing losses",
+      "Pretrained DeiT/downloads, DoRA/warmup and image-only training wrappers",
+      "Paper two-layer EARR ranker when it differs from released code",
+      "Sparse-token kernel/runtime implementation"
+    ],
+    "paper_code_adapter_differences": [
+      "Paper EARR is two-layer; fixed released router is three-linear GELU/ReLU.",
+      "Released main forward uses Gumbel-Softmax straight-through; router helper also contains a multinomial training branch, not used here.",
+      "Released balancing regularizer is variance hinge rather than paper expected/realized DU; all these losses are omitted in the selected MSE architecture identity.",
+      "Every recursive step executes a dense transformer even for halted token writes. Parameter tying and masking are not measured sparse compute savings.",
+      "CLS readout differs from GAP candidates and must be reported as a readout confound/matched-pooling ablation rather than described as a shared GAP head."
+    ],
+    "objective": "Shared plain supervised MSE over actual learned XYZ whole-window average velocity only; set_loss rejects non-MSE or kwargs. No source-task/SSL/teacher losses mixed into this identity.",
+    "input_permissions": "Same admitted reference_oracle six-axis task view as controls; no image/text/skeleton/geography/initial velocity/extra sensor/targets in forward/per-test fitting.",
+    "temporal_scope": "window_noncausal; only admitted T200 samples, no outside-window context or persistent fast weights/hidden state/maps.",
+    "risks": [
+      "Temporal event depth ranking and router collapse remain unverified from scratch.",
+      "True middle weight tying does not establish FLOPs/latency savings in dense execution.",
+      "Hard eval routing versus training STE and CLS/GAP differences need scientific and matched-control tests."
+    ]
+  },
+  "scientific_contract": {
+    "input_shape": "B,6,200",
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "window": 200,
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "input_track": "reference_oracle_not_deployable",
+    "remove_gravity": false,
+    "history": 0,
+    "history_stride": 0,
+    "output_steps": 0,
+    "overlap": "mean",
+    "extra_inputs": [],
+    "target": "avg_velocity",
+    "output_layout": "window",
+    "dims": 3,
+    "output": "vel:B,3 real supervised XYZ average velocity in m/s; no zero-padded Z",
+    "xy_semantics": "XY is the slice of the same XYZ prediction, no second XY model/head",
+    "task_head": "Final LayerNorm, CLS token (index0), one Linear(d_model,3) XYZ head. CLS is NOT unified temporal GAP.",
+    "loss": "mse",
+    "training_initialization": "scratch_supervised",
+    "optional_ssl_or_auxiliary_recipe": "Not selected; any future source-specific loss requires separately named preregistered identity and budget."
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "provenance": "provenance.json",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified fixed-commit root license bytes, including upstream copyright/appendix.",
+    "upstream_path": "LICENSE",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "raw_url": "https://raw.githubusercontent.com/RicardoLee510520/Edge-RecViT/9d0d34a8b3029d62955c9a1cf54ff7e4409ff934/LICENSE",
+    "notices": [
+      "Copyright 2024 The HuggingFace Team source notice retained in model; Apache root text unchanged"
+    ],
+    "redistribution_boundary": "Source/license evidence only, not Owner/Legal approval for all repository code, dependencies, weights, datasets or derivative redistribution."
+  },
+  "verification": {
+    "completed": [
+      "Prior primary-source qualification reused with fixed evidence SHA",
+      "Actual fixed-core raw SHA and AST rechecked without execution",
+      "Current class/constructor args/model YAML read and matched statically",
+      "Exact root LICENSE fetched/hash verified/copied",
+      "Independent adaptation/initialization/readout differences recorded"
+    ],
+    "not_completed": [
+      "Framework/model/pytest import or collection",
+      "CPU/GPU forward/backward/tests or scientific numeric acceptance",
+      "Native lifecycle/checkpoint reload",
+      "Parameter/MAC/VRAM/latency measurements or capacity admission",
+      "Pilot/three-seed training/val/test/formal matrix admission"
+    ],
+    "pending_server_tests": [
+      "Released router logits/Gumbel-STE values and gradients, eval depth choices and CLS full survival",
+      "Identity-sharing checks for middle versus distinct head/tail and masked-residual recursion",
+      "Controlled depth all/none/survival probes and canonical input rejection",
+      "Plain MSE, real learned Z, batch/window independence and checkpoint reload",
+      "Native lifecycle and measured dense-runtime/full frozen-profile capacity after tail"
+    ],
+    "execution_order": "Every new model import, scientific test, CPU lifecycle, GPU capacity probe, training or evaluation only on AutoDL AFTER ALL original and previously queued tasks with audited tail-readiness and resource-handoff receipt; no automatic launch.",
+    "tail_guard": "Parent conftest.py requires audited IPB_CVPR2026_TAIL_READINESS; guard itself is an unexecuted draft, no pytest --collect-only bypass.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "runtime_actions_performed": [],
+  "formal_rows_added": 0
+}

@@ -1,6 +1,6 @@
 {
   "schema": "ib.research.cvpr2026-tail-queue.plan.v1",
-  "status": "ten_sources_fixed_static_adaptation_in_progress_runtime_deferred",
+  "status": "ten_isolated_static_drafts_runtime_deferred",
   "expected_independent_methods": 10,
   "venue": "CVPR",
   "venue_year": 2026,
@@ -54,6 +54,7 @@
   "new_batch_admission": [
     "exactly_ten_distinct_cvpr2026_main_papers_with_author_code",
     "fixed_commit_and_license_review",
+    "no_unresolved_license_notice_holds_before_model_execution",
     "explicit_keep_replace_and_inertial_contract",
     "independent_source_profile_coverage_policy_seed_and_output_identity",
     "tail_barrier_before_any_model_runtime",
@@ -75,7 +76,11 @@
     "orientation_permission": "reference_oracle",
     "gravity_retained": true,
     "extra_inputs": [],
-    "outside_window_future": false
+    "outside_window_future": false,
+    "overlap": "mean",
+    "history": 0,
+    "history_stride": 0,
+    "output_steps": 0
   },
   "planned_output": {
     "quantity": "window_average_velocity",
@@ -92,7 +97,10 @@
       843628571,
       951150512
     ],
-    "recipe_status": "not_frozen_capacity_and_preregistration_required"
+    "recipe_status": "not_frozen_capacity_and_preregistration_required",
+    "initial_scientific_validation_amp": false,
+    "mixed_precision_source_parity_verified": false,
+    "precision_recipe_status": "not_frozen_source_amp_equivalence_and_capacity_pending"
   },
   "method_candidates": [
     {
@@ -143,10 +151,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Input-only negative-dot per-window reset fast weights; no target access or cross-window carry; 2D inner conv becomes 1D.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "ViT3Velocity",
+      "draft_profile_arch": "vitt3_velocity",
+      "draft_profile_name": "vitt3_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "vitt3/model.py",
+          "bytes": 8482,
+          "sha256": "2187799ed77a3662c98426a5f982db9ab89e422e0e85995369a4b89c1633c5b9"
+        },
+        {
+          "path": "vitt3/model_3d.yaml",
+          "bytes": 852,
+          "sha256": "8052b3694c69bd1ddc51ecab7376a99cafca876d3d119c1600a88495a24f44b1"
+        },
+        {
+          "path": "vitt3/provenance.json",
+          "bytes": 10543,
+          "sha256": "cb0beb71e85375354b1638dacb76017667138779a20dd477d835d1cc64c4746e"
+        },
+        {
+          "path": "vitt3/LICENSE.upstream",
+          "bytes": 1141,
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        },
+        {
+          "path": "vitt3/test_scientific_contract.py",
+          "bytes": 7886,
+          "sha256": "70f15add3084c98e4a5cfe445c2857b1f3568d3604591ef12054ddd696842cd2"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_backbones.json",
@@ -198,10 +237,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Released recursive token router and shared middle; paper/released-router differences explicit; auxiliary source losses omitted in MSE identity.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "EdgeRecViTVelocity",
+      "draft_profile_arch": "edge_recvit_velocity",
+      "draft_profile_name": "edge_recvit_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "edge_recvit/model.py",
+          "bytes": 7444,
+          "sha256": "cf808b710d7069f3d59599e4539b3f8f24678d9b30ba38f5880b268fc3bdacbf"
+        },
+        {
+          "path": "edge_recvit/model_3d.yaml",
+          "bytes": 920,
+          "sha256": "7305ac716e3643bcf6ffb0838f426a08101e88a3402ab468c2255e7b24b94554"
+        },
+        {
+          "path": "edge_recvit/provenance.json",
+          "bytes": 10938,
+          "sha256": "3496c8d006eb7ac32e0a80ffd751a317601715f405a99889237512ff9d3837f8"
+        },
+        {
+          "path": "edge_recvit/LICENSE.upstream",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "edge_recvit/test_scientific_contract.py",
+          "bytes": 7836,
+          "sha256": "e3cc0cc2203c60d5d6c9d66d2987d46ec0ff91c2200d3b8153e925ea2d1d0712"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_backbones.json",
@@ -263,10 +333,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Peripheral center suppression and derivative/Laplacian/variance scale gate; actual source GRN; no FFT replacement.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "PFGNetVelocity",
+      "draft_profile_arch": "pfgnet_velocity",
+      "draft_profile_name": "pfgnet_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "pfgnet/model.py",
+          "bytes": 8613,
+          "sha256": "091681a0c4e76789cbdb31ca606566ca2b31855bcd6a5ad9edc0de374f03f2dc"
+        },
+        {
+          "path": "pfgnet/model_3d.yaml",
+          "bytes": 870,
+          "sha256": "e30c8048bd6c8b12b6e0192e1f26d87ccf16b713633f073e112a58dd1a350f78"
+        },
+        {
+          "path": "pfgnet/provenance.json",
+          "bytes": 11330,
+          "sha256": "690526f1185cbceb7948c10f607d5ddadcb81f82ef4b5c850df18da9318c9810"
+        },
+        {
+          "path": "pfgnet/LICENSE.upstream",
+          "bytes": 11348,
+          "sha256": "bb34e42b3344c140de83a66be805064f263a3a3d3ee6bcc3914677e658d7fd16"
+        },
+        {
+          "path": "pfgnet/test_scientific_contract.py",
+          "bytes": 7878,
+          "sha256": "86e0b475c124b893860d96fbe96b79050ca44038ba54dbf5ceee0e8920b35fc9"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_backbones.json",
@@ -320,10 +421,43 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Source scaled sign-QK/STE fakequant floating reference; no bitpacked CUDA or inherited acceleration claim.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "BinaryAttentionVelocity",
+      "draft_profile_arch": "binary_attention_velocity",
+      "draft_profile_name": "binary_attention_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "binary_attention/model.py",
+          "bytes": 7920,
+          "sha256": "a05837b62cbd2668197392b36e69f95daf4cde20c682ee322c8dfb6ffbbf50b4"
+        },
+        {
+          "path": "binary_attention/model_3d.yaml",
+          "bytes": 929,
+          "sha256": "4145e969a588f7e329fa045cd638aec9a178155c73aca132f3860ae8c8f01e2c"
+        },
+        {
+          "path": "binary_attention/provenance.json",
+          "bytes": 12122,
+          "sha256": "cca9e0fba2ee9515605c496b13465aaa91eb7a84553ba6a4b664a12de30e0756"
+        },
+        {
+          "path": "binary_attention/LICENSE.upstream",
+          "bytes": 11435,
+          "sha256": "c20669c3fcd39ca552015568b5958af5ed6b4f75faaa9ffca5b03d470ae75ab5"
+        },
+        {
+          "path": "binary_attention/test_scientific_contract.py",
+          "bytes": 8184,
+          "sha256": "20672bca1ef2cc6d1e92813149e6f4aad55b83171aaed125604a64c3f7abe9e9"
+        }
+      ],
+      "license_notice_status": "hold_notice_review",
+      "license_notice_caveat": "Exact upstream Apache-2.0 LICENSE appendix contains unresolved copyright conflict markers; preserve raw bytes, no legal-validity inference, no batch execution until review/corrected author source/replacement closes this hold."
     },
     {
       "evidence_file": "candidate_backbones.json",
@@ -372,10 +506,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Local attention, Hedgehog/global-channel dual fusion, sharing/receiving and selective large-kernel core; no RGB/SR head.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "UCANVelocity",
+      "draft_profile_arch": "ucan_velocity",
+      "draft_profile_name": "ucan_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "ucan/model.py",
+          "bytes": 16039,
+          "sha256": "246e5cdbbf5e581d015aee79ce84737d561f5f2ba937e05464be7e016e0f9f4e"
+        },
+        {
+          "path": "ucan/model_3d.yaml",
+          "bytes": 647,
+          "sha256": "e623b446d9f1e1bc3d3ae482f929f2d14d7929c32b9ed5ab1cfce4581bfc1665"
+        },
+        {
+          "path": "ucan/provenance.json",
+          "bytes": 12619,
+          "sha256": "0ff611e262da590767e98e9ff3276db33ebede59f03cd478c606b85233dfe8a5"
+        },
+        {
+          "path": "ucan/LICENSE.upstream",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "ucan/test_scientific_contract.py",
+          "bytes": 10591,
+          "sha256": "807d3be2b7336489a6f33ec86447b2bdcdd275c9811276b74800a3822cdb1344"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_temporal.json",
@@ -450,10 +615,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Independent phase dilation1/2/3, inverse interleave, bidirectional selective SSM and multi-scale fuser; C-alignment and source auxiliary losses omitted in selected MSE identity.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "MSTembaVelocity",
+      "draft_profile_arch": "mstemba_architecture_core_velocity",
+      "draft_profile_name": "mstemba_architecture_core_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "mstemba/model.py",
+          "bytes": 13759,
+          "sha256": "17a703108e9e580b2ad5f7ed4276b71a6a303bc931c6f0867886b2eaf4cacb20"
+        },
+        {
+          "path": "mstemba/model_3d.yaml",
+          "bytes": 1778,
+          "sha256": "3731a5cebf8e118441c63d51a139c9d84b5355ab30d770add57c039c9491421b"
+        },
+        {
+          "path": "mstemba/provenance.json",
+          "bytes": 13108,
+          "sha256": "6dac481dbc51baf0e6e02b68ba7f49a937ade3478d92998800d9811cc82215a5"
+        },
+        {
+          "path": "mstemba/LICENSE.upstream",
+          "bytes": 23053,
+          "sha256": "d25d3e71207ec2f2871ee47f3b73b3fa16a078a3839cb8c3148c438bfa5041dd"
+        },
+        {
+          "path": "mstemba/test_scientific_contract.py",
+          "bytes": 14373,
+          "sha256": "042ad997b2b397f33c5d5ec6c7e4ae22762c956f725a99920b3c8ec7d0b5512f"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_temporal.json",
@@ -523,10 +719,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "MASF/FACM spectral cores only; V=1 feature location, no fictitious skeleton, action/text/boundary supervision.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "SpectralScalpelVelocity",
+      "draft_profile_arch": "specscalpel_spectral_core_velocity",
+      "draft_profile_name": "specscalpel_spectral_core_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "specscalpel/model.py",
+          "bytes": 9972,
+          "sha256": "78b9b42e1e914dc5e0ab9adba97d983a3916a2df7e63e06bd9234f120745d22e"
+        },
+        {
+          "path": "specscalpel/model_3d.yaml",
+          "bytes": 1751,
+          "sha256": "135f71e26c30bb6622bbc77aae06480ac15dd110ac98880dc9326a20f10d86bd"
+        },
+        {
+          "path": "specscalpel/provenance.json",
+          "bytes": 10562,
+          "sha256": "502547b151872c8cfb12c7c66f23f241c8f52f7aa063b1e45c29d407ac8733d3"
+        },
+        {
+          "path": "specscalpel/LICENSE.upstream",
+          "bytes": 1065,
+          "sha256": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278"
+        },
+        {
+          "path": "specscalpel/test_scientific_contract.py",
+          "bytes": 12953,
+          "sha256": "6606720df7ce93429bc9461826acd6aaffe7eb5c4a06c4c7ab987a125b870ba1"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_temporal.json",
@@ -609,10 +836,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Author v1 dual temporal encoders, GRU-conditioned attention pool, ordered concat and linear reducer; selected architecture-only identity explicitly omits BT, train views, shuffle/mix and SSL projector/loss; does not inherit conditional source candidate SSL keep table; only internal time positions.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "TesseraV1DualStreamVelocity",
+      "draft_profile_arch": "tessera_v1_dualstream_architecture_velocity",
+      "draft_profile_name": "tessera_v1_dualstream_architecture_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "tessera_v1/model.py",
+          "bytes": 7361,
+          "sha256": "a26f5a56bf13dd75f2b937ffd68674858ade991bfd6bc52dc3b586b5b7028aca"
+        },
+        {
+          "path": "tessera_v1/model_3d.yaml",
+          "bytes": 1759,
+          "sha256": "89dbe40acf3aaa3f242a90a815d5a6a15afbcb355b0f42a6ac9bb152c69ce1e0"
+        },
+        {
+          "path": "tessera_v1/provenance.json",
+          "bytes": 11332,
+          "sha256": "179addf6a44a37031a167debbaaa59e75db19f4d168feee3a3dcb7e798f10cd2"
+        },
+        {
+          "path": "tessera_v1/LICENSE.upstream",
+          "bytes": 1067,
+          "sha256": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b"
+        },
+        {
+          "path": "tessera_v1/test_scientific_contract.py",
+          "bytes": 12181,
+          "sha256": "667dfbe0f27f5a7df2575761c57f4220e8c10f2bd3b3996b24d1b848f53cad3a"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_structured.json",
@@ -658,10 +916,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "Last effective Attention class with SoftGShift and direct linear calibration; not earlier tanh variant; public/private pathways retained.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "CSaNVelocity",
+      "draft_profile_arch": "csan_vit_velocity_staging_unregistered",
+      "draft_profile_name": "csan_vit_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "csan_vit/model.py",
+          "bytes": 8635,
+          "sha256": "cd1343699e0889be6906a9320d826f2b7635bed4febb031f54780c26265e4a2e"
+        },
+        {
+          "path": "csan_vit/model_3d.yaml",
+          "bytes": 994,
+          "sha256": "4454eaafbc21ce9ce5f5ee200cdd0f2147f2631cb4aee2d6a2234816a2d1801e"
+        },
+        {
+          "path": "csan_vit/provenance.json",
+          "bytes": 6441,
+          "sha256": "526c16f2ec9ef103e2b35020153791627cfe39fc96e5cb14aef218ea1074732a"
+        },
+        {
+          "path": "csan_vit/LICENSE.upstream",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "csan_vit/test_scientific_contract.py",
+          "bytes": 11741,
+          "sha256": "846dc90467002928ea1c46d54765bdf68363a622c4d37f255d2305bf4c232adf"
+        }
+      ]
     },
     {
       "evidence_file": "candidate_structured.json",
@@ -765,10 +1054,41 @@
       "selected_recipe": "scratch_supervised_mse",
       "source_specific_auxiliary_losses": false,
       "selected_scope": "TransMixer temporal-core reference: input-conditioned delta per-token channel sorting, global/local gather and scatter; four 2D scans become forward/backward 1D; HOG/SRF/segmentation omitted.",
-      "implementation_status": "static_source_preparation_in_progress",
+      "implementation_status": "static_draft",
       "runtime_verified": false,
       "capacity_accepted": false,
-      "formal_matrix_enrolled": false
+      "formal_matrix_enrolled": false,
+      "class_name": "TransMixerVelocity",
+      "draft_profile_arch": "mixercseg_transmixer1d_velocity_staging_unregistered",
+      "draft_profile_name": "mixercseg_transmixer1d_velocity_3d_staging",
+      "independent_static_review": "completed_with_explicit_runtime_fidelity_and_capacity_holds",
+      "adapter_artifacts": [
+        {
+          "path": "mixercseg/model.py",
+          "bytes": 16190,
+          "sha256": "1b9bf39d7ad264fd3f7bcf7c484cae4c13156831bdaf586cce59c5e4ff237019"
+        },
+        {
+          "path": "mixercseg/model_3d.yaml",
+          "bytes": 1048,
+          "sha256": "19f79a3428f6a73d121cc2f35b0e3cdc8d3920275eaecc5b9c6474010c932c96"
+        },
+        {
+          "path": "mixercseg/provenance.json",
+          "bytes": 9728,
+          "sha256": "3b965a02126ea775a129951bbecc95865edd5cc23d214a760e8531c755110b57"
+        },
+        {
+          "path": "mixercseg/LICENSE.upstream",
+          "bytes": 1069,
+          "sha256": "e7d62576226fe965fd57f8fb192c4b1163be9bb92e17304a7f3f6cbaa326aada"
+        },
+        {
+          "path": "mixercseg/test_scientific_contract.py",
+          "bytes": 19677,
+          "sha256": "ab78bd2031aa013af420f42fef0eafa3040678f98c425dcdd83a9c89a0bd84f8"
+        }
+      ]
     }
   ],
   "accepted_method_count_increment": 0,
@@ -782,7 +1102,7 @@
   "selected_independent_source_count": 10,
   "source_review_scope": "primary-paper-author-repository-fixed-license-and-core-evidence; not runtime or redistribution approval",
   "model_runtime_started": false,
-  "implementation_stage": "isolated_source_preparation_in_progress",
+  "implementation_stage": "static_draft_complete_pending_tail_runtime",
   "proposed_pilot": {
     "status": "proposal_not_frozen_not_enrolled",
     "candidate_methods": 10,
@@ -798,5 +1118,32 @@
     "candidate_cells": 60,
     "control_cells": "not_frozen",
     "full_13_source_expansion_authorized": false
-  }
+  },
+  "static_adapter_count": 10,
+  "cpu_model_tests_executed": 0,
+  "training_started_count": 0,
+  "engineering_fixture_reference": {
+    "manifest_sha256": "3d8a676f45ec7b93a0365eadddee45ec1bad7025deb212a6dcecddc922bd8c53",
+    "provenance": "../cross_domain_baselines/CPU_HANDOFF.md",
+    "existing_acceptance_does_not_accept_new_adapters": true
+  },
+  "shared_adapter_artifacts": [
+    {
+      "path": "conftest.py",
+      "bytes": 5991,
+      "sha256": "a5eb12cbe7a0d89fa6cbdc9542da9f5f4a93ceccdd74ec665edbbbb73cb666eb"
+    },
+    {
+      "path": "test_native_lifecycle.py",
+      "bytes": 8244,
+      "sha256": "3d41d2f4673d89a3e807d4ec17cadd32e2fa896f6483e57ab35374fcfb79ad22"
+    },
+    {
+      "path": "check_static_manifest.py",
+      "bytes": 15109,
+      "sha256": "5ea38e873c5d9d9d1f73a511d8e8ea613dd4874fd695812d2689463b8265837b"
+    }
+  ],
+  "static_review_scope": "Source/AST/math/config/license/byte-binding review only; no framework import, test collection, numeric/gradient execution or full G1/runtime acceptance.",
+  "legal_notice_hold_count": 1
 }

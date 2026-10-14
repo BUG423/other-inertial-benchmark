@@ -1,0 +1,32 @@
+# Static draft only; no model runtime, capacity acceptance or formal admission.
+name: ucan_velocity_3d_staging
+arch: ucan_velocity
+registered: false
+implementation_kind: architecture_core_port
+causality: window_noncausal
+args:
+  d_model: 32
+  local_heads: 4
+  global_heads: 2
+  pairs: 1
+  patch_size: 4
+  window_size: 10
+  mlp_ratio: 2
+  pretrained: false
+input:
+  window: 200
+  dims: 3
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  overlap: mean
+  output_steps: 0
+  history: 0
+  history_stride: 0
+  extra_inputs: []
+training: supervised_from_scratch
+loss: mse
+recipes:
+  unified: {}

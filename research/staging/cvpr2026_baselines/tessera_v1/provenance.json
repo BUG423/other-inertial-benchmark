@@ -1,0 +1,217 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "tessera_v1_dualstream_architecture_velocity",
+  "architecture_id": "tessera_v1_dualstream_architecture_velocity",
+  "class_name": "TesseraV1DualStreamVelocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "paper": {
+    "title": "TESSERA: Temporal Embeddings of Surface Spectra for Earth Representation and Analysis",
+    "authors": [
+      "Zhengpeng Feng",
+      "Clement Atzberger",
+      "Sadiq Jaffer",
+      "Jovana Knezevic",
+      "Silja Sormunen",
+      "Robin Young",
+      "Madeline C. Lisaius",
+      "Markus Immitzer",
+      "Toby Jackson",
+      "James Ball",
+      "David A. Coomes",
+      "Anil Madhavapeddy",
+      "Andrew Blake",
+      "Srinivasan Keshav"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "34818-34831",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.html",
+    "cvf_html_sha256": "0f0491788a5a4154302d1ad0bd6b391b1db00e4f246582125a1f24ebd95924ae",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.pdf",
+    "pdf_sha256": "80240c5f199e581417cf0f9d7fd610b7c555c243844ac96f1efb9eddd197d93c",
+    "pdf_bytes": 17447236,
+    "pdf_pages": 14,
+    "primary_pdf_text_read": true
+  },
+  "repository": {
+    "url": "https://github.com/ucam-eo/tessera",
+    "commit": "e368539f7c4711e5f16fdd09801573830e34baf9",
+    "branch_observed": "master",
+    "official_link_evidence": "CVF paper and authors' official ucam-eo repository; only tessera_infer v1 paths considered, not third-party fork or v2.",
+    "license": {
+      "spdx": "MIT",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+          "sha256": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b",
+          "bytes": 1067,
+          "role": "root MIT copyright2025 Frank Feng"
+        }
+      ],
+      "weights_not_used": true
+    }
+  },
+  "core_sources": [
+    {
+      "path": "tessera_infer/src/models/modules.py",
+      "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+      "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+      "sha256": "e58867489428858f9494767dd104329338685c654a7d60f9117a746dc5a7c4fa",
+      "bytes": 5358,
+      "role": "TemporalPositionalEncoder; TransformerEncoder; TemporalAwarePooling GRU+attention; ProjectionHead"
+    },
+    {
+      "path": "tessera_infer/src/models/ssl_model.py",
+      "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+      "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+      "sha256": "6201e7c56564007ccaea7370bb96a99fab7f326db5428c2a1e3447889f6fe4b1",
+      "bytes": 2571,
+      "role": "MultimodalBTModel and inference dual-encoder concat/reducer"
+    },
+    {
+      "path": "tessera_infer/src/models/builder.py",
+      "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+      "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+      "sha256": "beaf0a052c59104951385a198fe250a1e96745b4053749eb612eda201d865e10",
+      "bytes": 1634,
+      "role": "actual fixed v1 8-layer two-backbone configuration"
+    },
+    {
+      "path": "tessera_infer/configs/ssl_config.py",
+      "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+      "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+      "sha256": "74ab894c50a1a85a5aabda74718f8267f1c4ea66ebed2f3510a25e1e2b70d4fa",
+      "bytes": 675,
+      "role": "BTlambda5e-3; concat; latent128; apply_mixupFalse at pinned source"
+    }
+  ],
+  "adaptation": {
+    "identity": "dualstream_architecture_core_port",
+    "complete_paper_reproduction": false,
+    "initialization": "scratch_supervised_no_weights_download_or_load",
+    "objective": "MSE(mean over actual learned XYZ whole-window average velocity), no auxiliary losses",
+    "source_default_args": {
+      "width": 512,
+      "layers": 8,
+      "heads": 8,
+      "feedforward_width": 4096,
+      "latent_dim": 128,
+      "dropout": 0.1,
+      "pretrained": false
+    },
+    "source_width_capacity_measured": false,
+    "diagnostic_small_configuration": "Only explicitly selected server scientific tests may use reduced widths/depths. Such tests do not admit the full profile or silently replace it.",
+    "model_inputs": {
+      "shape": [
+        "B",
+        6,
+        200
+      ],
+      "channels": [
+        "gyro_x",
+        "gyro_y",
+        "gyro_z",
+        "acc_x",
+        "acc_y",
+        "acc_z"
+      ],
+      "rate_hz": 200,
+      "frame": "gravity_world",
+      "orientation": "reference",
+      "remove_gravity": false,
+      "history": 0,
+      "history_stride": 0,
+      "extra_inputs": []
+    },
+    "outputs": {
+      "key": "vel",
+      "shape": [
+        "B",
+        3
+      ],
+      "semantic": "real learned XYZ window-average velocity in m/s",
+      "target": "avg_velocity",
+      "output_steps": 0,
+      "overlap": "mean",
+      "xy_metric": "slice the same XYZ prediction; no separate XY model or zero Z"
+    },
+    "causality": "window_noncausal_only_inside_admitted_T200_no_cross_window_hidden_state",
+    "permissions": "Existing six-axis IMU and train average-velocity labels only. Reference orientation is the admitted task-view rotation, not a separate model input. No runtime calibration/scaling statistics, pose, image, text, initial velocity, extra sensor or test-driven choice.",
+    "loss_identity_policy": "set_loss rejects all non-MSE losses and nonempty kwargs; adding source auxiliary or SSL terms requires a separately named pre-registered identity and budget.",
+    "retained": [
+      "two fully independent gyro3/acc3 encoders (source S2/S1 modality separation adapted to genuine inertial modalities)",
+      "each branch Linear3->512/ReLU/Linear512->512, additive source sinusoidal temporal encoding",
+      "eight cloned post-norm TransformerEncoder layers per stream,8 heads,FF4096,ReLU,dropout0.1; modules separate, same initial clone values as released code",
+      "GRU512->512 zero hidden each call; learned query over GRU context yields softmax temporal weights; pool ORIGINAL Transformer tokens, not GRU outputs",
+      "ordered concatenate gyro then acc features and SINGLE Linear1024->128 reducer",
+      "new actual learned Linear128->XYZ velocity head"
+    ],
+    "omitted": [
+      "Barlow Twins redundancy-reduction SSL objective and its projector/BatchNorm modules",
+      "train-only random temporal sampling, paired views, global shuffled SSL curriculum, mix-based regularization",
+      "EO image/bands, geography and external calendar day-of-year inputs",
+      "upstream pretrained weights, v2, QAT, ONNX/raster/acquisition code"
+    ],
+    "position_adapter": "Only inside-window index q=t_relative_seconds*200=0..199. Source sin/cos frequencies exp(-log10000*arange(0,width,2)/width), with no externally supplied timestamps/calendar/geography.",
+    "paper_code_differences": [
+      "Paper Sec3.2 describes4-layer Transformer and2-layer fusion MLP; fixed tessera_infer v1 builder uses8layers, encoder width512 and SINGLE linear reducer to128. Port follows fixed v1 code.",
+      "Paper says GRU pooling; actual source computes GRU-conditioned attention weights and pools the ORIGINAL Transformer token values.",
+      "Paper includes mix-based regularization; pinned ssl_config.py has apply_mixup=False, and this independent MSE architecture identity omits ALL SSL/views/mix.",
+      "Source EO band counts10 and2 are replaced by genuine gyro3 andacc3, not synthetic imagery.",
+      "Replacing external day-of-year by internal relative sample position is a declared task adapter.",
+      "Diagnostic width/layer reductions have separate args and are only tests; default source512/8/4096 is not silently narrowed or capacity accepted."
+    ],
+    "future_ssl_identity": "A full train-only BT/sampling/globalshuffle/mix pretraining proposal remains a separate future identity and budget; it is NOT mixed into this architecture-only MSE table or claimed reproduced.",
+    "capacity_risk": "Large released v1 defaults unmeasured. No full-profile batch/stride/VRAM/time GO; common B128 cannot be silently reduced.",
+    "dependency_scope": "Standard torch Transformer/GRU only. No SSL BatchNorm/projector, raster/geospatial packages, external sensors or model weights."
+  },
+  "local_artifact_sha256": {
+    "model.py": "a26f5a56bf13dd75f2b937ffd68674858ade991bfd6bc52dc3b586b5b7028aca",
+    "model_3d.yaml": "89dbe40acf3aaa3f242a90a815d5a6a15afbcb355b0f42a6ac9bb152c69ce1e0",
+    "LICENSE.upstream": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b",
+    "test_scientific_contract.py": "667dfbe0f27f5a7df2575761c57f4220e8c10f2bd3b3996b24d1b848f53cad3a"
+  },
+  "static_inspection": {
+    "stdlib_ast_json_profile_input_constructor_keys": "pass",
+    "parameterized_test_cases_written_not_collected_or_run": 47,
+    "execution": "NOT performed; no framework imports, pytest collection, model execution, CPU/GPU or training"
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "verification": {
+    "completed": [
+      "read fixed primary-source paper/code/license evidence",
+      "write isolated implementation and server-only test drafts",
+      "stdlib AST/JSON static inspection only"
+    ],
+    "not_completed": [
+      "framework import",
+      "pytest collection or test execution",
+      "CPU/GPU model forward/backward",
+      "source numeric parity",
+      "native lifecycle",
+      "capacity including full-source widths B128/stride200",
+      "pilot",
+      "training",
+      "checkpoint or formal matrix admission"
+    ],
+    "tail_guard": "Parent conftest.py fails closed without an audited AutoDL private original-queue terminal/resource-handoff receipt. No runtime allowed until this barrier is satisfied.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified root MIT LICENSE text from the pinned repository.",
+    "upstream_sha256": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b",
+    "copyright": "Copyright (c) 2025 Frank Feng"
+  }
+}

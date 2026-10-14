@@ -1,0 +1,32 @@
+# Static, released-code core port. Original classification/routing losses omitted.
+name: edge_recvit_velocity_3d_staging
+arch: edge_recvit_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Li_Edge-RecViT_Efficient_Vision_Transformer_via_Semantic-Refined_Dynamic_Recursion_CVPR_2026_paper.html
+code: https://github.com/RicardoLee510520/Edge-RecViT/tree/9d0d34a8b3029d62955c9a1cf54ff7e4409ff934
+license: Apache-2.0; LICENSE.upstream retained
+registered: false
+implementation_kind: architecture_core_port
+training: supervised_from_scratch
+causality: window_noncausal
+args:
+  d_model: 32
+  num_heads: 4
+  depth: 4
+  patch_size: 4
+  mlp_ratio: 2
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  history: 0
+  history_stride: 0
+  output_steps: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

@@ -1,0 +1,200 @@
+{
+  "schema": "ib.research.cvpr2026-baseline-provenance.v1",
+  "candidate_id": "vitt3_velocity_architecture",
+  "architecture_id": "vitt3_velocity",
+  "class_name": "ViT3Velocity",
+  "implementation_status": "static_draft",
+  "runtime_verified": false,
+  "capacity_accepted": false,
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "official_inertial_implementation": false,
+  "paper_training_fidelity_claim": false,
+  "complete_paper_reproduction": false,
+  "source_specific_auxiliary_losses": false,
+  "source_evidence": {
+    "path": "../candidate_backbones.json",
+    "sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+    "candidate_id": "vitt3",
+    "qualification_scope": "Five source-qualified CVPR2026 main papers; source qualification is not runtime/capacity/legal redistribution approval."
+  },
+  "paper": {
+    "title": "ViT³: Unlocking Test-Time Training in Vision",
+    "authors": [
+      "Dongchen Han",
+      "Yining Li",
+      "Tianyu Li",
+      "Zixuan Cao",
+      "Ziming Wang",
+      "Jun Song",
+      "Yu Cheng",
+      "Bo Zheng",
+      "Gao Huang"
+    ],
+    "venue": "CVPR 2026 main conference",
+    "pages": "51-61",
+    "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Han_ViT3_Unlocking_Test-Time_Training_in_Vision_CVPR_2026_paper.html",
+    "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Han_ViT3_Unlocking_Test-Time_Training_in_Vision_CVPR_2026_paper.pdf",
+    "pdf_bytes": 836449,
+    "pdf_sha256": "84a71a09dd49f3b0033ca6b3e43e01d94faf5df913943b9fe433099f0e5321c1"
+  },
+  "repository": {
+    "url": "https://github.com/LeapLabTHU/ViTTT",
+    "commit": "36eb23bfe2eca5cd4ad9ce01ef93bf8a89c6020f",
+    "license": {
+      "spdx": "MIT",
+      "path": "LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "notice": "Microsoft Corporation copyright retained upstream"
+    },
+    "official_link_evidence": "Primary CVF/complete PDF and author repository qualification recorded in candidate_backbones.json; reused fixed source evidence, not a new author inertial implementation."
+  },
+  "core_sources": [
+    {
+      "path": "ttt_block.py",
+      "bytes": 7440,
+      "sha256": "e48416ae6ae54e49721c83b4eeedd8320f843907715f7062526ca4d8ad8d04de",
+      "symbols": [
+        "TTT",
+        "inner_train_simplified_swiglu",
+        "inner_train_3x3dwc",
+        "forward"
+      ]
+    }
+  ],
+  "fixed_raw_base_url": "https://raw.githubusercontent.com/LeapLabTHU/ViTTT/36eb23bfe2eca5cd4ad9ce01ef93bf8a89c6020f/",
+  "source_recheck": {
+    "date": "2026-10-14",
+    "method": "Each actual core raw file SHA/byte count verified and AST parsed, no upstream module imported. Fixed root LICENSE raw bytes fetched/hash matched and saved unmodified using apply_patch. Prior complete primary PDF qualification reused from source evidence; no datasets/weights fetched."
+  },
+  "adaptation": {
+    "identity": "architecture_core_port",
+    "selected_core": "Input-only single-step fast weights: simplified SwiGLU global branch and depthwise local branch; not generic attention or label-based test-time optimization.",
+    "complete_paper_reproduction": false,
+    "adapter_draft_args": {
+      "d_model": 32,
+      "num_heads": 4,
+      "depth": 2,
+      "patch_size": 4,
+      "mlp_ratio": 2,
+      "pretrained": false
+    },
+    "draft_recipe_status": "Explicit compact width/depth/patch/operator/initialization hypotheses; not original full visual-model profile, measured capacity, accuracy, latency or final-initialization parity.",
+    "initialization": "Source core w1/w2/w3 truncated-normal std0.02 retained; newly constructed temporal stem/wrappers and nn.Linear defaults are an adapter initialization recipe, not full visual-model seeded/final-init parity.",
+    "readout": "Final LayerNorm, temporal mean of patch tokens, one Linear(d_model,3) XYZ head.",
+    "keep": [
+      "Q/K/V projections into global multi-head and local head-width branches",
+      "Per-sample/per-head w1/w2 and per-sample grouped convolution fast weights, all reset from base nn.Parameters on every call",
+      "Negative-dot-product closed-form inner gradients from current-window K/V only; normalize each gradient by its norm+1 and use one lr=1 full-token step",
+      "Updated simplified SwiGLU weights act on Q, local adapted convolution acts on Q, concatenate both branches and project",
+      "Pre-LN residual/GELU-MLP wrapper with no classifier, teacher or target access in forward"
+    ],
+    "replace": [
+      "RGB spatial patch embedding -> ordered Conv1d(6,32,kernel=4,stride=4) temporal patches within T200",
+      "Optional source 2D positional RoPE -> explicit 1D half-pair RoPE applied to global Q/K patch positions",
+      "Source 3x3 local inner DWConv -> 3-tap temporal DWConv",
+      "Source nine-position equivalent-neighborhood scale 9**-0.5 -> explicit three-position scale 3**-0.5",
+      "Visual task wrapper/head -> compact depth2 draft, final LayerNorm/GAP and one XYZ Linear head/plain MSE"
+    ],
+    "omitted": [
+      "Image/detection/diffusion task wrappers and source supervised classifiers",
+      "Pretrained weights and teachers",
+      "Source 2D neighborhoods, image spatial geometry and unused full visual stages",
+      "External optimizer or state cache for inner updates"
+    ],
+    "paper_code_adapter_differences": [
+      "1D RoPE, three-tap local neighborhoods and scale1/sqrt3 are adapter hypotheses, not algebraic equivalence to the published spatial model.",
+      "Outer velocity MSE is supervised; input-only negative-dot inner objective is a retained architecture computation, not a hidden target-task auxiliary loss.",
+      "Whole-window inner compression is window_noncausal, not a causal online algorithm.",
+      "D32/H4/depth2/MLP2/p4 is an unmeasured compact draft, not original paper size/capacity or initialization parity."
+    ],
+    "objective": "Shared plain supervised MSE over actual learned XYZ whole-window average velocity only; set_loss rejects non-MSE or kwargs. No source-task/SSL/teacher losses mixed into this identity.",
+    "input_permissions": "Same admitted reference_oracle six-axis task view as controls; no image/text/skeleton/geography/initial velocity/extra sensor/targets in forward/per-test fitting.",
+    "temporal_scope": "window_noncausal; only admitted T200 samples, no outside-window context or persistent fast weights/hidden state/maps.",
+    "risks": [
+      "Inner compute must be charged to measured efficiency; no free TTT-cost claim.",
+      "Per-forward parameter invariance, batch separability, independent windows, values and inner gradients await server tests.",
+      "Neither source vision results nor input-only adaptation establishes inertial superiority or online deployability."
+    ]
+  },
+  "scientific_contract": {
+    "input_shape": "B,6,200",
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "window": 200,
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "input_track": "reference_oracle_not_deployable",
+    "remove_gravity": false,
+    "history": 0,
+    "history_stride": 0,
+    "output_steps": 0,
+    "overlap": "mean",
+    "extra_inputs": [],
+    "target": "avg_velocity",
+    "output_layout": "window",
+    "dims": 3,
+    "output": "vel:B,3 real supervised XYZ average velocity in m/s; no zero-padded Z",
+    "xy_semantics": "XY is the slice of the same XYZ prediction, no second XY model/head",
+    "task_head": "Final LayerNorm, temporal mean of patch tokens, one Linear(d_model,3) XYZ head.",
+    "loss": "mse",
+    "training_initialization": "scratch_supervised",
+    "optional_ssl_or_auxiliary_recipe": "Not selected; any future source-specific loss requires separately named preregistered identity and budget."
+  },
+  "local_files": {
+    "model": "model.py",
+    "profile": "model_3d.yaml",
+    "provenance": "provenance.json",
+    "license": "LICENSE.upstream",
+    "server_only_tests": "test_scientific_contract.py"
+  },
+  "local_license_record": {
+    "file": "LICENSE.upstream",
+    "composition": "Exact unmodified fixed-commit root license bytes, including upstream copyright/appendix.",
+    "upstream_path": "LICENSE",
+    "bytes": 1141,
+    "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+    "raw_url": "https://raw.githubusercontent.com/LeapLabTHU/ViTTT/36eb23bfe2eca5cd4ad9ce01ef93bf8a89c6020f/LICENSE",
+    "notices": [
+      "Microsoft Corporation upstream MIT notice retained"
+    ],
+    "redistribution_boundary": "Source/license evidence only, not Owner/Legal approval for all repository code, dependencies, weights, datasets or derivative redistribution."
+  },
+  "verification": {
+    "completed": [
+      "Prior primary-source qualification reused with fixed evidence SHA",
+      "Actual fixed-core raw SHA and AST rechecked without execution",
+      "Current class/constructor args/model YAML read and matched statically",
+      "Exact root LICENSE fetched/hash verified/copied",
+      "Independent adaptation/initialization/readout differences recorded"
+    ],
+    "not_completed": [
+      "Framework/model/pytest import or collection",
+      "CPU/GPU forward/backward/tests or scientific numeric acceptance",
+      "Native lifecycle/checkpoint reload",
+      "Parameter/MAC/VRAM/latency measurements or capacity admission",
+      "Pilot/three-seed training/val/test/formal matrix admission"
+    ],
+    "pending_server_tests": [
+      "Independent SwiGLU/local inner-gradient equations and fast-weight forward values",
+      "Base-parameter immutability, per-sample grouped-conv separation and reset across input order",
+      "1D RoPE and three-tap neighborhoods/scale values",
+      "Real Z-only supervision, plain MSE rejection, canonical axes and deterministic eval/reload",
+      "Native lifecycle and full frozen-profile capacity after tail"
+    ],
+    "execution_order": "Every new model import, scientific test, CPU lifecycle, GPU capacity probe, training or evaluation only on AutoDL AFTER ALL original and previously queued tasks with audited tail-readiness and resource-handoff receipt; no automatic launch.",
+    "tail_guard": "Parent conftest.py requires audited IPB_CVPR2026_TAIL_READINESS; guard itself is an unexecuted draft, no pytest --collect-only bypass.",
+    "original_tasks_untouched": true,
+    "source_code_copied_wholesale": false
+  },
+  "runtime_actions_performed": [],
+  "formal_rows_added": 0
+}

@@ -1,0 +1,30 @@
+# Static draft only: execute after original tasks, with a new immutable receipt.
+name: pfgnet_velocity_3d_staging
+arch: pfgnet_velocity
+paper: https://openaccess.thecvf.com/content/CVPR2026/html/Cai_PFGNet_A_Fully_Convolutional_Frequency-Guided_Peripheral_Gating_Network_for_Efficient_CVPR_2026_paper.html
+code: https://github.com/fhjdqaq/PFGNet/tree/9db02476d14bfc457558ebd7fd0b2d68f47dd6fa
+license: Apache-2.0; LICENSE.upstream retained
+registered: false
+implementation_kind: architecture_core_port
+training: supervised_from_scratch
+causality: window_noncausal
+args:
+  d_model: 32
+  depth: 2
+  mlp_ratio: 2
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  history: 0
+  history_stride: 0
+  output_steps: 0
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}
