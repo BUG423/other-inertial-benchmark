@@ -1,0 +1,125 @@
+{
+  "schema": "ib.staging.cross-domain-baseline.provenance.v1",
+  "checked_date": "2026-10-14",
+  "method": "moderntcn_velocity",
+  "title": "ModernTCN: A Modern Pure Convolution Structure for General Time Series Analysis",
+  "venue": "ICLR 2024 Spotlight",
+  "published": true,
+  "authors": ["Donghao Luo", "Xue Wang"],
+  "primary": "https://openreview.net/forum?id=vpJMJerXHU",
+  "official_source": {
+    "repository": "https://github.com/luodhhh/ModernTCN",
+    "commit": "56a9a2c018385cd5acef015378cae7f084d1b11c",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2024 luodhhh",
+    "notice_path": "LICENSE.upstream",
+    "hash_convention": "SHA-256 of exact raw HTTP response bytes; no newline normalization",
+    "files": {
+      "README.md": {
+        "bytes": 4110,
+        "sha256": "4973eb06e1fe7f5e0e65a0bb81e29276ab7381c9a45bf0e5aa8bf18b9c995493"
+      },
+      "LICENSE": {
+        "bytes": 1064,
+        "sha256": "62c172f180a9c70514e597a2e3bd22f12d3eb6eb2af1cbd79c83d4292a749115"
+      },
+      "ModernTCN-classification/models/ModernTCN.py": {
+        "bytes": 15769,
+        "sha256": "ff510ce62aa9a8b7df26c2f7819a9cc499c4a93fb7b0067e22cc4fe3af58eaa3"
+      },
+      "ModernTCN-classification/scripts/classification.sh": {
+        "bytes": 4378,
+        "sha256": "84d8c8f393fc2a25b10eeaa92c034d122b273e5e23474ffee40d2e597324d9ea"
+      },
+      "ModernTCN-classification/run.py": {
+        "bytes": 12292,
+        "sha256": "ebe511d6221c5f65760b1b693a2fe31af9f621c69826c4dee22f19816eb74df9"
+      },
+      "ModernTCN-Long-term-forecasting/models/ModernTCN.py": {
+        "bytes": 18476,
+        "sha256": "daf74722e40d928e5ed6bc871b528a5d5d2c9090f30cafb89110cc88dc60fa30"
+      }
+    }
+  },
+  "implementation_kind": "architecture_port; compact adaptation of reviewed official classifier computation",
+  "source_task": "general time-series classification",
+  "profile_anchor": {
+    "script": "ModernTCN-classification/scripts/classification.sh",
+    "command": "EthanolConcentration (first command)",
+    "same_backbone_hyperparameters": true,
+    "universal_paper_default_claimed": false,
+    "widths": [32, 64],
+    "depths": [1, 1],
+    "large_kernels": [13, 13],
+    "small_kernels": [5, 5],
+    "patch_size": 8,
+    "patch_stride": 4,
+    "downsample_ratio": 2,
+    "ffn_ratio": 1,
+    "dropout": 0.1,
+    "port_trainable_params": {"xy": 88866, "xyz": 89251}
+  },
+  "fidelity_contract": {
+    "retained": [
+      "shared per-variable Conv1d patch embedding and BatchNorm",
+      "two source-anchored stages with BatchNorm and stride-two reduction",
+      "unmerged large/small depthwise Conv-BatchNorm branch sum",
+      "feature FFN grouped by six variables",
+      "permuted variable FFN grouped by embedded feature width",
+      "source GELU, dropout, post-temporal shared BatchNorm and one whole-block residual",
+      "source repeat-last stem and odd-token stride-two padding"
+    ],
+    "adapted": [
+      "ordered six-axis IMU gravity-world input at 200 Hz with retained gravity",
+      "classification GELU/dropout/flatten head replaced by temporal mean, ordered variable-feature flatten and one linear velocity head",
+      "classification supervision and UEA recipe replaced by shared benchmark average-velocity MSE and unified recipe",
+      "official task wrapper replaced by BaseModel/InputSpec without active registration"
+    ],
+    "omitted_unused_modules": [
+      "RevIN constructed but not called by official classification path",
+      "forecast head and forecasting-specific wrappers",
+      "unused stem_ratio and dw_dims constructor settings"
+    ],
+    "deferred": ["inference structural reparameterization", "export adapters"]
+  },
+  "input_contract": {
+    "shape": "B x 6 x T; YAML T=200",
+    "rate_hz": 200,
+    "channels": ["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"],
+    "frame": "gravity_world",
+    "draft_orientation": "reference",
+    "remove_gravity": false,
+    "extra_inputs": [],
+    "causality": "window_noncausal"
+  },
+  "output_contract": {
+    "layout": "window (B,D)",
+    "quantity": "average velocity",
+    "unit": "m/s",
+    "dimensions": [2, 3],
+    "primary_dimensions": 3,
+    "z": "actual learned third linear output; no padding or fabricated zero",
+    "xy_rule": "XYZ experiments slice their same XYZ prediction; separate XY draft is a separate declared run"
+  },
+  "training_contract": {
+    "initialization": "supervised_from_scratch",
+    "pretrained": false,
+    "loss": "mse",
+    "external_data_or_weights_downloaded": false
+  },
+  "engineering_assumptions": [
+    "released EthanolConcentration architecture is chosen as a traceable IMU PoC starting point",
+    "temporal mean and ordered linear head suit average-velocity supervision",
+    "common gravity-world input view and orientation permission require pilot validation",
+    "unified inertial training recipe is not the paper classification recipe"
+  ],
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "formal_2067_rows_changed": false,
+  "local_framework_runtime": "not_run; prohibited by AutoDL operations workflow",
+  "server_scientific_tests": "passed_on_AutoDL; source-qualified evidence in ../CPU_HANDOFF.md",
+  "server_default_profile_lifecycle": "passed_on_AutoDL_CPU; XY/XYZ engineering fixture, not accuracy",
+  "server_gpu_capacity": "not_run",
+  "three_seed_pilot": "not_run",
+  "paper_accuracy_reproduction": "not_established"
+}

@@ -1,6 +1,6 @@
 # 交付与执行总览
 
-> 状态基线：`dev/v1@92edf25`。本文建立于 2026-10-14，服务于当前冻结实验、结果验收和论文交付。
+> 状态基线：`dev/v1@8c1d818`。本文建立于 2026-10-14，服务于当前冻结实验、结果验收和论文交付。
 > 它不是实时监控面板，也不替代[冻结共同协议](protocols/common-benchmark-v1.json)、
 > [数据/实验状态](DEV_V1_INTEGRATION.md)或逐项机器收据。
 
@@ -65,19 +65,20 @@
 
 ## 5. 动态训练快照
 
-**事实，观测时间 2026-10-14 15:20 CST（UTC+08:00）**：
+**事实，观测时间 2026-10-14 17:35 CST（UTC+08:00）**：
 
 | 状态 | 单元数 | 解释 |
 | :--- | ---: | :--- |
-| completed | 614 | 执行状态为完成；仍须经过 L3 结果验收，不能直接等同 614 个可发表结果 |
+| completed | 643 | 执行状态为完成；仍须经过 L3 结果验收，不能直接等同 643 个可发表结果 |
 | running | 4 | 瞬时状态，下一次读取可变化 |
-| qualified | 1,400 | 已通过 taskview，但尚未进入终态 |
+| qualified | 1,371 | 已通过 taskview，但尚未进入终态 |
 | failed | 1 | CTIN/TLIO/seed 1735231569 的数值/科学失败；保留证据，未自动重试 |
 | unsupported_taskview | 48 | 冻结的不支持输入单元，保留为明确 N/A/unsupported |
 | **合计** | **2,067** | 与冻结 coverage 一致 |
 
 这个快照只回答“当时状态文件写了什么”。它不证明矩阵完成、模型收敛、结果有效或服务器随后仍保持相同计数。
-当前 completed 按 seed 为 238 / 189 / 187；按执行类型为 231 个训练、7 个校准、376 个仅评测。
+当前 completed 按 seed 为 267 / 189 / 187；按执行类型为 260 个训练、7 个校准、376 个仅评测；
+其中 637 个标记为 primary XYZ。冻结 source/policy/seed 身份无错误。
 已知至少一个历史 completed 单元存在空/无效 evaluation；因此不能把 `completed` 数直接写入论文结果覆盖数，
 必须先由 L3 matrix-report 记为 accepted 或 invalid。
 
@@ -95,6 +96,7 @@
 | AI-IMU-DR 分阶段移植 | `e5d66e7`、`93c2acc`、`05087ec` | 固定来源核心、全序列输出与 pair-cache；尚非正式矩阵方法 |
 | 评估别名复用 | `e795f9d` | exact CPU 等价复用证据；不等于正式 GPU 加速声明 |
 | KITTI 候选链 | `b25b5d9`、`92edf25` | raw/derived converter 与候选证据；保持正式 13 来源不变 |
+| 完成态与矩阵报告加固 | `8c1d818` | completed-state fail-closed 验收、matrix-aware report 与 178 项组合回归；尚未热部署到冻结训练源 |
 
 completed-state/result-report 加固已通过本地独立审查；是否已经提交以 Git 记录为准，且在产生服务器 preflight receipt 前，
 **不能写成已部署到当前冻结矩阵**。
@@ -124,6 +126,10 @@ completed-state/result-report 加固已通过本地独立审查；是否已经�
 ### P2：不得回填当前冻结矩阵的后续版本
 
 - 对“30 个独立论文方法”的口径和必要性作 Owner 决策；若继续扩展，单独建立 source/data/capacity/seed/version，不修改当前 2,067 行。
+- 按[跨领域架构 baseline 计划](CROSS_DOMAIN_BASELINES_PLAN.md)先隔离验证 ModernTCN、PatchTST、S4D 三种正交归纳偏置；
+  首批只做 staging 与预注册 pilot，TS-TCC/EEGNet/TimesNet 属第二批，不得用骨干或配置变体虚增论文方法数。
+  2026-10-14 17:36 CST 三者已完成独立服务器 CPU 科学/原生生命周期验收（108 passed）；
+  尚无 CUDA 容量或精度/三 seed 结果，新增正式方法为 0。
 - 候选数据或新增方法只有在来源、许可、真实输入/标签、完整 CPU 生命周期、CUDA 容量和科学协议全部通过后，才可进入下一版 inventory。
 - 下一版矩阵应先完成成本/价值评审；不能仅因已有候选 converter、网络核心或短 smoke 就启动付费全矩阵。
 
@@ -141,7 +147,7 @@ P0/P1 组合回归为 **178 passed / 0 failed**（另有 4 条既有 multiproces
 - checkpoint 使用流式快照，结果/identity/split 的解析与哈希使用同一受控字节视图；report 持久化 manifest 根哈希；
 - 现有旧 completed state 没有 `result_artifacts` 时仍可走严格的只读现场重验，不自动回填或改写历史 state。
 
-这表示代码具备生成首份可复核 partial snapshot 的条件，不表示远端 614 个 completed 已全部验收。新实现未热部署到当前运行源码；
+这表示代码具备生成首份可复核 partial snapshot 的条件，不表示远端所有 completed 已全部验收。新实现未热部署到当前运行源码；
 部署前仍须在服务器对旧 checkpoint/result 做只读 preflight，并由 Owner 决定已知 invalid completed 的重跑策略。
 
 ### 8.2 CTIN/TLIO 正式失败

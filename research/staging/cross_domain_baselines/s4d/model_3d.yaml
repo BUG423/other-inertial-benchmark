@@ -1,0 +1,29 @@
+# Source-qualified adapter; the S4D paper did not evaluate this IMU velocity task.
+name: s4d_lin_zoh_velocity_3d_staging
+arch: s4d_lin_zoh_velocity
+paper: https://papers.neurips.cc/paper_files/paper/2022/hash/e9a32fade47b906de908431991440f7c-Abstract-Conference.html
+code: https://github.com/state-spaces/s4/tree/e757cef57d89e448c413de7325ed5601aceaac13
+license: Apache-2.0 upstream; independent compact adaptation
+fidelity: official minimal S4D-Lin/ZOH kernel and example residual backbone with adapted velocity output
+registered: false
+training: supervised_from_scratch
+args:
+  d_model: 128
+  d_state: 64
+  n_layers: 4
+  dropout: 0.1
+  prenorm: false
+  dt_min: 0.001
+  dt_max: 0.1
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse
+recipes:
+  unified: {}

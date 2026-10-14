@@ -1,0 +1,118 @@
+{
+  "schema": "ib.staging.cross-domain-baseline.provenance.v1",
+  "checked_utc": "2026-10-14T09:25:11Z",
+  "method": "patchtst_ci_ordered_velocity",
+  "title": "A Time Series is Worth 64 Words: Long-term Forecasting with Transformers",
+  "venue": "ICLR 2023",
+  "published": true,
+  "authors": [
+    "Yuqi Nie",
+    "Nam H. Nguyen",
+    "Phanwadee Sinthong",
+    "Jayant Kalagnanam"
+  ],
+  "paper": {
+    "abstract_url": "https://arxiv.org/abs/2211.14730",
+    "pdf_url": "https://arxiv.org/pdf/2211.14730",
+    "version": "v2",
+    "pdf_bytes_observed": 4027069,
+    "pdf_sha256_observed": "ffd4021d25b4959883242f256b0fe4ec42f477f66db78c61bfacf7baa7848b0e"
+  },
+  "official_source": {
+    "repository": "https://github.com/yuqinie98/PatchTST",
+    "commit": "204c21efe0b39603ad6e2ca640ef5896646ab1a9",
+    "commit_observed_at_main": true,
+    "license": "Apache-2.0",
+    "files": {
+      "README.md": "7b45e8c686111038986b3b6e35b7e29338dad16eb1a9586a321be8a19d16ea7e",
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "PatchTST_supervised/models/PatchTST.py": "49d8bb865e1226d6338842f4b33c4bc6992cefb048dc2a4a5a8c410ca708586b",
+      "PatchTST_supervised/layers/PatchTST_backbone.py": "df67173153787c2356bdfb6491159cd754332ef7382986efe879e1fbea8ebf26",
+      "PatchTST_supervised/layers/PatchTST_layers.py": "21c06c70a90c60ee2a269b5c600c702834dea22cdfd72915e6b0f8b4a28db3f6",
+      "PatchTST_supervised/layers/RevIN.py": "e64c0ccded9228b347134e7368420d3fb10f70c75145b5ff2d8bdd8c3af59df6"
+    }
+  },
+  "implementation_kind": "independent compact adaptation; no upstream file vendored",
+  "fidelity_contract": {
+    "retained": [
+      "overlapping univariate patch tokens with repeat-last end padding",
+      "one linear patch projection shared across all channels",
+      "one position embedding and Transformer stack shared across all channels",
+      "shared channel-wise attention and feed-forward paths implemented by folding channels into the batch; train BatchNorm statistics pool across B*C and patch positions",
+      "vanilla multi-head attention, feed-forward residual blocks and temporal BatchNorm",
+      "residual attention scores across encoder layers",
+      "both attention output projection dropout and attention residual dropout before Add+Norm",
+      "learnable pe=zeros position embedding initialized uniformly in [-0.02,0.02] and shared across channels",
+      "upstream encoder feature layout B,C,D_model,N_patch"
+    ],
+    "adapted": [
+      "forecasting horizon head replaced by a single ordered linear D-dimensional window-average-velocity task adapter",
+      "task adapter flattens C,D_model,N_patch in this order and learns separate coefficients for fixed gyro/accelerometer and x/y/z channel identities; optional input dropout precedes its linear map",
+      "RevIN omitted because denormalizing six sensor channels into a 2D/3D velocity target is not dimensionally defined",
+      "gravity-world six-axis IMU input and 2D/3D average-velocity targets are benchmark adaptations"
+    ],
+    "excluded": [
+      "channel-mixing Transformer encoder",
+      "self-supervised masking or reconstruction",
+      "pretrained weights and fine-tuning",
+      "series decomposition"
+    ]
+  },
+  "training_contract": {
+    "default": "supervised_from_scratch",
+    "pretrained": false,
+    "loss": "mse",
+    "external_data_or_weights_downloaded": false
+  },
+  "input_contract": {
+    "channels": ["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"],
+    "channel_order_enforced": true,
+    "rate_hz": 200,
+    "unsupported_rates_rejected": true,
+    "profile_window_samples": 200,
+    "constructor_window_samples": "configurable; patch geometry validated",
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "remove_gravity": false,
+    "extra_inputs": [],
+    "extra_inputs_rejected": true
+  },
+  "task_adapter": {
+    "identity": "ordered_channel_feature_patch_linear_velocity",
+    "encoder_channel_independent": true,
+    "encoder_eval_channel_isolation": true,
+    "encoder_train_statistical_independence": false,
+    "encoder_output_layout": "B,C,D_model,N_patch",
+    "flatten_order": "C,D_model,N_patch",
+    "learned_channel_combination": "velocity task head only",
+    "final_velocity_permutation_invariant": false,
+    "causality": "window_noncausal; attention uses the full observed window",
+    "upstream_forecast_channel_identity": "preserved even with a shared forecasting head"
+  },
+  "output_contract": {
+    "layout": "window (B,D)",
+    "quantity": "average velocity",
+    "unit": "m/s",
+    "frame": "gravity_world",
+    "dims": [2, 3],
+    "xy_rule": "XYZ experiments evaluate XY by slicing the same XYZ prediction; the 2D draft is a separate run"
+  },
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "formal_2067_rows_changed": false,
+  "server_scientific_tests": "passed_on_AutoDL; source-qualified evidence in ../CPU_HANDOFF.md",
+  "server_native_lifecycle": "passed_on_AutoDL_CPU; XY/XYZ engineering fixture, not accuracy",
+  "server_gpu_capacity": "not_run",
+  "local_cpu_scientific_tests": "not_run_for_revised_source; framework runtime belongs on AutoDL",
+  "historical_superseded_local_cpu_observation": {
+    "status": "superseded; not current acceptance",
+    "old_method": "patchtst_ci_velocity",
+    "reason": "old mean head erased sensor and axis identities; old observation lacks source hashes and does not qualify revised code",
+    "observed_utc": "2026-10-14T08:41:29Z",
+    "passed": 12,
+    "failed": 0,
+    "runtime_seconds": 3.13,
+    "gpu_used": false
+  }
+}
+

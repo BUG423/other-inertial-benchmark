@@ -1,0 +1,87 @@
+{
+  "schema": "ib.staging.cross-domain-baseline.provenance.v1",
+  "checked_utc": "2026-10-14T09:25:56Z",
+  "method": "s4d_lin_zoh_velocity",
+  "title": "On the Parameterization and Initialization of Diagonal State Space Models",
+  "venue": "NeurIPS 2022",
+  "published": true,
+  "authors": ["Albert Gu", "Karan Goel", "Ankit Gupta", "Christopher Ré"],
+  "paper": {
+    "abstract_url": "https://papers.neurips.cc/paper_files/paper/2022/hash/e9a32fade47b906de908431991440f7c-Abstract-Conference.html",
+    "doi": "10.52202/068431-2607",
+    "pdf_hash_status": "not_recorded; direct retrieval failed with TLS EOF"
+  },
+  "official_source": {
+    "repository": "https://github.com/state-spaces/s4",
+    "commit": "e757cef57d89e448c413de7325ed5601aceaac13",
+    "license": "Apache-2.0",
+    "license_copy": "LICENSE.upstream",
+    "files": {
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "README.md": "a9f27287f594e161a50a44afe8af7dadec757cb7d0fbe5a46bef79c0a7965d2f",
+      "example.py": "5925911c0260379ce05d84a710d508e7b010a139504722ad405b99b20ac47aa6",
+      "models/s4/s4d.py": "4aab484e96dba85b2eba14f54c42df103a314a087ca184bfcca30e77d0faea2c",
+      "src/models/nn/__init__.py": "499b0fb6449625962b445ae2c22faa9751ed563b3b5e4e17559843f3ff15cd0c",
+      "src/models/nn/dropout.py": "4cbe734786c1149f8ed8d6d2bdced4a519c172afbfc8d369dc7f493cfdde027f"
+    }
+  },
+  "implementation_kind": "architecture_port; independent compact implementation; no upstream code file vendored",
+  "source_architecture": "official_minimal_s4d_lin_zoh",
+  "fidelity_contract": {
+    "retained": [
+      "S4D-Lin diagonal initialization: negative real part -0.5 and imaginary part pi*n",
+      "learnable per-feature log dt, conjugate-paired complex C and fixed continuous B=1",
+      "zero-order-hold diagonal discretization and Vandermonde convolution kernel",
+      "zero-state causal linear FFT convolution padded to twice window length",
+      "direct D skip, GELU, tied feature dropout and Conv1d-GLU pointwise mixing",
+      "four residual layers with post-LayerNorm by default and optional source prenorm",
+      "linear input projection, temporal mean pool and one linear output head"
+    ],
+    "adapted": [
+      "input projection accepts ordered gravity-world six-axis IMU instead of sequential image channels",
+      "classification output replaced with D-dimensional average velocity in m/s",
+      "cross entropy replaced with benchmark MSE",
+      "expm1 used for the mathematically identical ZOH numerator",
+      "Dropout1d used instead of upstream custom DropoutNd(tie=True)",
+      "shared benchmark optimization used; upstream selected-parameter LR/decay groups are not reproduced"
+    ],
+    "excluded": [
+      "full S4 custom kernels and non-diagonal HiPPO parameterization",
+      "S4D initialization or discretization variants beyond the fixed minimal S4D-Lin/ZOH source",
+      "streaming or cross-window carried state",
+      "pretraining, pretrained weights, auxiliary labels and selective Mamba dynamics"
+    ]
+  },
+  "training_contract": {
+    "default": "supervised_from_scratch",
+    "pretrained": false,
+    "loss": "mse",
+    "external_data_or_weights_downloaded": false,
+    "upstream_optimizer_groups_reproduced": false
+  },
+  "input_contract": {
+    "shape": "B,6,T; default T=200",
+    "channels": ["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"],
+    "rate_hz": 200,
+    "frame": "gravity_world",
+    "extra_inputs": [],
+    "history": 0,
+    "inference_causality": "window_noncausal; causal SSM internals, complete-window pooling",
+    "state_policy": "zero initial state independently for every window"
+  },
+  "output_contract": {
+    "layout": "window (B,D)",
+    "quantity": "average velocity",
+    "unit": "m/s",
+    "frame": "gravity_world",
+    "dims": [2, 3],
+    "xy_rule": "XYZ experiments slice the same XYZ prediction; 2D draft is a distinct run"
+  },
+  "active_registered": false,
+  "accepted_method_count_increment": 0,
+  "formal_2067_rows_changed": false,
+  "local_cpu_scientific_tests": {"status": "not_run; AutoDL-only policy"},
+  "server_scientific_tests": "passed_on_AutoDL; source-qualified evidence in ../CPU_HANDOFF.md",
+  "server_native_lifecycle": "passed_on_AutoDL_CPU; XY/XYZ engineering fixture, not accuracy",
+  "server_gpu_capacity": "not_run"
+}

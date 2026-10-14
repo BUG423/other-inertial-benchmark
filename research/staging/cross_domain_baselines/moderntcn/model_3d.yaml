@@ -1,0 +1,33 @@
+# Primary port profile; an IMU adaptation of the released Ethanol backbone.
+name: moderntcn_velocity_3d_staging
+arch: moderntcn_velocity
+paper: https://openreview.net/forum?id=vpJMJerXHU
+code: https://github.com/luodhhh/ModernTCN/tree/56a9a2c018385cd5acef015378cae7f084d1b11c
+license: MIT; upstream notice retained in LICENSE.upstream
+registered: false
+implementation_kind: architecture_port
+training: supervised_from_scratch
+causality: window_noncausal
+args:
+  patch_size: 8
+  patch_stride: 4
+  widths: [32, 64]
+  depths: [1, 1]
+  large_kernels: [13, 13]
+  small_kernels: [5, 5]
+  ffn_ratio: 1
+  downsample_ratio: 2
+  dropout: 0.1
+  pretrained: false
+input:
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+  extra_inputs: []
+loss: mse
+recipes:
+  unified: {}

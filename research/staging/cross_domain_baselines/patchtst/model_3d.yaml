@@ -1,0 +1,39 @@
+# XYZ adaptation; not a claim that the forecasting paper evaluated inertial 3D velocity.
+name: patchtst_ci_ordered_velocity_3d_staging
+arch: patchtst_ci_ordered_velocity
+paper: https://arxiv.org/abs/2211.14730
+code: https://github.com/yuqinie98/PatchTST/tree/204c21efe0b39603ad6e2ca640ef5896646ab1a9
+license: Apache-2.0 upstream; independent compact adaptation
+fidelity: PatchTST shared channel-independent encoder plus benchmark ordered C-D-N linear velocity adapter
+task_adapter: ordered_channel_feature_patch_linear_velocity
+causality: window_noncausal
+encoder_output_layout: B,C,D,N
+head_flatten_order: C,D,N
+input_channels: [gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z]
+registered: false
+training: supervised_from_scratch
+args:
+  patch_len: 16
+  stride: 8
+  d_model: 128
+  n_heads: 16
+  n_layers: 3
+  d_ff: 256
+  dropout: 0.2
+  attention_dropout: 0.0
+  head_dropout: 0.0
+  pad_end: true
+  pretrained: false
+input:
+  extra_inputs: []
+  window: 200
+  rate: 200
+  frame: gravity_world
+  orientation: reference
+  remove_gravity: false
+  target: avg_velocity
+  dims: 3
+loss: mse
+recipes:
+  unified: {}
+
