@@ -10,7 +10,7 @@ import math
 import random
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 import torch
@@ -64,7 +64,8 @@ class Trainer:
     """训练器。``Trainer(overrides={...}).train()`` 返回最终（best 权重在 val 上的）指标。"""
 
     def __init__(self, cfg: Any = None, overrides: Optional[dict] = None,
-                 callbacks: Optional[dict] = None, save_dir: Optional[Path] = None) -> None:
+                 callbacks: Optional[dict] = None, save_dir: Optional[Path] = None,
+                 protocol_factory: Optional[Callable] = None) -> None:
         overrides = dict(overrides or {})
         overrides["mode"] = "train"
         self.resume_ckpt = None
@@ -76,6 +77,10 @@ class Trainer:
                 if isinstance(exported, dict) and exported.get("schema") == SCHEMA:
                     raise ConfigError("inference export cannot resume training: use the original "
                                       "training checkpoint, or start a new train with pretrained weights")
+                if ckpt.get("schema") == "ipb-protocol-inference-v1":
+                    raise ConfigError("protocol inference payload cannot resume D/G training")
+                if ckpt.get("protocol_checkpoint_schema") and protocol_factory is None:
+                    raise ConfigError("complete-pair checkpoint requires its explicit typed protocol factory")
 
             value = overrides["resume"]
             automatic = value is True or isinstance(value, str) and value.lower() in ("true", "1")
@@ -107,6 +112,8 @@ class Trainer:
         self.sequence_model = False
         self.budget: dict = {}
         self.stopper = EarlyStopping(int(self.args.patience))
+        self.protocol_factory = protocol_factory
+        self.protocol_binding = None
 
     # ------------------------------------------------------------------ 准备
     @staticmethod
@@ -122,6 +129,14 @@ class Trainer:
     def add_callback(self, event: str, fn) -> None:
         add_callback(self.callbacks, event, fn)
 
+    def _emit_callback(self, event: str) -> None:
+        if self.protocol_binding is None:
+            run_callbacks(self.callbacks, event, self)
+        else:
+            from .training_protocol import preserve_rng_and_modes
+            with preserve_rng_and_modes(self.model):
+                run_callbacks(self.callbacks, event, self)
+
     def _close_log(self) -> None:
         """移除并关闭本次运行的文件日志句柄（可重复调用）。"""
         handler = getattr(self, "_log_handler", None)
@@ -132,7 +147,7 @@ class Trainer:
 
     def setup(self) -> None:
         a = self.args
-        run_callbacks(self.callbacks, "on_pretrain_routine_start", self)
+        self._emit_callback("on_pretrain_routine_start")
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.wdir.mkdir(parents=True, exist_ok=True)
         self._log_handler = add_file_handler(self.save_dir / "log.txt")
@@ -140,6 +155,10 @@ class Trainer:
         self.device = select_device(a.device)
         self.amp = bool(a.amp) and self.device.type == "cuda"
         self.spec = resolve_dataset(a.data)
+
+        if self.protocol_factory is not None:
+            self._setup_protocol()
+            return
 
         self.train_set = build_dataset(a, "train", training=True, spec=self.spec)
         if len(self.train_set) == 0:
@@ -171,7 +190,36 @@ class Trainer:
                   {**a.to_dict(), "protocol": protocol_from_cfg(a)})
         self.env = collect_env(self.device, self.spec)
         json_save(self.save_dir / "env.json", self.env)
-        run_callbacks(self.callbacks, "on_pretrain_routine_end", self)
+        self._emit_callback("on_pretrain_routine_end")
+
+    def _setup_protocol(self) -> None:
+        """Opt-in setup, without an unused loader or all-parameter optimizer."""
+        from .protocol_binding import ProtocolSetupContext, ProtocolTrainerBinding
+
+        context = ProtocolSetupContext(self.args, self.device, self.spec)
+        binding = self.protocol_factory(context)
+        if not isinstance(binding, ProtocolTrainerBinding):
+            raise TypeError("protocol_factory must return a typed ProtocolTrainerBinding")
+        binding.validate_setup(context)
+        self.protocol_binding = binding
+        self.model = binding.model
+        self.train_set, self.val_set = binding.train_set, binding.val_set
+        self.val_sources = [self.val_set.sequence_view(k)
+                            for k in range(len(self.val_set.sequence_ids))]
+        self.train_loader = None
+        self.optimizer = self.scheduler = self.scaler = None
+        self.sequence_model = False
+        self.validator = Validator(self.args, callbacks=self.callbacks)
+        self.env = collect_env(self.device, self.spec)
+        if self.resume_ckpt is not None:
+            self._load_resume_state()
+        yaml_save(self.save_dir / "args.yaml", {**self.args.to_dict(),
+                  "protocol": protocol_from_cfg(self.args),
+                  "training_protocol_identity": binding.protocol.identity.sha256})
+        json_save(self.save_dir / "env.json", self.env)
+        LOGGER.info(f"complete-pair protocol: {len(self.train_set)} source windows; "
+                    f"G/D optimizers={list(binding.protocol.optimizers)}, source-only validation")
+        self._emit_callback("on_pretrain_routine_end")
 
     def resolve_epoch_budget(self) -> None:
         """等窗口预算：把 ``train_windows_budget`` 换算成本数据集的 ``epochs``（见 ``budget.py``）。
@@ -193,6 +241,15 @@ class Trainer:
 
     def _load_resume_state(self) -> None:
         ckpt = load_checkpoint(self.resume_ckpt, map_location=self.device)
+        if self.protocol_binding is not None:
+            self.start_epoch = self.protocol_binding.load_training(ckpt)
+            self.stopper.load_state_dict(ckpt.get("stopper", {}))
+            if self.csv.exists():
+                with open(self.csv, encoding="utf-8") as f:
+                    rows = [r for r in csv.DictReader(f) if int(r["epoch"]) < self.start_epoch]
+                self._write_rows(rows)
+            LOGGER.info(f"resuming complete-pair source epoch {self.start_epoch}; committed cursor preserved")
+            return
         self.model.load_state_dict(ckpt["model"])
         evidence = ckpt.get('training_evidence') or {}
         model = de_parallel(self.model)
@@ -234,6 +291,8 @@ class Trainer:
         torch.cuda.manual_seed_all(seed)
 
     def train_one_epoch(self, epoch: int) -> dict:
+        if self.protocol_binding is not None:
+            return self.train_protocol_pairs(epoch)
         a = self.args
         model = self.model
         if isinstance(de_parallel(model), SequenceModel):
@@ -246,7 +305,7 @@ class Trainer:
         grad_clip = float(a.grad_clip)
         for batch_idx, batch in enumerate(self.train_loader):
             self.batch = batch
-            run_callbacks(self.callbacks, "on_train_batch_start", self)
+            self._emit_callback("on_train_batch_start")
             x = batch["imu"].to(self.device, non_blocking=True)
             y = batch["target"].to(self.device, non_blocking=True)
             mask = batch["mask"].to(self.device, non_blocking=True)
@@ -285,7 +344,7 @@ class Trainer:
             count += n
             for k, v in items.items():
                 items_sum[k] = items_sum.get(k, 0.0) + float(v) * n
-            run_callbacks(self.callbacks, "on_train_batch_end", self)
+            self._emit_callback("on_train_batch_end")
         if actual_optimizer_updates:
             trained = de_parallel(model)
             trained._ipb_trained_epoch = epoch
@@ -295,6 +354,38 @@ class Trainer:
         out.update({f"train/{k}": v / max(count, 1) for k, v in items_sum.items()
                     if f"train/{k}" != "train/loss"})
         return out
+
+    def train_protocol_pairs(self, epoch: int, max_pairs: Optional[int] = None) -> dict:
+        """Execute committed pairs in this Trainer; a bound preserves a partial epoch.
+
+        ``max_pairs`` is an explicit engineering interruption boundary, not a
+        training recipe override. Normal ``train_one_epoch`` consumes the source
+        pass. No global reseeding occurs when a committed cursor is resumed.
+        """
+        binding = self.protocol_binding
+        if binding is None:
+            raise RuntimeError("no typed protocol is configured")
+        if max_pairs is not None and (type(max_pairs) is not int or max_pairs < 1):
+            raise ValueError("max_pairs must be a positive integer")
+        binding.begin_epoch(epoch)
+        self.epoch = epoch
+        self.model.train()
+        count = 0
+        while max_pairs is None or count < max_pairs:
+            if binding.protocol.stream.source.exhausted:
+                break
+            self.batch = {"protocol": binding.protocol.identity.protocol,
+                          "next_pair": binding.protocol.stream.pairs + 1}
+            self._emit_callback("on_train_batch_start")
+            pair = binding.protocol.step()
+            if pair is None:
+                break
+            self.batch = pair
+            count += 1
+            # Complete-pair evidence is distinct from completed-source-epoch evidence.
+            self.model._ipb_protocol_pair_evidence = binding.evidence()
+            self._emit_callback("on_train_batch_end")
+        return binding.row()
 
     def calibrate_once(self, epoch: int) -> dict:
         """序列级模型没有梯度训练：只在 **train 划分**上拟合一次标定标量。
@@ -317,8 +408,17 @@ class Trainer:
         return row
 
     def validate(self, epoch: int) -> dict:
-        result = self.validator(model=self.model, sources=self.val_sources, device=self.device,
-                                epoch=epoch, dataset=self.spec, split="val")
+        if self.protocol_binding is None:
+            result = self.validator(model=self.model, sources=self.val_sources, device=self.device,
+                                    epoch=epoch, dataset=self.spec, split="val")
+        else:
+            with self.protocol_binding.source_evaluation() as model:
+                result = self.validator(model=model, sources=self.val_sources, device=self.device,
+                                        epoch=epoch, dataset=self.spec, split="val")
+            result.cfg.update(training_protocol=self.protocol_binding.protocol.identity.protocol,
+                              loss_semantics="source_polar_velocity_diagnostic",
+                              validation_domain="source", inference_domain=0,
+                              target_labels_used=False)
         self.val_result = result
         return result.metrics
 
@@ -349,23 +449,29 @@ class Trainer:
         LOGGER.info(f"train: {self.spec.name}, {len(self.train_set)} windows, "
                     f"{len(self.val_sources)} val sequences, epochs {self.start_epoch}->{epochs}, "
                     f"save_dir={self.save_dir}")
-        run_callbacks(self.callbacks, "on_train_start", self)
+        self._emit_callback("on_train_start")
         t_start = time.time()
         epoch = self.start_epoch - 1
         try:
             for epoch in range(self.start_epoch, epochs):
                 self.epoch = epoch
                 t0 = time.time()
-                run_callbacks(self.callbacks, "on_train_epoch_start", self)
+                self._emit_callback("on_train_epoch_start")
                 row = {"epoch": epoch, **self.train_one_epoch(epoch)}
-                row["lr"] = self.optimizer.param_groups[0]["lr"]
-                run_callbacks(self.callbacks, "on_train_epoch_end", self)
+                if self.protocol_binding is None:
+                    row["lr"] = self.optimizer.param_groups[0]["lr"]
+                else:
+                    rates = self.protocol_binding.learning_rates()
+                    row["lr"] = rates["generator"]
+                    row.update({f"lr/{k}": v for k, v in rates.items()})
+                self._emit_callback("on_train_epoch_end")
                 is_plateau = isinstance(self.scheduler,
                                         torch.optim.lr_scheduler.ReduceLROnPlateau)
-                if not is_plateau and not self.sequence_model:
+                if not is_plateau and not self.sequence_model and self.protocol_binding is None:
                     self.scheduler.step()
                 last_epoch = epoch == epochs - 1
                 improved = False
+                val = None
                 if (epoch + 1) % int(a.val_interval) == 0 or last_epoch:
                     val = self.validate(epoch)
                     row.update({f"val/{k}": v for k, v in val.items()
@@ -378,18 +484,27 @@ class Trainer:
                     if is_plateau:
                         self.scheduler.step(val.get("loss", fit))
                     self.metrics = val
+                if self.protocol_binding is not None:
+                    binding = self.protocol_binding
+                    binding.protocol.complete_epoch(val.get("loss") if val is not None else None)
+                    row["train/source_epoch_complete"] = True
+                    evidence = binding.evidence()
+                    self.model._ipb_protocol_pair_evidence = evidence
+                    self.model._ipb_trained_epoch = epoch
+                    self.model._ipb_epoch_optimizer_updates = 2 * int(binding.protocol.aggregates["pairs"])
+                    self.model._ipb_optimizer_updates = evidence["generator_steps"] + evidence["discriminator_steps"]
                 row["time"] = time.time() - t0
                 self.save_model(epoch, improved)
                 self._append_row(row)
                 LOGGER.info(self._epoch_summary(row, improved))
-                run_callbacks(self.callbacks, "on_fit_epoch_end", self)
+                self._emit_callback("on_fit_epoch_end")
                 if epoch + 1 >= int(self.args.min_epochs) and self.stopper.should_stop(epoch):
                     break
             self.final_eval(epoch)
             LOGGER.info(f"train: done in {(time.time() - t_start) / 60:.2f} min, "
                         f"best {a.fitness_stat} {a.fitness}={self.stopper.best:.4f} "
                         f"(epoch {self.stopper.best_epoch}), weights → {self.best}")
-            run_callbacks(self.callbacks, "on_train_end", self)
+            self._emit_callback("on_train_end")
         finally:
             self._close_log()
             device = getattr(self, "device", None)
@@ -409,6 +524,8 @@ class Trainer:
 
     # ------------------------------------------------------------------ 保存与记录
     def checkpoint(self, epoch: int) -> dict:
+        if self.protocol_binding is not None:
+            return self._protocol_checkpoint(epoch)
         model = de_parallel(self.model)
         return {
             "epoch": epoch,
@@ -433,6 +550,37 @@ class Trainer:
             "version": __version__,
         }
 
+    def _protocol_checkpoint(self, epoch: int) -> dict:
+        from dataclasses import asdict
+        from .protocol_binding import CHECKPOINT_SCHEMA
+        from .training_protocol import immutable_copy
+
+        binding = self.protocol_binding
+        binding.ensure_trainable()
+        if epoch != binding.epoch:
+            raise ValueError("checkpoint epoch differs from the committed source cursor")
+        state = binding.protocol.state_dict()
+        evidence = binding.evidence()
+        return {"protocol_checkpoint_schema": CHECKPOINT_SCHEMA,
+                "protocol_identity": asdict(binding.protocol.identity),
+                "protocol_identity_sha256": binding.protocol.identity.sha256,
+                "protocol_recipe": asdict(binding.protocol.recipe),
+                "protocol_permission_identity": immutable_copy(binding.permission_identity),
+                "protocol_execution_identity": immutable_copy(binding.execution_identity),
+                "protocol_training": state, "protocol_training_evidence": evidence,
+                "epoch": epoch, "model": state["model"],
+                "model_cfg": to_builtin(self.model.model_cfg),
+                "model_name": str(self.model.model_cfg.get("name")),
+                "input_spec": self.model.input_spec.to_dict(), "cfg": to_builtin(self.args.to_dict()),
+                "optimizer": None, "scheduler": None, "scaler": None,
+                "stopper": self.stopper.state_dict(), "best_fitness": self.stopper.best,
+                "metrics": to_builtin(self.metrics), "git": self.env.get("git"),
+                "dataset_fingerprint": binding.protocol.identity.source.dataset_fingerprint,
+                "training_evidence": {"completed_epoch": epoch if evidence["source_epoch_complete"] else None,
+                                      "epoch_optimizer_updates": 2 * int(binding.protocol.aggregates["pairs"]),
+                                      "total_optimizer_updates": evidence["generator_steps"] + evidence["discriminator_steps"]},
+                "date": _dt.datetime.now(_dt.timezone.utc).isoformat(), "version": __version__}
+
     def save_model(self, epoch: int, improved: bool) -> None:
         """先写 ``best.pt`` 再写 ``last.pt``。
 
@@ -446,7 +594,7 @@ class Trainer:
         period = int(self.args.save_period)
         if period > 0 and (epoch + 1) % period == 0:
             save_checkpoint(self.wdir / f"epoch{epoch + 1}.pt", ckpt)
-        run_callbacks(self.callbacks, "on_model_save", self)
+        self._emit_callback("on_model_save")
 
     def _write_rows(self, rows: list) -> None:
         header: list = []
@@ -621,6 +769,9 @@ class Trainer:
 
     def final_eval(self, epoch: int) -> None:
         """用 best 权重在 val 上做最终评测并写出 ``metrics.json`` 等文件（不触碰 test）。"""
+        if self.protocol_binding is not None:
+            self._final_eval_protocol(epoch)
+            return
         if not self.best.exists():
             LOGGER.warning("no finite fitness was recorded; using last.pt as best.pt")
             save_checkpoint(self.best, load_checkpoint(self.last))
@@ -660,4 +811,40 @@ class Trainer:
         slim = dict(ckpt)
         for key in ("optimizer", "scheduler", "scaler"):
             slim[key] = None
+        save_checkpoint(self.best, slim)
+
+    def _final_eval_protocol(self, epoch: int) -> None:
+        """Source-only best evaluation; never combine best weights with last opt evidence."""
+        if not self.best.exists():
+            save_checkpoint(self.best, load_checkpoint(self.last))
+        ckpt = load_checkpoint(self.best, map_location=self.device)
+        binding = self.protocol_binding
+        binding.load_best_for_inference(ckpt)
+        self.validate(int(ckpt["epoch"]))
+        result = self.val_result
+        result.weights, result.env = str(self.best), self.env
+        result.cfg.update(self.args.to_dict())
+        result.cfg.update(training_protocol=binding.protocol.identity.protocol,
+                          loss_semantics="source_polar_velocity_diagnostic",
+                          validation_domain="source", inference_domain=0, target_labels_used=False)
+        payload = result.to_dict()
+        payload.update(mode="train", best_epoch=int(ckpt["epoch"]), last_epoch=epoch,
+                       epochs=int(self.args.epochs), protocol_identity=ckpt["protocol_identity"],
+                       protocol_training_evidence=ckpt["protocol_training_evidence"],
+                       public_NIO_protocol_export_supported=False)
+        # Reuse the same native diagnostic on a source-only inference wrapper.
+        # Its loss is explicitly a source diagnostic, not any GAN objective.
+        original = self.model
+        try:
+            with binding.source_evaluation() as model:
+                self.model = model
+                payload["train_eval_gap"] = self.train_eval_gap(epoch=int(ckpt["epoch"]))
+        finally:
+            self.model = original
+        result.save(self.save_dir, predictions=bool(self.args.save_predictions),
+                    plots=bool(self.args.plots), max_plots=int(self.args.max_plots))
+        json_save(self.save_dir / "metrics.json", payload)
+        self.metrics = result.metrics
+        slim = dict(ckpt)
+        slim["protocol_training"] = None
         save_checkpoint(self.best, slim)
