@@ -9,6 +9,7 @@
 | [DEV_V1_INTEGRATION.md](DEV_V1_INTEGRATION.md) | 本轮 CPU/GPU 阶段、数据接入与未完成增量 |
 | [DELIVERY_EXECUTION_PLAN.md](DELIVERY_EXECUTION_PLAN.md) | 最终目的、五层交付判据、冻结范围、任务编排与待决策事项 |
 | [FORMAL_PARTIAL_RESULTS_HANDOFF.md](FORMAL_PARTIAL_RESULTS_HANDOFF.md) | 首份只读部分结果的收据、可用性和 seed 覆盖；不代表矩阵或全链完成 |
+| [FORMAL_FULL_CHAIN_PREFLIGHT_PLAN.md](FORMAL_FULL_CHAIN_PREFLIGHT_PLAN.md) | validation 元信息诊断及 identity/checkpoint/transfer 全链验收编排；完整 preflight 未执行 |
 | [CROSS_DOMAIN_BASELINES_PLAN.md](CROSS_DOMAIN_BASELINES_PLAN.md) | 跨领域算法迁移的来源、适配与隔离验收；不改变当前冻结矩阵 |
 | [DESIGN.md](DESIGN.md) | 架构、v1 数据契约、任务视图、推理与评价 |
 | [CLI.md](CLI.md) | 实际命令、配置、矩阵与输出文件 |

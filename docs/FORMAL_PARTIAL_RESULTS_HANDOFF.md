@@ -18,13 +18,46 @@
 649 个 completed cells 均至少有一个 accepted 测试 split；XYZ 643、原生二维参考 6。
 它们按 seed 为 273 / 189 / 187。测试范围 **0 invalid / 0 rejected**，
 但本工具不消费 train/val 结果，也不检查 checkpoint 或 transfer provenance；
-所以不能据此取消历史空 validation、checkpoint 身份或 completed-state 全链验收风险。
+所以不能据此关闭 validation、checkpoint 身份或 completed-state 全链验收。
+历史摘要的空 validation 疑点尚无具体单元与原始证据；后续限定 completed 的 280 个训练/标定单元元信息检查均非空，
+不能把该疑点直接称为已确认 invalid，也不能将非空检查升级为完整 validation 验收。
+该诊断的原始输出、时间限制和后续验收编排见[全链 preflight 计划](FORMAL_FULL_CHAIN_PREFLIGHT_PLAN.md)。
 
 569 个汇总 strata 中，**341 有三 seed、228 只有一个 seed**，没有两 seed stratum。
 这些是 dataset/split/model/input track/dimension/domain/training source/privilege 分层，
-不是 341 个独立方法或完整实验；三 seed 数量齐全尚不证明逐序列 ID 和 group ID 已精确配对。
+不是 341 个独立方法或完整实验；不能仅凭三 seed 数量判断配对。
+后续 18:33 CST 的独立覆盖审计已确认这 341 个 strata 的逐序列 ID 集合相等且 group ID 一致，见下节。
 全部 accepted 结果属于 **`reference_oracle`**，不能称为 deployable 纯 IMU 主表。
 partial 覆盖不可用于最终全域排名、挑选种子或提前停止模型。
+
+## 三 seed 逐序列配对覆盖审计
+
+**实际执行 18:33:00.379–18:33:05.140 CST**（UTC `10:33:00.379714–10:33:05.140399`），
+`passed_coverage_audit / exit 0`。输入仍是本页 17:58:50–17:59:01 的冻结 partial report，
+不包含后来完成的单元，不重新运行 test，也不修改原报告或 state。
+
+- **341 complete_paired / 228 incomplete / 0 issues**：三 seed 完整分组的 sequence ID 集合精确相等，
+  group ID 在 seed 内和跨 seed 一致，无重复序列或数量矛盾。
+- 2,067 matrix row IDs、1,251 accepted evaluations、23,788 逐序列行及 569 summary strata 全部与原 manifest/ledger 相符。
+  `n_sequences` 按 `(sequence_id,group_id)` 唯一数核对，不混成原生录制总数。
+- 每份 CSV 各自使用单个受控 fd 同时逐行投影与原字节 SHA；完整读取/hash 均通过。
+  仅保留科学身份、seed、sequence/group ID 和数量，**不分析指标值、排名或置信区间**。
+- 总 wall **4.76 秒**，采样峰值 RSS **70,950,912 bytes**；单 CPU、nice +10、无框架/CUDA。
+  512 MiB 是行检查点处至多每 250 ms 采样的终止阈值，不是内核硬限。
+- supplemental lease 实际取得/关闭/释放；正式/分析 source、policy、seed、coverage、13 native guards 前后不变。
+
+| 审计身份 | SHA256 |
+| :--- | :--- |
+| pairing runner（29,933 bytes） | `2b55fd80c0bf0a773f0cb4b7cec28f47fe12d2ef0edaa56380c80edfaadf59af` |
+| support（原 partial supervisor，同 bytes） | `572a514e1629eb93593acb10b3d77ef4d2351f24e0793bdfab22a457045eb969` |
+| pairing request | `3655a998e7a5844c3238ffb68360c1d7afb2016a0b4527afe6975ff6c1e084c4` |
+| 原始 pairing supervisor receipt | `d461021e983edc9abef246bd8fec08a71c82904fec63ee9d07f780d894eeddd9` |
+| pairing.json | `e466333c7f61c4c067eb387a5bd38a2d2466f0b22caf9d22524b231d59ffb70c` |
+
+服务器与本机原字节镜像位于 `.local/reports/pairing-20261014T103257Z/`；
+服务器 runner/support/request 位于 `.local/research/matrix-report-pairing/2b55fd80c0bf-20261014T103257Z/`。
+该审计只关闭 **seed/sequence/group 覆盖一致性**：不证明每项指标有限、方法间配对成立、checkpoint/transfer 全链通过，
+也不代表三 seed 全矩阵完成或新的科学机制主张。228 个单 seed strata 不补值、不删记录。
 
 ## 可用性台账
 
@@ -110,6 +143,7 @@ PYTHONPATH=<immutable-analysis>/src CUDA_VISIBLE_DEVICES='' \
 
 下一步可直接推进：按冻结协议编排论文级 XYZ / 同预测 XY / 原二维参考 / 同域-跨域 / seed-coverage 表，
 继续只读监控并在新 snapshot 中消费新增结果；三 seed 未齐的 strata 必须明确标记不完整。
+本页的配对覆盖审计已通过，但完整的 XYZ/XY/方法间配对统计与 checkpoint 全链尚未完成。
 `summary.csv` 目前只汇总八项 MAIN_METRICS，`xy_*` 保留于逐序列表；完整 XY/置信区间/统计表属于 P1.2。
 
 仍需完成 checkpoint/transfer/validation 全链只读验收、剩余正式训练、trajectory-shortening 预注册研究、
