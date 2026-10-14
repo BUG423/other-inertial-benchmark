@@ -35,13 +35,14 @@ class Validator:
 
     def __init__(self, cfg: Any = None, save_dir: Optional[Path] = None,
                  callbacks: Optional[dict] = None, overrides: Optional[dict] = None,
-                 label: Optional[str] = None) -> None:
+                 label: Optional[str] = None, alias_session: Any = None) -> None:
         self.args = cfg if cfg is not None else get_cfg(overrides)
         self.save_dir = Path(save_dir) if save_dir else None
         self.label = label  # 结果中的模型名（缺省取模型配置名）
         self.callbacks = callbacks or default_callbacks()
         self.result: Optional[RunResult] = None
         self.metrics: dict = {}
+        self.alias_session = alias_session
 
     def metric_kwargs(self) -> dict:
         a = self.args
@@ -98,7 +99,17 @@ class Validator:
                         f"({len(sources)} sequences) → {self.save_dir}")
         try:
             t0 = time.time()
-            result = self.evaluate(predictor, sources, epoch, spec.name, split)
+            attempt = None
+            result = None
+            # Preserve every fresh Predictor/checkpoint constructor and its RNG
+            # consumption. Sharing is confined to standalone final tests.
+            if self.alias_session is not None and standalone and model is None:
+                attempt = self.alias_session.prepare(predictor, self.args, split, epoch,
+                                                     self.callbacks)
+                if attempt is not None:
+                    result = self.alias_session.lookup(attempt, self.args, spec.name, split)
+            if result is None:
+                result = self.evaluate(predictor, sources, epoch, spec.name, split)
             result.cfg['loss_evaluation_epoch'] = epoch
             result.cfg['loss_evaluation_epoch_source'] = epoch_source if standalone else 'trainer_explicit'
             if self.label:
@@ -118,6 +129,8 @@ class Validator:
                 json_save(self.save_dir / "env.json", result.env)
                 result.save(self.save_dir, predictions=bool(self.args.save_predictions),
                             plots=bool(self.args.plots), max_plots=int(self.args.max_plots))
+                if self.alias_session is not None:
+                    self.alias_session.finish(attempt, predictor, result, self.args, self.save_dir)
                 LOGGER.info(result.summary() + f" [{time.time() - t0:.1f}s]")
         finally:
             if handler is not None:

@@ -40,7 +40,8 @@ from ..utils import CFG_DIR, LOGGER, json_load, json_save, to_builtin, yaml_load
 PathLike = Union[str, Path]
 # 基准 YAML 允许的顶层键
 PLAN_KEYS = ("name", "project", "models", "datasets", "seeds", "splits", "overrides", "report",
-             "continue_on_error", "native_registry", "seed_record", "policy", "admission")
+             "continue_on_error", "native_registry", "seed_record", "policy", "admission",
+             "eval_alias_reuse")
 # 评测时不需要的训练专用键
 TRAIN_ONLY = ("epochs", "train_windows_budget", "budget_max_epochs",
               "batch", "lr", "optimizer", "momentum", "weight_decay", "scheduler",
@@ -60,6 +61,7 @@ class BenchmarkItem:
     splits: Optional[list] = None
     root: Path = Path(".")
     metadata: dict = field(default_factory=dict)
+    eval_alias_reuse: bool = False
 
     @property
     def run_dir(self) -> Path:
@@ -186,8 +188,12 @@ def scientific_run_identity(item: BenchmarkItem) -> dict:
     keys = ('dataset_fingerprint', 'dataset_manifest_sha256', 'split_sha256',
             'profile_config_sha256', 'scientific_input_spec', 'sampling_spec', 'input_track',
             'policy_sha256', 'source_manifest_sha256', 'transfer_checkpoint_sha256')
-    return {**{key: meta.get(key) for key in keys}, 'profile': item.label, 'seed': item.seed,
-            'seed_record_sha256': meta['seeds_record_sha256'], 'overrides': item.overrides}
+    identity = {**{key: meta.get(key) for key in keys}, 'profile': item.label, 'seed': item.seed,
+                'seed_record_sha256': meta['seeds_record_sha256'], 'overrides': item.overrides}
+    if item.eval_alias_reuse:
+        from .eval_aliases import ALIAS_POLICY
+        identity['eval_alias_policy'] = dict(ALIAS_POLICY)
+    return identity
 
 
 def dependency_order(items: list) -> list:
@@ -278,6 +284,9 @@ def load_plan(cfg: Union[PathLike, Mapping], overrides: Optional[dict] = None) -
     unknown = set(spec) - set(PLAN_KEYS)
     if unknown:
         raise ConfigError(f"unknown benchmark keys: {sorted(unknown)}")
+    alias_reuse = spec.get('eval_alias_reuse', False)
+    if type(alias_reuse) is not bool:
+        raise ConfigError('eval_alias_reuse must be a boolean')
     name = spec.get("name") or (Path(str(cfg)).stem if not isinstance(cfg, Mapping) else "bench")
     common = {**(spec.get("overrides") or {}), **(overrides or {})}
     # 输出根目录：命令行的 project= 优先于 YAML（同一份矩阵可以写到别的盘而不改配置）
@@ -315,7 +324,8 @@ def load_plan(cfg: Union[PathLike, Mapping], overrides: Optional[dict] = None) -
                                 "profile_config_sha256": _sha(CFG_DIR / 'models' / f'{Path(str(model)).stem}.yaml')}
                     metadata['coverage_row_id'] = matrix_row_id(label, d['name'], seed, metadata['input_track'])
                     splits = [s for s in data_spec.test_splits if not s.startswith("official_")]
-                    items.append(BenchmarkItem(label, model, d["root"], seed, over, splits, root, metadata))
+                    items.append(BenchmarkItem(label, model, d["root"], seed, over, splits, root,
+                                               metadata, alias_reuse))
         if not items:
             raise ConfigError("dynamic benchmark has no accepted independent native datasets or active profiles")
         return items
@@ -327,7 +337,7 @@ def load_plan(cfg: Union[PathLike, Mapping], overrides: Optional[dict] = None) -
                 over = {**common, **m_over, **d_over, "seed": int(seed)}
                 get_cfg({**over, "model": model, "data": data})  # 提前发现配置错误
                 items.append(BenchmarkItem(label, model, data, int(seed), over,
-                                           spec.get("splits"), root))
+                                           spec.get("splits"), root, eval_alias_reuse=alias_reuse))
     if not items:
         raise ConfigError("benchmark needs at least one model and one dataset")
     return items
@@ -359,6 +369,9 @@ def plan_item(item: BenchmarkItem) -> dict:
             status["epochs"] = None
             status["error"] = f"{type(exc).__name__}: {exc}"
     status["splits"] = list(item.splits or spec.test_splits)
+    if item.eval_alias_reuse:
+        from .eval_aliases import ALIAS_POLICY
+        status['eval_alias_policy'] = dict(ALIAS_POLICY)
     return status
 
 
@@ -518,6 +531,19 @@ def _run_item(item: BenchmarkItem) -> dict:
     blocked = _admit_dynamic(item)
     if blocked:
         return {**status, "train": blocked, "coverage": item.metadata, "error": blocked}
+    # Static plans also need an opt-in identity boundary. Legacy disabled plans
+    # create no new file; they cannot silently reuse an enabled plan's outputs.
+    alias_identity = item.run_dir / 'eval-alias-policy.json'
+    if item.eval_alias_reuse or alias_identity.exists():
+        from .eval_aliases import ALIAS_POLICY
+        expected = dict(ALIAS_POLICY) if item.eval_alias_reuse else None
+        if alias_identity.exists():
+            if json_load(alias_identity) != expected:
+                raise RuntimeError('evaluation alias policy changed; use a new benchmark run directory')
+        elif any(item.run_dir.glob('*/metrics.json')):
+            raise RuntimeError('existing outputs lack the requested evaluation alias policy identity')
+        else:
+            json_save(alias_identity, expected)
     if item.metadata:
         identity_path = item.run_dir / "run-identity.json"
         identity = scientific_run_identity(item)
@@ -546,6 +572,10 @@ def _run_item(item: BenchmarkItem) -> dict:
 
     spec = resolve_dataset(item.data)
     splits = item.splits or spec.test_splits
+    alias_session = None
+    if item.eval_alias_reuse:
+        from .eval_aliases import ExactAliasSession
+        alias_session = ExactAliasSession(spec, splits)
     for split in splits:
         out = item.run_dir / split
         if (out / "metrics.json").exists():
@@ -559,7 +589,10 @@ def _run_item(item: BenchmarkItem) -> dict:
                 if k not in TRAIN_ONLY and k not in INPUT_KEYS}
         cfg = get_cfg({**over, "model": str(weights), "data": item.data, "split": split,
                        "mode": "val"})
-        Validator(cfg, save_dir=out, label=item.label)()
+        if alias_session is None:
+            Validator(cfg, save_dir=out, label=item.label)()
+        else:
+            Validator(cfg, save_dir=out, label=item.label, alias_session=alias_session)()
         status["splits"][split] = "evaluated"
     status.update(train_summary(train_dir))
     status["test"] = any(s.startswith("test") and v == "evaluated"
