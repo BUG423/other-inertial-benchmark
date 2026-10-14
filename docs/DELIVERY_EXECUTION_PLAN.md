@@ -140,11 +140,14 @@ completed-state/result-report 加固已通过本地独立审查；是否已经�
 
 ### P2：不得回填当前冻结矩阵的后续版本
 
+- 用户更新的跨域执行目标为 **CVPR 2026 主会十个独立开源算法**，全部排在现有实验及先前排队实验之后。
+  现在仅做来源核验、接口/源码静态准备；本批 CPU/GPU 模型运行均后置。旧三架构工程成果保留但不计入十方法，
+  旧三方法 pilot 草案不再作为当前执行清单。完整先后约束见[跨域计划](CROSS_DOMAIN_BASELINES_PLAN.md#当前范围与执行顺序)。
 - 对“30 个独立论文方法”的口径和必要性作 Owner 决策；若继续扩展，单独建立 source/data/capacity/seed/version，不修改当前 2,067 行。
-- 按[跨领域架构 baseline 计划](CROSS_DOMAIN_BASELINES_PLAN.md)先隔离验证 ModernTCN、PatchTST、S4D 三种正交归纳偏置；
-  首批只做 staging 与预注册 pilot，TS-TCC/EEGNet/TimesNet 属第二批，不得用骨干或配置变体虚增论文方法数。
-  2026-10-14 17:36 CST 三者已完成独立服务器 CPU 科学/原生生命周期验收（108 passed）；
-  尚无 CUDA 容量或精度/三 seed 结果，新增正式方法为 0。
+- 已有 ModernTCN、PatchTST、S4D 三种架构的隔离工程成果：
+  2026-10-14 17:36 CST 完成独立服务器 CPU 科学/原生生命周期验收（108 passed）。
+  它们不满足新要求的 CVPR 2026 来源条件，只保留研究参考，不列入本次十方法执行范围；
+  仍无 CUDA 容量或精度/三 seed 结果，新增正式方法为 0。
 - 候选数据或新增方法只有在来源、许可、真实输入/标签、完整 CPU 生命周期、CUDA 容量和科学协议全部通过后，才可进入下一版 inventory。
 - 下一版矩阵应先完成成本/价值评审；不能仅因已有候选 converter、网络核心或短 smoke 就启动付费全矩阵。
 

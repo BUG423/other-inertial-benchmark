@@ -1,0 +1,544 @@
+{
+  "schema": "ib.cvpr2026.temporal-candidates.primary-evidence.v1",
+  "reviewed_date": "2026-10-14",
+  "evidence_recorded_utc": "2026-10-14T15:02:13Z",
+  "owner": "patchtst_review temporal source subagent",
+  "status": "static_candidate_evidence_only",
+  "required_order": "User requested these additions after ALL original tasks. No runtime begins until original tasks end or authorized terminal disposition is explicit.",
+  "target_note": "Initial at-least4 temporal target was narrowed by root to1-2 additional licensed non-Mamba options beyond MS-Temba/SpecScalpel. Three independent licensed cores are documented; TESSERA is conditional. No fourth is manufactured.",
+  "candidate_count": 3,
+  "full_method_or_runtime_accepted_count": 0,
+  "formal_matrix_rows": 2067,
+  "formal_matrix_changed": false,
+  "implementation_added": false,
+  "framework_imported": false,
+  "cpu_or_gpu_tests_run": false,
+  "trained": false,
+  "weights_downloaded": false,
+  "source_code_vendored": false,
+  "verification_method": [
+    "CVF main-conference HTML bibliography and original publisher PDFs, parsed locally as documents only",
+    "Author official GitHub fixed commit pages and raw source/license bytes; sha256 over exact read bytes",
+    "Actual class/function/source path inspection, no module imports/model execution"
+  ],
+  "web_fetch_caveat": "web.open often403 for CVF PDFs; direct publisher URL urllib+pypdf succeeded. TESSERA first16MB reads were truncated; only complete17,447,236-byte PDF is hashed/claimed.",
+  "candidates": [
+    {
+      "id": "mstemba_temporal_core_velocity_xyz",
+      "short_name": "MS-Temba",
+      "selection": "primary_candidate_source_verified_not_runtime_accepted",
+      "independent_paper": true,
+      "architecture_family": "hierarchical dilated bidirectional selective SSM plus multi-scale SSM fusion",
+      "paper": {
+        "title": "MS-Temba: Multi-Scale Temporal Mamba for Understanding Long Untrimmed Videos",
+        "authors": [
+          "Arkaprava Sinha",
+          "Monish Soundar Raj",
+          "Pu Wang",
+          "Ahmed Helmy",
+          "Hieu Le",
+          "Srijan Das"
+        ],
+        "venue": "CVPR 2026 main conference",
+        "pages": "9815-9826",
+        "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.html",
+        "cvf_html_sha256": "d7a54d99c2f90ba781b55074804f10be23b6b0a8b17ecf970f2db167b67e1000",
+        "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.pdf",
+        "pdf_sha256": "a4a7c789cef654afe4af00e95641c2f8bd22abd2c08c894afc1fe778d8da7b7a",
+        "pdf_bytes": 2472123,
+        "pdf_pages": 12,
+        "primary_pdf_text_read": true
+      },
+      "repository": {
+        "url": "https://github.com/thearkaprava/MS-Temba",
+        "commit": "d42b4606d03884bfe2591d0bed1ed7a1dd01ab22",
+        "branch_observed": "main",
+        "official_link_evidence": "CVF PDF project https://mstemba.github.io and author-owned official repo title/README; actual pinned model code read",
+        "license": {
+          "spdx": "Apache-2.0",
+          "files": [
+            {
+              "path": "LICENSE.txt",
+              "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+              "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+              "sha256": "760939b000194d04548ede6a857bbe735d1695d8422ec85955c8e2bd7f4b95c5",
+              "bytes": 11348,
+              "role": "root Mamba attribution/license"
+            },
+            {
+              "path": "vim/LICENSE",
+              "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+              "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+              "sha256": "b208c52b00a2df2c8f4c3298c34407bf2bfe409968213372251c91fcc737a1a5",
+              "bytes": 11354,
+              "role": "Vim/Facebook code license"
+            }
+          ],
+          "attribution_risk": "Retain upstream Mamba/Vim/timm notices; root license is not a claim every vendored subtree has identical provenance."
+        }
+      },
+      "core_sources": [
+        {
+          "path": "vim/models_MSTemba.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+          "sha256": "2259c792f72fb1ebe5be48ff308e61d723a4ca34f7e0f26f04b156fa5f2056ce",
+          "bytes": 34991,
+          "role": "MSTemba, VisionMamba, branch slicing/reinterleave, fuser, C-state alignment"
+        },
+        {
+          "path": "mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "sha256": "cbfa6819a9126eda8afdf4cfa8d49288afe0c66037d334d07a569a2ace560807",
+          "bytes": 18775,
+          "role": "bidirectional selective SSM exposes C states"
+        },
+        {
+          "path": "vim/MSTemba_main.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+          "sha256": "336ece7f18812053302de84ae54d2a7880f01ec77226268a14c1d1cda020a86f",
+          "bytes": 26726,
+          "role": "actual training loss composition lines353-376"
+        }
+      ],
+      "adaptation": {
+        "status": "proposed_not_implemented",
+        "keep": [
+          "three sequential Temba scales with dilation1/2/3",
+          "separate phase-branch weights and exact inverse interleave",
+          "source zero-pad third scale for T200, then remove padded position",
+          "source multi-scale projection/norm/add plus SSM interaction fuser",
+          "bidirectional source scan and C-state pairwise cosine alignment",
+          "auxiliary scale heads, if retained, must be window-pooled XYZ heads"
+        ],
+        "replace": [
+          "I3D/CLIP feature extractor with one ordered Linear6->D task input projection",
+          "dense classification final head with temporal pooling and LinearD->3",
+          "BCE/action labels with supervised window-average XYZ MSE"
+        ],
+        "loss_permissions": [
+          "Only existing train velocity labels and input-derived C-state alignment; no action labels.",
+          "Never broadcast the average-velocity label as a claimed per-timestep instantaneous target.",
+          "If auxiliary heads are used, each regresses the SAME whole-window average after pooling.",
+          "Source C alignment is1-cosine similarity (paper Eq9); function is misleadingly named diversity. Preserve minimization toward alignment, not a guessed repulsion.",
+          "Any auxiliary coefficient has a new pre-registered loss identity and train/val-only budget; not an automatic frozen-policy change."
+        ]
+      },
+      "dependencies_and_risks": [
+        "custom mamba-1p1p1/selective_scan_interface_getC + causal-conv1d CUDA extensions and Triton RMSNorm; upstream README torch2.1.1/cu118",
+        "A generic Mamba package is not a faithful substitute for getC/bidirectional source mechanics",
+        "fused_add_norm arguments in factory and per-block builder need source-faithful review",
+        "T200 not divisible by3: padding/restoration and tail gradients require future exact tests",
+        "No runnable or CPU acceptance claim; capacity B128/stride200 unmeasured"
+      ],
+      "scope": {
+        "input": {
+          "shape": "(B,6,200)",
+          "channels": [
+            "gyro_x",
+            "gyro_y",
+            "gyro_z",
+            "acc_x",
+            "acc_y",
+            "acc_z"
+          ],
+          "rate_hz": 200,
+          "frame": "gravity_world",
+          "orientation": "reference",
+          "remove_gravity": false,
+          "history": 0,
+          "extra_inputs": []
+        },
+        "output": {
+          "shape": "(B,3)",
+          "semantic": "real learned window-average XYZ velocity in m/s",
+          "target": "avg_velocity",
+          "same_prediction_xy_slice": true
+        },
+        "forbidden": [
+          "video/image/text inputs",
+          "skeleton poses or joint coordinates",
+          "action/boundary labels",
+          "initial velocity",
+          "extra sensors",
+          "heldout/test-driven architecture or hyperparameter choices",
+          "renaming a generic Mamba/Transformer as the full 2026 method"
+        ],
+        "initialization": "scratch; no upstream weights downloaded or loaded",
+        "causality": "window_noncausal; only the admitted observed T200 window, no zero-lookahead claim",
+        "runtime_status": "not_implemented; no imports/tests/CPU/GPU/training; all runtime deferred until original tasks end or authorized terminal disposition is explicit",
+        "formal_matrix_unchanged": true
+      }
+    },
+    {
+      "id": "specscalpel_spectral_core_velocity_xyz",
+      "short_name": "Spectral Scalpel",
+      "selection": "primary_candidate_novel_modules_only_not_full_STAS_reproduction",
+      "independent_paper": true,
+      "architecture_family": "multi-scale adaptive Fourier filtering plus spectral channel mixer and linear temporal attention",
+      "paper": {
+        "title": "Spectral Scalpel: Amplifying Adjacent Action Discrepancy via Frequency-Selective Filtering for Skeleton-Based Action Segmentation",
+        "authors": [
+          "Haoyu Ji",
+          "Bowen Chen",
+          "Zhihao Yang",
+          "Wenze Huang",
+          "Yu Gao",
+          "Xueting Liu",
+          "Weihong Ren",
+          "Zhiyong Wang",
+          "Honghai Liu"
+        ],
+        "venue": "CVPR 2026 main conference",
+        "pages": "12849-12859",
+        "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.html",
+        "cvf_html_sha256": "03b73bb5a278a10e787a1eea95a653e497d6c5501f0c29f785fedb22334da50e",
+        "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.pdf",
+        "pdf_sha256": "437cc9f5d13fc820ea16c73a3562ad22c433962a040c685f0d89b5c213649f80",
+        "pdf_bytes": 5349071,
+        "pdf_pages": 11,
+        "primary_pdf_text_read": true,
+        "supplement_url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Ji_Spectral_Scalpel_Amplifying_CVPR_2026_supplemental.pdf"
+      },
+      "repository": {
+        "url": "https://github.com/HaoyuJi/SpecScalpel",
+        "commit": "01adb1ed708d410023b8482c52270cac358c8525",
+        "branch_observed": "main",
+        "official_link_evidence": "CVF abstract/PDF directly names author repo; README identifies actual libs model implementation",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            {
+              "path": "LICENSE",
+              "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+              "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+              "sha256": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278",
+              "bytes": 1065,
+              "role": "root MIT copyright2025 Haoyu Ji"
+            }
+          ],
+          "attribution_risk": "Retain reused MS-TCN/graph module attributions if any such source is later ported."
+        }
+      },
+      "core_sources": [
+        {
+          "path": "libs/models/SpecScalpel.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+          "sha256": "8c9a8fcde61ef6c1026713eda630c8d7f8570b3e9a9d6fd7831aa1b2ec43f2ff",
+          "bytes": 15106,
+          "role": "FFT_filter(MASF) lines117-171; FFT_conv_filter(FACM)65-96; Linear_Attention/AttModule/STI"
+        },
+        {
+          "path": "libs/models/tcn.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+          "sha256": "9379f749c1b9cbd3f0a0b3c01268d57cbf231b17d025aa7320977525e37b1798",
+          "bytes": 3113,
+          "role": "legacy2019 MS-TCN helpers; NOT an independent2026 novelty"
+        },
+        {
+          "path": "train.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+          "sha256": "744a9432c84a010eefecdc3e5bbcfa76b7470f01df4bab1f5d2ab0fc2583a2eb",
+          "bytes": 18209,
+          "role": "links actual libs.models/helper/loss modules"
+        }
+      ],
+      "adaptation": {
+        "status": "proposed_not_implemented",
+        "fidelity_identity": "Port the2026 MASF/FACM novel modules, NOT the entire skeleton segmentation algorithm.",
+        "keep": [
+          "temporal rFFT/irFFT with explicit n=T",
+          "four multi-scale spectral filters and nearest-frequency interpolation",
+          "dynamic plus static channel-wise weighting and source residual fusion",
+          "shared real/imag pointwise channel transforms",
+          "source-compatible temporal linear-attention block, if used"
+        ],
+        "replace": [
+          "skeleton graph and joint-text spatial stem with ordered six-channel learned projection",
+          "MASF V dimension with explicit singleton feature-location V=1, not fictitious joints",
+          "action/boundary refinement heads and ASRF postprocessing with pooled LinearD->3"
+        ],
+        "loss_permissions": [
+          "Supervised whole-window XYZ MSE only in the first architecture-core identity.",
+          "AADL is tied to adjacent action segments; do not fabricate segment labels from IMU or reuse velocity GT as action boundaries.",
+          "Action-text, classification, smoothing and boundary losses omitted explicitly; no BERT/text embeddings.",
+          "No claim to retain complete Spectral Scalpel STAS accuracy/algorithm or all paper losses."
+        ]
+      },
+      "dependencies_and_risks": [
+        "novel FFT modules require standard torch FFT; optional graph/BERT/ASRF pipeline is excluded",
+        "source historical env torch1.10.1/cu111; no inference of compatibility with current server",
+        "singleton V=1 and shape preservation need future scientific tests",
+        "input projection must preserve gyro/acc units and ordered axes; no channel averaging before projection",
+        "Do not count plain MS-TCN2019 helper as the new paper; MASF and FACM are mandatory"
+      ],
+      "scope": {
+        "input": {
+          "shape": "(B,6,200)",
+          "channels": [
+            "gyro_x",
+            "gyro_y",
+            "gyro_z",
+            "acc_x",
+            "acc_y",
+            "acc_z"
+          ],
+          "rate_hz": 200,
+          "frame": "gravity_world",
+          "orientation": "reference",
+          "remove_gravity": false,
+          "history": 0,
+          "extra_inputs": []
+        },
+        "output": {
+          "shape": "(B,3)",
+          "semantic": "real learned window-average XYZ velocity in m/s",
+          "target": "avg_velocity",
+          "same_prediction_xy_slice": true
+        },
+        "forbidden": [
+          "video/image/text inputs",
+          "skeleton poses or joint coordinates",
+          "action/boundary labels",
+          "initial velocity",
+          "extra sensors",
+          "heldout/test-driven architecture or hyperparameter choices",
+          "renaming a generic Mamba/Transformer as the full 2026 method"
+        ],
+        "initialization": "scratch; no upstream weights downloaded or loaded",
+        "causality": "window_noncausal; only the admitted observed T200 window, no zero-lookahead claim",
+        "runtime_status": "not_implemented; no imports/tests/CPU/GPU/training; all runtime deferred until original tasks end or authorized terminal disposition is explicit",
+        "formal_matrix_unchanged": true
+      }
+    },
+    {
+      "id": "tessera_v1_temporal_dualstream_velocity_xyz",
+      "short_name": "TESSERA v1",
+      "selection": "conditional_backup_actual_licensed_core_SSL_and_fidelity_bridge_pending",
+      "independent_paper": true,
+      "architecture_family": "two modality-specific temporal Transformers with GRU-conditioned attention pooling, concat fusion and redundancy-reduction SSL",
+      "paper": {
+        "title": "TESSERA: Temporal Embeddings of Surface Spectra for Earth Representation and Analysis",
+        "authors": [
+          "Zhengpeng Feng",
+          "Clement Atzberger",
+          "Sadiq Jaffer",
+          "Jovana Knezevic",
+          "Silja Sormunen",
+          "Robin Young",
+          "Madeline C. Lisaius",
+          "Markus Immitzer",
+          "Toby Jackson",
+          "James Ball",
+          "David A. Coomes",
+          "Anil Madhavapeddy",
+          "Andrew Blake",
+          "Srinivasan Keshav"
+        ],
+        "venue": "CVPR 2026 main conference",
+        "pages": "34818-34831",
+        "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.html",
+        "cvf_html_sha256": "0f0491788a5a4154302d1ad0bd6b391b1db00e4f246582125a1f24ebd95924ae",
+        "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.pdf",
+        "pdf_sha256": "80240c5f199e581417cf0f9d7fd610b7c555c243844ac96f1efb9eddd197d93c",
+        "pdf_bytes": 17447236,
+        "pdf_pages": 14,
+        "primary_pdf_text_read": true
+      },
+      "repository": {
+        "url": "https://github.com/ucam-eo/tessera",
+        "commit": "e368539f7c4711e5f16fdd09801573830e34baf9",
+        "branch_observed": "master",
+        "official_link_evidence": "CVF paper and authors' official ucam-eo repository; only tessera_infer v1 paths considered, not third-party fork or v2.",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            {
+              "path": "LICENSE",
+              "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+              "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+              "sha256": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b",
+              "bytes": 1067,
+              "role": "root MIT copyright2025 Frank Feng"
+            }
+          ],
+          "weights_not_used": true
+        }
+      },
+      "core_sources": [
+        {
+          "path": "tessera_infer/src/models/modules.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+          "sha256": "e58867489428858f9494767dd104329338685c654a7d60f9117a746dc5a7c4fa",
+          "bytes": 5358,
+          "role": "TemporalPositionalEncoder; TransformerEncoder; TemporalAwarePooling GRU+attention; ProjectionHead"
+        },
+        {
+          "path": "tessera_infer/src/models/ssl_model.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+          "sha256": "6201e7c56564007ccaea7370bb96a99fab7f326db5428c2a1e3447889f6fe4b1",
+          "bytes": 2571,
+          "role": "MultimodalBTModel and inference dual-encoder concat/reducer"
+        },
+        {
+          "path": "tessera_infer/src/models/builder.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+          "sha256": "beaf0a052c59104951385a198fe250a1e96745b4053749eb612eda201d865e10",
+          "bytes": 1634,
+          "role": "actual fixed v1 8-layer two-backbone configuration"
+        },
+        {
+          "path": "tessera_infer/configs/ssl_config.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+          "sha256": "74ab894c50a1a85a5aabda74718f8267f1c4ea66ebed2f3510a25e1e2b70d4fa",
+          "bytes": 675,
+          "role": "BTlambda5e-3; concat; latent128; apply_mixupFalse at pinned source"
+        }
+      ],
+      "adaptation": {
+        "status": "proposed_not_implemented",
+        "keep": [
+          "distinct gyro and accelerometer three-channel temporal encoders",
+          "source temporal-position injection and GRU-conditioned attention pooling",
+          "ordered concat fusion + dimensional reducer",
+          "train-only two stochastic sampling views, redundancy-reduction Barlow Twins objective, globally shuffled TRAIN windows",
+          "mix-based view regularization as separately pre-registered faithful-SSL candidate, not silent default"
+        ],
+        "replace": [
+          "Sentinel bands with genuine gyro3/acc3 only, no artificial skeleton/image",
+          "day-of-year with deterministic relative time/index derived inside admitted200Hz T200",
+          "EO task head with real Linearlatent->XYZ velocity"
+        ],
+        "loss_permissions": [
+          "A paper-derived SSL identity requires train-only BT/sampling/mix terms and separate pre-registered budget, followed by supervised whole-window XYZ MSE task head.",
+          "Random-sample views come only from the SAME already-admitted T200 train window; sampling is an internal representation view and does not redefine the target interval.",
+          "Full-window canonical inference has fixed deterministic T200, not fresh random test sampling.",
+          "No unlabeled target/test domain used for pretraining; no imagery, geography, calendar, pose or text permission expansion.",
+          "MSE-only two-encoder variant is architecture-only and must NOT be called the complete TESSERA method."
+        ]
+      },
+      "fidelity_discrepancies": [
+        "paper Sec3.2 describes4-layer Transformer, GRU pooling and2-layer fusionMLP; fixed v1 builder uses8layers, actual GRU-conditioned attention pool and a single linear reducer",
+        "paper includes mix-based regularization; pinned ssl_config apply_mixup=False",
+        "actual repository exposes licensed encoders/projector/inference core, not a source-qualified inertial SSL training lifecycle; implementing SSL losses/views is future task work",
+        "TESSERA v2 and QAT are separate identities and are excluded",
+        "default code is large (latent128 -> encoder width512,8layers,ff4096); capacity must be measured, no untested width/batch change GO"
+      ],
+      "dependencies_and_risks": [
+        "core standard torch Transformer/GRU/BatchNorm; do not import geospatial raster/ONNX/acquisition pipeline",
+        "BT BatchNorm requires adequate genuine TRAIN batch; constant/degenerate pairs and temporal sampling invariance may suppress velocity-relevant transients",
+        "gyro/acc different units require explicitly train-only/unit-specific scaling if any; no test normalization statistics",
+        "paper-to-code discrepancies need independent G1 fidelity decision; source port is not exact paper reproduction",
+        "SSL+head training budget and common-recipe comparability require Owner decision after all original work"
+      ],
+      "scope": {
+        "input": {
+          "shape": "(B,6,200)",
+          "channels": [
+            "gyro_x",
+            "gyro_y",
+            "gyro_z",
+            "acc_x",
+            "acc_y",
+            "acc_z"
+          ],
+          "rate_hz": 200,
+          "frame": "gravity_world",
+          "orientation": "reference",
+          "remove_gravity": false,
+          "history": 0,
+          "extra_inputs": []
+        },
+        "output": {
+          "shape": "(B,3)",
+          "semantic": "real learned window-average XYZ velocity in m/s",
+          "target": "avg_velocity",
+          "same_prediction_xy_slice": true
+        },
+        "forbidden": [
+          "video/image/text inputs",
+          "skeleton poses or joint coordinates",
+          "action/boundary labels",
+          "initial velocity",
+          "extra sensors",
+          "heldout/test-driven architecture or hyperparameter choices",
+          "renaming a generic Mamba/Transformer as the full 2026 method"
+        ],
+        "initialization": "scratch; no upstream weights downloaded or loaded",
+        "causality": "window_noncausal; only the admitted observed T200 window, no zero-lookahead claim",
+        "runtime_status": "not_implemented; no imports/tests/CPU/GPU/training; all runtime deferred until original tasks end or authorized terminal disposition is explicit",
+        "formal_matrix_unchanged": true
+      }
+    }
+  ],
+  "rejected_or_held": [
+    {
+      "short_name": "HAL",
+      "paper": "Hierarchical Action Learning for Weakly-Supervised Action Segmentation",
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Hierarchical_Action_Learning_for_Weakly-Supervised_Action_Segmentation_CVPR_2026_paper.html",
+      "repo": "https://github.com/DMIRLAB-Group/HAL",
+      "commit": "1b41194b2ecd0125f9e551cbf5b1bd92eed366db",
+      "actual_core": "models/model.py",
+      "core_sha256": "5e073962ac2ba6def3d44461952068c039a58c37e4b807bb8932cf9f9acef71e",
+      "status": "HOLD_license_unverified_not_counted",
+      "reason": "Actual hierarchical Transformer code exists, but no root license observed. Public source availability is not a reuse license. Transcript/class supervision also requires explicit replacement."
+    },
+    {
+      "short_name": "AMR",
+      "paper": "Exploring Adaptive Masked Reconstruction for Self-Supervised Skeleton-Based Action Recognition",
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sun_Exploring_Adaptive_Masked_Reconstruction_for_Self-Supervised_Skeleton-Based_Action_Recognition_CVPR_2026_paper.html",
+      "repo": "https://github.com/AshenOne1005/AMR",
+      "commit": "1ee34e9487e8f808f805e5e2df7b14efb22341ad",
+      "readme_sha256": "b23e5f888b391991dac6eac77c4add142a1d54f8a2894c67bc79085b4a1cb4fb",
+      "readme_bytes": 82,
+      "status": "REJECT_no_actual_core_not_counted",
+      "reason": "Pinned root contains only LICENSE and82B README; no actual model source. CVF acceptance does not create missing code."
+    },
+    {
+      "short_name": "Frame2Freq",
+      "paper": "Frame2Freq: Spectral Adapters for Fine-Grained Video Understanding",
+      "repo": "https://github.com/th-nesh/Frame2Freq",
+      "commit": "64897fb043008e50bacebb733bb49740990edcdf",
+      "actual_core": "models_adapter.py",
+      "status": "HOLD_license_unverified_not_counted",
+      "reason": "Actual source file exists; root license not observed. Full method also adapts pretrained CLIP; dropping all backbone context would require an explicitly named adapter-core port."
+    },
+    {
+      "short_name": "LaDy",
+      "repo": "https://github.com/HaoyuJi/LaDy",
+      "commit": "bdba27dc03670f0ad54927a7b50d0d0d04b22997",
+      "license_observed": "MIT",
+      "primary_source": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Ji_LaDy_Lagrangian-Dynamic_Informed_CVPR_2026_supplemental.pdf",
+      "status": "REJECT_core_pose_requirement_not_counted",
+      "reason": "Identity-defining generalized joint coordinates/velocities/accelerations, force synthesis and energy consistency need actual articulated pose. Treating gyro/acc channels as joint coordinates is dimensionally/scientifically invalid; removing dynamics leaves borrowed generic temporal backbone."
+    },
+    {
+      "short_name": "EMMA physical parameter extraction",
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Shaikh_EMMA_Extracting_Multiple_physical_parameters_from_Multimodal_Data_CVPR_2026_paper.html",
+      "repo": "https://github.com/ImpactLabASU/EMMA-CVPR2026",
+      "commit": "06971b6d948b75f2f404a58a917385a1bf8375f9",
+      "license_sha256": "150ea8c97e9ea8eb1fd7119797bd8ca5a21917af863c22ec1769b3f0af7d0c21",
+      "status": "NOT_SELECTED_physics_protocol_identity_risk",
+      "reason": "Real licensed code exists, but the full estimator requires a supplied governing ODE and physical-parameter objective; replacing it entirely with a velocity MSE would be a generic LTC baseline, not EMMA."
+    },
+    {
+      "short_name": "Gamba / TMambaDet",
+      "status": "OUT_OF_AGENT_SCOPE",
+      "reason": "Assigned by root to S4D source team; not duplicated here."
+    },
+    {
+      "short_name": "WACV TQT/CLAM, CVPRW boundary-loss methods, CVPR2026 Findings Flora",
+      "status": "REJECT_wrong_venue",
+      "reason": "Not CVPR2026 main conference; no count inflation by matching keywords/year."
+    }
+  ]
+}

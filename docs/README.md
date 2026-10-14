@@ -11,6 +11,7 @@
 | [FORMAL_PARTIAL_RESULTS_HANDOFF.md](FORMAL_PARTIAL_RESULTS_HANDOFF.md) | 首份只读部分结果的收据、可用性和 seed 覆盖；不代表矩阵或全链完成 |
 | [FORMAL_FULL_CHAIN_PREFLIGHT_PLAN.md](FORMAL_FULL_CHAIN_PREFLIGHT_PLAN.md) | validation 元信息诊断及 identity/checkpoint/transfer 全链验收编排；完整 preflight 未执行 |
 | [CROSS_DOMAIN_BASELINES_PLAN.md](CROSS_DOMAIN_BASELINES_PLAN.md) | 跨领域算法迁移的来源、适配与隔离验收；不改变当前冻结矩阵 |
+| [CVPR 2026 十方法清单](../research/staging/cvpr2026_baselines/README.md) | 十个主会论文来源、隔离适配边界与末尾执行约束；来源/静态代码不等于运行验收 |
 | [DESIGN.md](DESIGN.md) | 架构、v1 数据契约、任务视图、推理与评价 |
 | [CLI.md](CLI.md) | 实际命令、配置、矩阵与输出文件 |
 | [METRICS.md](METRICS.md) | 指标公式、单位、支持条件、统计与已有边界行为 |

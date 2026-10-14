@@ -1,0 +1,802 @@
+{
+  "schema": "ib.research.cvpr2026-tail-queue.plan.v1",
+  "status": "ten_sources_fixed_static_adaptation_in_progress_runtime_deferred",
+  "expected_independent_methods": 10,
+  "venue": "CVPR",
+  "venue_year": 2026,
+  "venue_track": "main_conference",
+  "excluded_venue_tracks": [
+    "workshops",
+    "findings"
+  ],
+  "user_order": "all_new_cross_domain_model_execution_after_existing_experiments",
+  "execution_enabled": false,
+  "active_queue_enrolled": false,
+  "formal_2067_rows_changed": false,
+  "existing_source_manifest_sha256": "1897c9ccfa959199ef3f8dbf8c7863dd40d5472d4da9b5551154366458650949",
+  "legacy_three_ports": {
+    "methods": [
+      "ModernTCN",
+      "PatchTST",
+      "S4D"
+    ],
+    "artifacts_retained": true,
+    "count_toward_cvpr2026_target": false,
+    "old_pilot_is_current_execution_plan": false
+  },
+  "permitted_now": [
+    "primary_source_research",
+    "source_cards",
+    "interface_design",
+    "local_static_source_preparation"
+  ],
+  "deferred_until_tail": [
+    "framework_model_import",
+    "cpu_model_tests",
+    "native_cpu_lifecycle",
+    "gpu_capacity",
+    "training",
+    "validation_and_test"
+  ],
+  "tail_barrier": {
+    "status": "not_evaluated",
+    "satisfied": false,
+    "readiness_receipt": null,
+    "required_conditions": [
+      "existing_experimental_queue_has_no_running_or_unresolved_qualified_cells",
+      "previously_authorized_queued_experiments_have_explicit_terminal_dispositions",
+      "failures_and_not_applicable_have_explicit_dispositions",
+      "shared_cpu_gpu_leases_released_and_reacquired_for_new_batch"
+    ],
+    "no_stop_restart_or_preemption_of_existing_work": true,
+    "instantaneous_free_memory_is_not_admission": true
+  },
+  "new_batch_admission": [
+    "exactly_ten_distinct_cvpr2026_main_papers_with_author_code",
+    "fixed_commit_and_license_review",
+    "explicit_keep_replace_and_inertial_contract",
+    "independent_source_profile_coverage_policy_seed_and_output_identity",
+    "tail_barrier_before_any_model_runtime",
+    "cpu_lifecycle_and_cuda_capacity_before_training",
+    "preregistered_candidate_control_recipe_and_stop_rules_before_test"
+  ],
+  "planned_input": {
+    "shape": "B,6,200",
+    "sampling_rate_hz": 200,
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "frame": "gravity_world",
+    "orientation_permission": "reference_oracle",
+    "gravity_retained": true,
+    "extra_inputs": [],
+    "outside_window_future": false
+  },
+  "planned_output": {
+    "quantity": "window_average_velocity",
+    "units": "m/s",
+    "dimensions": 3,
+    "z_is_learned_not_padded": true,
+    "xy_is_slice_of_same_xyz_prediction": true
+  },
+  "planned_training": {
+    "initialization": "from_scratch",
+    "loss": "mse",
+    "seeds": [
+      1735231569,
+      843628571,
+      951150512
+    ],
+    "recipe_status": "not_frozen_capacity_and_preregistration_required"
+  },
+  "method_candidates": [
+    {
+      "evidence_file": "candidate_backbones.json",
+      "evidence_file_sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+      "evidence_candidate_id": "vitt3",
+      "paper_title": "ViT³: Unlocking Test-Time Training in Vision",
+      "paper_authors": [
+        "Dongchen Han",
+        "Yining Li",
+        "Tianyu Li",
+        "Zixuan Cao",
+        "Ziming Wang",
+        "Jun Song",
+        "Yu Cheng",
+        "Bo Zheng",
+        "Gao Huang"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Han_ViT3_Unlocking_Test-Time_Training_in_Vision_CVPR_2026_paper.html",
+      "pdf_sha256": "84a71a09dd49f3b0033ca6b3e43e01d94faf5df913943b9fe433099f0e5321c1",
+      "official_repo": "https://github.com/LeapLabTHU/ViTTT",
+      "upstream_commit": "36eb23bfe2eca5cd4ad9ce01ef93bf8a89c6020f",
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "bytes": 1141,
+        "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "notice": "Microsoft Corporation copyright retained upstream"
+      },
+      "core_sources": [
+        {
+          "path": "ttt_block.py",
+          "bytes": 7440,
+          "sha256": "e48416ae6ae54e49721c83b4eeedd8320f843907715f7062526ca4d8ad8d04de",
+          "symbols": [
+            "TTT",
+            "inner_train_simplified_swiglu",
+            "inner_train_3x3dwc",
+            "forward"
+          ]
+        }
+      ],
+      "id": "vitt3_velocity_architecture",
+      "display_name": "ViT³",
+      "folder": "vitt3",
+      "assigned_agent": "modern_tcn_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Input-only negative-dot per-window reset fast weights; no target access or cross-window carry; 2D inner conv becomes 1D.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_backbones.json",
+      "evidence_file_sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+      "evidence_candidate_id": "edge_recvit",
+      "paper_title": "Edge-RecViT: Efficient Vision Transformer via Semantic-Refined Dynamic Recursion",
+      "paper_authors": [
+        "YiZhou Li",
+        "Jinyi Xu",
+        "Mingyu Yin",
+        "Xianyi Zhao"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Edge-RecViT_Efficient_Vision_Transformer_via_Semantic-Refined_Dynamic_Recursion_CVPR_2026_paper.html",
+      "pdf_sha256": "23f438f95f2749cb00bda47b85b96f0216988f8e80d2100a30e8bd16fe621bfd",
+      "official_repo": "https://github.com/RicardoLee510520/Edge-RecViT",
+      "upstream_commit": "9d0d34a8b3029d62955c9a1cf54ff7e4409ff934",
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "core_sources": [
+        {
+          "path": "optimum/mor_vit/modeling_mor_vit.py",
+          "bytes": 43815,
+          "sha256": "5b6c88a299efe4afce45db6190a8d660accfdbec0d9191e93cdc763a4693b792",
+          "symbols": [
+            "MoRViTBlock",
+            "MoRViT",
+            "MoRViTForImageClassification",
+            "get_routing_losses"
+          ]
+        },
+        {
+          "path": "optimum/mor_vit/token_choice_router.py",
+          "bytes": 4904,
+          "sha256": "5b9f658e7bee03ec2f94069c7ee2587dd0288954af49851eed918a016973153b",
+          "symbols": [
+            "TokenChoiceRouter"
+          ]
+        }
+      ],
+      "id": "edge_recvit_velocity_architecture",
+      "display_name": "Edge-RecViT",
+      "folder": "edge_recvit",
+      "assigned_agent": "modern_tcn_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Released recursive token router and shared middle; paper/released-router differences explicit; auxiliary source losses omitted in MSE identity.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_backbones.json",
+      "evidence_file_sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+      "evidence_candidate_id": "pfgnet",
+      "paper_title": "PFGNet: A Fully Convolutional Frequency-Guided Peripheral Gating Network for Efficient Spatiotemporal Predictive Learning",
+      "paper_authors": [
+        "Xinyong Cai",
+        "Changbin Sun",
+        "Yong Wang",
+        "Hongyu Yang",
+        "Yuankai Wu"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cai_PFGNet_A_Fully_Convolutional_Frequency-Guided_Peripheral_Gating_Network_for_Efficient_CVPR_2026_paper.html",
+      "pdf_sha256": "ccad6ac8f3600550c587c5cf1835d8bb4de2b2c3c68539717a0ea5a22b789ef8",
+      "official_repo": "https://github.com/fhjdqaq/PFGNet",
+      "upstream_commit": "9db02476d14bfc457558ebd7fd0b2d68f47dd6fa",
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "bytes": 11348,
+        "sha256": "bb34e42b3344c140de83a66be805064f263a3a3d3ee6bcc3914677e658d7fd16"
+      },
+      "core_sources": [
+        {
+          "path": "openstl/models/pfg_model.py",
+          "bytes": 4312,
+          "sha256": "273bccfba86db5c2878d111dd588fc50a9904903ee20a1a2c1767a174cdc169c",
+          "symbols": [
+            "PFG_Model",
+            "MidPFG"
+          ]
+        },
+        {
+          "path": "openstl/modules/pfg_modules.py",
+          "bytes": 4486,
+          "sha256": "e3841754bc2b8c3d491fd0f088947b0d6807565366b5fca8cb668a255e695ae7",
+          "symbols": [
+            "MSInit",
+            "PFG"
+          ]
+        },
+        {
+          "path": "openstl/modules/layers/pfg.py",
+          "bytes": 6190,
+          "sha256": "58411bcbeade0868124a29d74d81e962d6abbf887635f590709cbdffa373314e",
+          "symbols": [
+            "GRN",
+            "_RepDWLite",
+            "PFGA"
+          ]
+        }
+      ],
+      "id": "pfgnet_velocity_architecture",
+      "display_name": "PFGNet",
+      "folder": "pfgnet",
+      "assigned_agent": "modern_tcn_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Peripheral center suppression and derivative/Laplacian/variance scale gate; actual source GRN; no FFT replacement.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_backbones.json",
+      "evidence_file_sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+      "evidence_candidate_id": "binary_attention",
+      "paper_title": "BinaryAttention: One-Bit QK-Attention for Vision and Diffusion Transformers",
+      "paper_authors": [
+        "Chaodong Xiao",
+        "Zhengqiang Zhang",
+        "Lei Zhang"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xiao_BinaryAttention_One-Bit_QK-Attention_for_Vision_and_Diffusion_Transformers_CVPR_2026_paper.html",
+      "pdf_sha256": "d5667d360701541b0a1fc06321a48dac887efda148f8c0975c9c30386cb231e1",
+      "official_repo": "https://github.com/EdwardChasel/BinaryAttention",
+      "upstream_commit": "a8e0268ffc63ed4bb26bceac5fa015d358732055",
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "bytes": 11435,
+        "sha256": "c20669c3fcd39ca552015568b5958af5ed6b4f75faaa9ffca5b03d470ae75ab5"
+      },
+      "core_sources": [
+        {
+          "path": "models.py",
+          "bytes": 25771,
+          "sha256": "0af0f3863076ed6d0aa3b8e764559c21d86acf267b2b64a6f21aa9d223baf229",
+          "symbols": [
+            "Attention",
+            "Block",
+            "VisionTransformer",
+            "round_ste"
+          ]
+        },
+        {
+          "path": "utils.py",
+          "bytes": 9979,
+          "sha256": "56668b4e072660759e579866eda635092eaea58b4870f829fb107fad002558d4",
+          "symbols": [
+            "binary_sign",
+            "binarize",
+            "SymQuantizer",
+            "symquantize"
+          ]
+        }
+      ],
+      "id": "binary_attention_velocity_float_reference",
+      "display_name": "BinaryAttention",
+      "folder": "binary_attention",
+      "assigned_agent": "modern_tcn_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Source scaled sign-QK/STE fakequant floating reference; no bitpacked CUDA or inherited acceleration claim.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_backbones.json",
+      "evidence_file_sha256": "1a3e1b01b3046d22a5f88cba9b2f149df432dfee44571b3d4193a311b7976d15",
+      "evidence_candidate_id": "ucan",
+      "paper_title": "UCAN: Unified Convolutional Attention Network for Expansive Receptive Fields in Lightweight Super-Resolution",
+      "paper_authors": [
+        "Cao Thien Tan",
+        "Phan Thi Thu Trang",
+        "Do Nghiem Duc",
+        "Ho Ngoc Anh",
+        "Hanyang Zhuang",
+        "Nguyen Duc Dung"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tan_UCAN_Unified_Convolutional_Attention_Network_for_Expansive_Receptive_Fields_in_CVPR_2026_paper.html",
+      "pdf_sha256": "105f9a285cfccfcd292d1f98beeab6add6b752d9cc7fc9eca1b34544cace70e0",
+      "official_repo": "https://github.com/hokiyoshi/UCAN",
+      "upstream_commit": "b812c0adb8ce70d442973db5c87bab7d1e8c3333",
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "core_sources": [
+        {
+          "path": "basicsr/archs/ucan_arch.py",
+          "bytes": 57779,
+          "sha256": "d1673486ad78b9a80e46741d94e4267c45e2e763be93b3a25fc5466ec5b1ad3a",
+          "symbols": [
+            "HedgehogFeatureMap",
+            "SDFL",
+            "DFRL",
+            "WindowsAttention",
+            "SharedWindowsAttention",
+            "HybridBlock",
+            "LKSA"
+          ]
+        }
+      ],
+      "id": "ucan_velocity_architecture",
+      "display_name": "UCAN",
+      "folder": "ucan",
+      "assigned_agent": "modern_tcn_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Local attention, Hedgehog/global-channel dual fusion, sharing/receiving and selective large-kernel core; no RGB/SR head.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_temporal.json",
+      "evidence_file_sha256": "7b91615f832f4426cd7189f1054ce8cdaf9cca625a946192bcace189a6a2b2fb",
+      "evidence_candidate_id": "mstemba_temporal_core_velocity_xyz",
+      "paper_title": "MS-Temba: Multi-Scale Temporal Mamba for Understanding Long Untrimmed Videos",
+      "paper_authors": [
+        "Arkaprava Sinha",
+        "Monish Soundar Raj",
+        "Pu Wang",
+        "Ahmed Helmy",
+        "Hieu Le",
+        "Srijan Das"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sinha_MS-Temba_Multi-Scale_Temporal_Mamba_for_Understanding_Long_Untrimmed_Videos_CVPR_2026_paper.html",
+      "pdf_sha256": "a4a7c789cef654afe4af00e95641c2f8bd22abd2c08c894afc1fe778d8da7b7a",
+      "official_repo": "https://github.com/thearkaprava/MS-Temba",
+      "upstream_commit": "d42b4606d03884bfe2591d0bed1ed7a1dd01ab22",
+      "license": {
+        "spdx": "Apache-2.0",
+        "files": [
+          {
+            "path": "LICENSE.txt",
+            "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+            "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/LICENSE.txt",
+            "sha256": "760939b000194d04548ede6a857bbe735d1695d8422ec85955c8e2bd7f4b95c5",
+            "bytes": 11348,
+            "role": "root Mamba attribution/license"
+          },
+          {
+            "path": "vim/LICENSE",
+            "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+            "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/LICENSE",
+            "sha256": "b208c52b00a2df2c8f4c3298c34407bf2bfe409968213372251c91fcc737a1a5",
+            "bytes": 11354,
+            "role": "Vim/Facebook code license"
+          }
+        ],
+        "attribution_risk": "Retain upstream Mamba/Vim/timm notices; root license is not a claim every vendored subtree has identical provenance."
+      },
+      "core_sources": [
+        {
+          "path": "vim/models_MSTemba.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/models_MSTemba.py",
+          "sha256": "2259c792f72fb1ebe5be48ff308e61d723a4ca34f7e0f26f04b156fa5f2056ce",
+          "bytes": 34991,
+          "role": "MSTemba, VisionMamba, branch slicing/reinterleave, fuser, C-state alignment"
+        },
+        {
+          "path": "mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py",
+          "sha256": "cbfa6819a9126eda8afdf4cfa8d49288afe0c66037d334d07a569a2ace560807",
+          "bytes": 18775,
+          "role": "bidirectional selective SSM exposes C states"
+        },
+        {
+          "path": "vim/MSTemba_main.py",
+          "url": "https://github.com/thearkaprava/MS-Temba/blob/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+          "raw_url": "https://raw.githubusercontent.com/thearkaprava/MS-Temba/d42b4606d03884bfe2591d0bed1ed7a1dd01ab22/vim/MSTemba_main.py",
+          "sha256": "336ece7f18812053302de84ae54d2a7880f01ec77226268a14c1d1cda020a86f",
+          "bytes": 26726,
+          "role": "actual training loss composition lines353-376"
+        }
+      ],
+      "id": "mstemba_temporal_core_velocity_xyz",
+      "display_name": "MS-Temba",
+      "folder": "mstemba",
+      "assigned_agent": "patchtst_review",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Independent phase dilation1/2/3, inverse interleave, bidirectional selective SSM and multi-scale fuser; C-alignment and source auxiliary losses omitted in selected MSE identity.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_temporal.json",
+      "evidence_file_sha256": "7b91615f832f4426cd7189f1054ce8cdaf9cca625a946192bcace189a6a2b2fb",
+      "evidence_candidate_id": "specscalpel_spectral_core_velocity_xyz",
+      "paper_title": "Spectral Scalpel: Amplifying Adjacent Action Discrepancy via Frequency-Selective Filtering for Skeleton-Based Action Segmentation",
+      "paper_authors": [
+        "Haoyu Ji",
+        "Bowen Chen",
+        "Zhihao Yang",
+        "Wenze Huang",
+        "Yu Gao",
+        "Xueting Liu",
+        "Weihong Ren",
+        "Zhiyong Wang",
+        "Honghai Liu"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.html",
+      "pdf_sha256": "437cc9f5d13fc820ea16c73a3562ad22c433962a040c685f0d89b5c213649f80",
+      "official_repo": "https://github.com/HaoyuJi/SpecScalpel",
+      "upstream_commit": "01adb1ed708d410023b8482c52270cac358c8525",
+      "license": {
+        "spdx": "MIT",
+        "files": [
+          {
+            "path": "LICENSE",
+            "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+            "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/LICENSE",
+            "sha256": "ca0180170040757d4994d3a67e2c13fa2f101eae65104b3d70d5a2cc6e2e3278",
+            "bytes": 1065,
+            "role": "root MIT copyright2025 Haoyu Ji"
+          }
+        ],
+        "attribution_risk": "Retain reused MS-TCN/graph module attributions if any such source is later ported."
+      },
+      "core_sources": [
+        {
+          "path": "libs/models/SpecScalpel.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/SpecScalpel.py",
+          "sha256": "8c9a8fcde61ef6c1026713eda630c8d7f8570b3e9a9d6fd7831aa1b2ec43f2ff",
+          "bytes": 15106,
+          "role": "FFT_filter(MASF) lines117-171; FFT_conv_filter(FACM)65-96; Linear_Attention/AttModule/STI"
+        },
+        {
+          "path": "libs/models/tcn.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/libs/models/tcn.py",
+          "sha256": "9379f749c1b9cbd3f0a0b3c01268d57cbf231b17d025aa7320977525e37b1798",
+          "bytes": 3113,
+          "role": "legacy2019 MS-TCN helpers; NOT an independent2026 novelty"
+        },
+        {
+          "path": "train.py",
+          "url": "https://github.com/HaoyuJi/SpecScalpel/blob/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+          "raw_url": "https://raw.githubusercontent.com/HaoyuJi/SpecScalpel/01adb1ed708d410023b8482c52270cac358c8525/train.py",
+          "sha256": "744a9432c84a010eefecdc3e5bbcfa76b7470f01df4bab1f5d2ab0fc2583a2eb",
+          "bytes": 18209,
+          "role": "links actual libs.models/helper/loss modules"
+        }
+      ],
+      "id": "specscalpel_spectral_core_velocity_xyz",
+      "display_name": "Spectral Scalpel",
+      "folder": "specscalpel",
+      "assigned_agent": "patchtst_review",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "MASF/FACM spectral cores only; V=1 feature location, no fictitious skeleton, action/text/boundary supervision.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_temporal.json",
+      "evidence_file_sha256": "7b91615f832f4426cd7189f1054ce8cdaf9cca625a946192bcace189a6a2b2fb",
+      "evidence_candidate_id": "tessera_v1_temporal_dualstream_velocity_xyz",
+      "paper_title": "TESSERA: Temporal Embeddings of Surface Spectra for Earth Representation and Analysis",
+      "paper_authors": [
+        "Zhengpeng Feng",
+        "Clement Atzberger",
+        "Sadiq Jaffer",
+        "Jovana Knezevic",
+        "Silja Sormunen",
+        "Robin Young",
+        "Madeline C. Lisaius",
+        "Markus Immitzer",
+        "Toby Jackson",
+        "James Ball",
+        "David A. Coomes",
+        "Anil Madhavapeddy",
+        "Andrew Blake",
+        "Srinivasan Keshav"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Feng_TESSERA_Temporal_Embeddings_of_Surface_Spectra_for_Earth_Representation_and_CVPR_2026_paper.html",
+      "pdf_sha256": "80240c5f199e581417cf0f9d7fd610b7c555c243844ac96f1efb9eddd197d93c",
+      "official_repo": "https://github.com/ucam-eo/tessera",
+      "upstream_commit": "e368539f7c4711e5f16fdd09801573830e34baf9",
+      "license": {
+        "spdx": "MIT",
+        "files": [
+          {
+            "path": "LICENSE",
+            "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+            "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/LICENSE",
+            "sha256": "1d0633266dfba2985bd18ea26dc1d83d597785f51aac1c938c621536bfe1583b",
+            "bytes": 1067,
+            "role": "root MIT copyright2025 Frank Feng"
+          }
+        ],
+        "weights_not_used": true
+      },
+      "core_sources": [
+        {
+          "path": "tessera_infer/src/models/modules.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/modules.py",
+          "sha256": "e58867489428858f9494767dd104329338685c654a7d60f9117a746dc5a7c4fa",
+          "bytes": 5358,
+          "role": "TemporalPositionalEncoder; TransformerEncoder; TemporalAwarePooling GRU+attention; ProjectionHead"
+        },
+        {
+          "path": "tessera_infer/src/models/ssl_model.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/ssl_model.py",
+          "sha256": "6201e7c56564007ccaea7370bb96a99fab7f326db5428c2a1e3447889f6fe4b1",
+          "bytes": 2571,
+          "role": "MultimodalBTModel and inference dual-encoder concat/reducer"
+        },
+        {
+          "path": "tessera_infer/src/models/builder.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/src/models/builder.py",
+          "sha256": "beaf0a052c59104951385a198fe250a1e96745b4053749eb612eda201d865e10",
+          "bytes": 1634,
+          "role": "actual fixed v1 8-layer two-backbone configuration"
+        },
+        {
+          "path": "tessera_infer/configs/ssl_config.py",
+          "url": "https://github.com/ucam-eo/tessera/blob/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+          "raw_url": "https://raw.githubusercontent.com/ucam-eo/tessera/e368539f7c4711e5f16fdd09801573830e34baf9/tessera_infer/configs/ssl_config.py",
+          "sha256": "74ab894c50a1a85a5aabda74718f8267f1c4ea66ebed2f3510a25e1e2b70d4fa",
+          "bytes": 675,
+          "role": "BTlambda5e-3; concat; latent128; apply_mixupFalse at pinned source"
+        }
+      ],
+      "id": "tessera_v1_dualstream_architecture_velocity",
+      "display_name": "TESSERA v1 architecture",
+      "folder": "tessera_v1",
+      "assigned_agent": "patchtst_review",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Author v1 dual temporal encoders, GRU-conditioned attention pool, ordered concat and linear reducer; selected architecture-only identity explicitly omits BT, train views, shuffle/mix and SSL projector/loss; does not inherit conditional source candidate SSL keep table; only internal time positions.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_structured.json",
+      "evidence_file_sha256": "8f74a18dbddeb223f4d4ca7f1c11310a60d7ce9d61fb12d7102e02eee32a436c",
+      "evidence_candidate_id": "csan_vit",
+      "paper_title": "Selection-as-Nonlinearity: Bridging Attention and Activation via a Joint Game-Decision Lens for Interpretable, Discriminative Visual Representations",
+      "paper_authors": [
+        "Sudong Cai",
+        "Shuai Yuan",
+        "Bingzhi Chen",
+        "Rui Mao",
+        "Bing Wang"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cai_Selection-as-Nonlinearity_Bridging_Attention_and_Activation_via_a_Joint_Game-Decision_Lens_CVPR_2026_paper.html",
+      "pdf_sha256": "b7cf0d1340db0aabc942c65211a1807224392d8f75b239c44c9ed5979d027d7e",
+      "official_repo": "https://github.com/SudongCAI/CSaN",
+      "upstream_commit": "a07175ffb9fa82ec58eca397e80aa63027c5d73f",
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "core_sources": [
+        {
+          "path": "MODELS/vit_csan.py",
+          "bytes": 128775,
+          "sha256": "db47f5d9026cd433758ed2751765776765653e42a832516776a0dba338472459",
+          "symbols": [
+            "Attention",
+            "SoftGShift",
+            "Block",
+            "VisionTransformer",
+            "vit_tiny_patch16_224"
+          ]
+        }
+      ],
+      "id": "csan_vit_velocity_architecture",
+      "display_name": "CSaN-ViT",
+      "folder": "csan_vit",
+      "assigned_agent": "s4d_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "Last effective Attention class with SoftGShift and direct linear calibration; not earlier tanh variant; public/private pathways retained.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    },
+    {
+      "evidence_file": "candidate_structured.json",
+      "evidence_file_sha256": "8f74a18dbddeb223f4d4ca7f1c11310a60d7ce9d61fb12d7102e02eee32a436c",
+      "evidence_candidate_id": "mixercseg_transmixer",
+      "paper_title": "MixerCSeg: An Efficient Mixer Architecture for Crack Segmentation via Decoupled Mamba Attention",
+      "paper_authors": [
+        "Zilong Zhao",
+        "Zhengming Ding",
+        "Pei Niu",
+        "Wenhao Sun",
+        "Feng Guo"
+      ],
+      "cvf_url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhao_MixerCSeg_An_Efficient_Mixer_Architecture_for_Crack_Segmentation_via_Decoupled_CVPR_2026_paper.html",
+      "pdf_sha256": "a9c196236f73923e60e402d3b6d4d903a058c923de2086b113090344b04fba4f",
+      "official_repo": "https://github.com/spiderforest/MixerCSeg",
+      "upstream_commit": "7ad3fd6fd0e9bc60d1eb9c3b50292d876485dd1d",
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "bytes": 1069,
+        "sha256": "e7d62576226fe965fd57f8fb192c4b1163be9bb92e17304a7f3f6cbaa326aada",
+        "notice": "Copyright2026 spiderforest; keep VMamba/Mamba and other third-party provenance/notices rather than infer root MIT erases vendor obligations"
+      },
+      "core_sources": [
+        {
+          "path": "VMamba/models/vmamba.py",
+          "bytes": 62669,
+          "sha256": "3a259ceacbd05f8521292c5e0340cef0f02f22912208d4229614fc0347770fcc",
+          "symbols": [
+            "SS2Dv2",
+            "SS2D",
+            "TransMixer"
+          ]
+        },
+        {
+          "path": "VMamba/models/utils.py",
+          "bytes": 9723,
+          "sha256": "a935b81d78a1a43d91536e2dff1cfa750dfc76322179216a3b891d393e5c0927",
+          "symbols": [
+            "get_global_local_index",
+            "Attention",
+            "LocalModule"
+          ]
+        },
+        {
+          "path": "VMamba/models/csms6s.py",
+          "bytes": 10627,
+          "sha256": "0a73a10dc8328c697fa155b312105f9accce5e4511db5d5f7b7a3fac71b90b36",
+          "symbols": [
+            "selective_scan_torch",
+            "selective_scan_fn",
+            "SelectiveScanCuda"
+          ]
+        },
+        {
+          "path": "models/encoder/vss_block.py",
+          "bytes": 4933,
+          "sha256": "d00aad8f6d6d34443aabf09c7d185204aef1c4d8bcd5e391f2c37205eb5bf587",
+          "symbols": [
+            "VSS",
+            "VSSEncoder"
+          ]
+        },
+        {
+          "path": "models/layers/hog_edge.py",
+          "bytes": 5036,
+          "sha256": "fc9fd40ae70f87046134989329b12da7f527bc0072a019c1f7ae5b879777c6d8",
+          "symbols": [
+            "HoGEdgeGateConv",
+            "EdgeConv",
+            "image2patches",
+            "patches2image"
+          ]
+        },
+        {
+          "path": "models/decoder/SRF.py",
+          "bytes": 3561,
+          "sha256": "c6798ec41d6434fbfed9a53551be40485dd68f2125c9a0d48053cd206692edb7",
+          "symbols": [
+            "SRModule",
+            "SRFModule"
+          ]
+        },
+        {
+          "path": "models/segmentor/MixerCSeg.py",
+          "bytes": 1869,
+          "sha256": "511f9dec06917ee988e09dc975f4df9d5146e641e2ee5f20f698ba6fd56024f7",
+          "symbols": [
+            "MixerCSeg",
+            "build_MixerCSeg",
+            "bce_dice"
+          ]
+        }
+      ],
+      "id": "mixercseg_transmixer_velocity_1d_reference",
+      "display_name": "MixerCSeg TransMixer-1D",
+      "folder": "mixercseg",
+      "assigned_agent": "s4d_port",
+      "implementation_kind": "architecture_core_port",
+      "selected_recipe": "scratch_supervised_mse",
+      "source_specific_auxiliary_losses": false,
+      "selected_scope": "TransMixer temporal-core reference: input-conditioned delta per-token channel sorting, global/local gather and scatter; four 2D scans become forward/backward 1D; HOG/SRF/segmentation omitted.",
+      "implementation_status": "static_source_preparation_in_progress",
+      "runtime_verified": false,
+      "capacity_accepted": false,
+      "formal_matrix_enrolled": false
+    }
+  ],
+  "accepted_method_count_increment": 0,
+  "runtime_receipts": [],
+  "notes": [
+    "This is a preparation and ordering manifest, not a deployed scheduler or a started experiment.",
+    "A model adaptation must retain a paper-specific core; renaming an old backbone is not a new independent method.",
+    "Input self-supervised fast weights, stochastic inference or source-specific loss must be explicitly scoped; no test labels, external modalities or cross-split state are permitted.",
+    "No final accuracy, convergence, novel-to-inertial or accepted-method claim is established by candidate discovery."
+  ],
+  "selected_independent_source_count": 10,
+  "source_review_scope": "primary-paper-author-repository-fixed-license-and-core-evidence; not runtime or redistribution approval",
+  "model_runtime_started": false,
+  "implementation_stage": "isolated_source_preparation_in_progress",
+  "proposed_pilot": {
+    "status": "proposal_not_frozen_not_enrolled",
+    "candidate_methods": 10,
+    "source_candidates": [
+      "ridi",
+      "euroc"
+    ],
+    "seeds": [
+      1735231569,
+      843628571,
+      951150512
+    ],
+    "candidate_cells": 60,
+    "control_cells": "not_frozen",
+    "full_13_source_expansion_authorized": false
+  }
+}
