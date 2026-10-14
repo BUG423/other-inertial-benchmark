@@ -27,6 +27,7 @@ commands:
   export     model=weights/best.pt [format=native|torchscript|onnx] [path=exports/model]
   benchmark  cfg=benchmarks/main.yaml [dry_run=true] [report=false] [key=value overrides]
   report     runs=runs/benchmark/main [out=reports/main] [metrics=[ate,rte]] [plots=true]
+  matrix-report matrix=runs/formal-matrix [out=reports/formal-matrix]
   info       [model=...] [data=...]   (no arguments: list models, datasets, converters)
   cfg        [key=value ...]          (print the resolved configuration)
   version
@@ -204,6 +205,17 @@ def cmd_report(kv: dict) -> int:
     return 0
 
 
+def cmd_matrix_report(kv: dict) -> int:
+    """Collect strict available results plus an explicit unavailable/NA matrix ledger."""
+    from .utils.reports import collect_matrix_results
+
+    _check_keys(kv, {"matrix", "out"}, "matrix-report")
+    _require(kv, "matrix")
+    out = kv.get("out") or Path(kv["matrix"]) / "matrix-report"
+    collect_matrix_results(kv["matrix"], out)
+    return 0
+
+
 def cmd_info(kv: dict) -> int:
     _check_keys(kv, {"model", "data", "flops"}, "info")
     if not kv:
@@ -263,6 +275,7 @@ COMMANDS: dict = {
     "export": cmd_export,
     "benchmark": cmd_benchmark,
     "report": cmd_report,
+    "matrix-report": cmd_matrix_report,
     "info": cmd_info,
     "cfg": cmd_cfg,
     "version": cmd_version,

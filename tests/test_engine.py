@@ -211,7 +211,7 @@ def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, 
     import shutil
     from inertial_benchmark.cfg import INPUT_KEYS
     from inertial_benchmark.engine.benchmark import (BenchmarkItem, _admit_dynamic, dependency_order,
-        matrix_row_id, matrix_state, run_item, scientific_run_identity, _sha)
+        matrix_row_id, matrix_state, run_item, scientific_run_identity, verify_completed_state, _sha)
     from inertial_benchmark.utils import CFG_DIR
     origin_root = tmp_path / source
     target_root = tmp_path / target
@@ -238,20 +238,31 @@ def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, 
     admission = tmp_path / 'coverage.json'
     rows, items = [], []
     for name, native, trainable in ((source, origin_root, True), (target, target_root, False)):
+        manifest = json.loads((native / 'dataset.json').read_text())
+        manifest['dataset'] = name
+        (native / 'dataset.json').write_text(json.dumps(manifest))
         row = {'profile': profile, 'dataset': name, 'seed': options['seed'], 'input_track': 'reference_oracle',
+               'domain': 'source-domain' if trainable else 'target-domain', 'classic': True,
+               'data_root': str(native), 'dims': int(resolved.dims),
+               'scientific_input_spec': {k: getattr(resolved, k) for k in INPUT_KEYS},
+               'sampling_spec': {'stride': 10, 'eval_stride': 10},
                'dataset_fingerprint': json.loads((native / 'dataset.json').read_text())['fingerprint'],
                'dataset_manifest_sha256': _sha(native / 'dataset.json'),
                'split_sha256': {p.name: _sha(p) for p in sorted((native / 'splits').glob('*.txt'))},
                'profile_config_sha256': _sha(CFG_DIR / 'models' / f'{profile}.yaml'),
-               'taskview_receipt': {'status': 'passed'}, 'model_cpu_accepted': True,
-               'trainable': trainable, 'state': 'pending_admission'}
+               'taskview_receipt': {'status': 'passed', 'splits': {
+                   'test': {'status': 'passed', 'valid_windows': 1}}}, 'model_cpu_accepted': True,
+                   'trainable': trainable,
+                   'checkpoint_training_source': None if trainable else source,
+                   'state': 'pending_admission'}
         row['id'] = matrix_row_id(profile, name, options['seed'], 'reference_oracle')
-        meta = {**row, 'dataset_name': name, 'scientific_input_spec': {k: getattr(resolved, k) for k in INPUT_KEYS},
+        meta = {**row, 'dataset_name': name,
                 'source_manifest_sha256': 'unit-source', 'seeds_record_sha256': 'unit-random-seed-record',
                 'policy_path': str(policy), 'policy_sha256': _sha(policy), 'admission_path': str(admission),
                 'sequence_calibration': True, 'checkpoint_training_source': None if trainable else source}
         rows.append(row)
-        items.append(BenchmarkItem(profile, profile, str(native), options['seed'], options.copy(),
+        execution_options = {**options, 'recipe': 'unified', 'metric_dims': int(resolved.dims)}
+        items.append(BenchmarkItem(profile, profile, str(native), options['seed'], execution_options,
                                    ['test'], tmp_path / 'runs', meta))
     admission.write_text(json.dumps({'source': {'source_manifest_sha256': 'unit-source'}, 'coverage': rows}))
     origin, transfer = items
@@ -265,8 +276,31 @@ def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, 
     assert not (origin.run_dir / 'train/weights/last.pt').exists()
     import fcntl
     from dataclasses import replace
+    from inertial_benchmark.engine import benchmark as benchmark_module
     from inertial_benchmark.engine.validator import Validator
     alternate = replace(origin, root=tmp_path / 'different-public-output', metadata=origin.metadata.copy())
+    if target == 'blackbird':
+        identity_path = Path(saved['run_identity_path'])
+        original_identity = identity_path.read_bytes()
+        replacement = identity_path.with_name('forged-public-reuse-identity.json')
+        forged_identity = json.loads(original_identity)
+        forged_identity['profile'] = 'forged-public-profile'
+        replacement.write_text(json.dumps(forged_identity))
+        real_fdopen = benchmark_module.os.fdopen
+        opens = 0
+
+        def replace_public_identity_after_open(fd, *args, **kwargs):
+            nonlocal opens
+            opens += 1
+            if opens == 2:  # checkpoint is first; run identity is second
+                replacement.replace(identity_path)
+            return real_fdopen(fd, *args, **kwargs)
+
+        with monkeypatch.context() as race:
+            race.setattr(benchmark_module.os, 'fdopen', replace_public_identity_after_open)
+            with pytest.raises(RuntimeError, match='run_identity_path pathname changed'):
+                run_item(alternate)
+        identity_path.write_bytes(original_identity)
     with monkeypatch.context() as probe:
         probe.setattr(Trainer, 'train', lambda *_: pytest.fail('completed shared cell was trained again'))
         probe.setattr(Validator, '__call__', lambda *_args, **_kw: pytest.fail('completed shared cell was evaluated again'))
@@ -281,10 +315,46 @@ def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, 
     changed = replace(alternate, metadata={**alternate.metadata, 'seeds_record_sha256': 'changed-random-record'})
     with pytest.raises(RuntimeError, match='completed shared run requested scientific identity changed'):
         run_item(changed)
+    if target == 'blackbird':
+        identity_path = Path(saved['run_identity_path'])
+        original_identity = identity_path.read_bytes()
+        replacement = identity_path.with_name('forged-transfer-source-identity.json')
+        forged_identity = json.loads(original_identity)
+        forged_identity['dataset_fingerprint'] = 'forged-transfer-source'
+        replacement.write_text(json.dumps(forged_identity))
+        real_fdopen = benchmark_module.os.fdopen
+        opens = 0
+
+        def replace_transfer_identity_after_open(fd, *args, **kwargs):
+            nonlocal opens
+            opens += 1
+            if opens == 2:  # origin checkpoint is first; origin identity is second
+                replacement.replace(identity_path)
+            return real_fdopen(fd, *args, **kwargs)
+
+        with monkeypatch.context() as race:
+            race.setattr(benchmark_module.os, 'fdopen', replace_transfer_identity_after_open)
+            with pytest.raises(RuntimeError, match='run_identity_path pathname changed'):
+                _admit_dynamic(transfer)
+        identity_path.write_bytes(original_identity)
     assert _admit_dynamic(transfer) is None
     transferred = run_item(transfer)
     assert transferred['train'] == 'pretrained checkpoint'
-    assert matrix_state(admission, rows[1])['checkpoint_sha256'] == saved['checkpoint_sha256']
+    transferred_state = matrix_state(admission, rows[1])
+    assert transferred_state['checkpoint_sha256'] == saved['checkpoint_sha256']
+    assert transferred_state['checkpoint_source'] == {
+        'run_id': saved['id'], 'path': saved['checkpoint'],
+        'sha256': saved['checkpoint_sha256']}
+    assert transferred_state['cross_domain_transfer'] is True
+    import importlib.util
+    ops_path = Path(__file__).resolve().parents[1] / 'tools' / 'ops_v1' / 'full_matrix.py'
+    ops_spec = importlib.util.spec_from_file_location('public_to_ops_reuse', ops_path)
+    ops_module = importlib.util.module_from_spec(ops_spec)
+    ops_spec.loader.exec_module(ops_module)
+    origin_context = verify_completed_state(saved, rows)
+    ops_module.verify_current_completed(
+        transferred_state, json.loads(policy.read_text()), _sha(policy),
+        'unit-source', 'unit-random-seed-record', rows, saved, origin_context)
     identity_path = Path(saved['run_identity_path'])
     original = identity_path.read_bytes()
     identity = json.loads(original)
@@ -293,7 +363,11 @@ def test_public_transfer_uses_shared_completed_state(dataset, tmp_path, target, 
         changed = {**identity, key: wrong}; identity_path.write_text(json.dumps(changed))
         state = json.loads(state_path.read_text()); state['run_identity_sha256'] = _sha(identity_path)
         state_path.write_text(json.dumps(state))
-        assert _admit_dynamic(transfer) == 'awaiting_matching_transfer_scientific_identity'
+        if key == 'seed':
+            with pytest.raises(RuntimeError, match='source scientific identity mismatch'):
+                _admit_dynamic(transfer)
+        else:
+            assert _admit_dynamic(transfer) == 'awaiting_matching_transfer_scientific_identity'
     identity_path.write_bytes(original)
     state = json.loads(state_path.read_text()); state['run_identity_sha256'] = _sha(identity_path)
     state_path.write_text(json.dumps(state))

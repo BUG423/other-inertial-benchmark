@@ -23,18 +23,25 @@ epoch 数由框架按数据集规模换算——窗口数差一个数量级的�
 
 from __future__ import annotations
 
-import json
-import hashlib
-import os
-import time
+import csv
 import fcntl
+import hashlib
+import io
+import json
+import math
+import os
+import stat
+import time
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
+import numpy as np
+
 from ..cfg import INPUT_KEYS, ConfigError, get_cfg, is_checkpoint
 from ..data.manifest import resolve_dataset
+from ..metrics import MAIN_METRICS
 from ..utils import CFG_DIR, LOGGER, json_load, json_save, to_builtin, yaml_load
 
 PathLike = Union[str, Path]
@@ -42,6 +49,12 @@ PathLike = Union[str, Path]
 PLAN_KEYS = ("name", "project", "models", "datasets", "seeds", "splits", "overrides", "report",
              "continue_on_error", "native_registry", "seed_record", "policy", "admission",
              "eval_alias_reuse")
+MATRIX_STATE_MUTABLE_FIELDS = frozenset((
+    'id', 'state', 'error', 'dependency_reason', 'resource_reason',
+    'model_cpu_pending_reason', 'checkpoint', 'checkpoint_sha256',
+    'checkpoint_retention', 'checkpoint_source', 'cross_domain_transfer',
+    'result', 'result_artifacts', 'run_identity_path', 'run_identity_sha256',
+))
 # 评测时不需要的训练专用键
 TRAIN_ONLY = ("epochs", "train_windows_budget", "budget_max_epochs",
               "batch", "lr", "optimizer", "momentum", "weight_decay", "scheduler",
@@ -62,6 +75,16 @@ class BenchmarkItem:
     root: Path = Path(".")
     metadata: dict = field(default_factory=dict)
     eval_alias_reuse: bool = False
+    # Exact qualification evidence from ``taskview_receipt.splits``.  The ops
+    # runner clears ``metadata`` after independently checking admission, so the
+    # split receipt travels separately into the shared execution path.
+    split_receipts: Optional[dict] = None
+    # Ephemeral, already-snapshotted completion evidence.  These are deliberately
+    # not stored in metadata/run identity or serialized to campaign artifacts.
+    completed_verification: Optional[dict] = field(default=None, repr=False)
+    transfer_origin: Optional[dict] = field(default=None, repr=False)
+    transfer_origin_verification: Optional[dict] = field(default=None, repr=False)
+    coverage_rows: Optional[list] = field(default=None, repr=False)
 
     @property
     def run_dir(self) -> Path:
@@ -109,11 +132,26 @@ def matrix_state(admission: PathLike, row: dict) -> dict:
     if not path.exists():
         return dict(row)
     state = json_load(path)
-    keys = ('profile', 'dataset', 'seed', 'input_track', 'dataset_fingerprint',
-            'dataset_manifest_sha256', 'split_sha256', 'profile_config_sha256', 'sampling_spec')
-    if any(state.get(key) != row.get(key) for key in keys):
+    # The coverage/taskview record is the qualification authority.  A stale or
+    # hand-edited run-state may contribute execution progress, but it must not
+    # replace scientific qualification fields when the two stores are merged.
+    keys = ('profile', 'architecture', 'dataset', 'data_root', 'domain', 'seed', 'input_track',
+            'classic', 'dims', 'main_xyz', 'native_xyz', 'learned_cuda_training', 'trainable',
+            'checkpoint_training_source', 'scientific_input_spec', 'sampling_spec', 'scientific_loss',
+            'dataset_fingerprint', 'dataset_manifest_sha256', 'split_sha256',
+            'profile_config_sha256', 'seeds_record_sha256', 'taskview_receipt', 'model_cpu_accepted',
+            'model_cpu_receipt_sha256')
+    changed_overlap = any(
+        key not in MATRIX_STATE_MUTABLE_FIELDS and state[key] != row[key]
+        for key in set(state) & set(row)
+    )
+    if state.get('id', identifier) != identifier or changed_overlap or any(
+            state.get(key) != row.get(key) for key in keys):
         raise RuntimeError('saved matrix state scientific row identity changed')
-    return {**row, **state}
+    merged = {**row, **state}
+    merged.update({key: row[key] for key in keys if key in row})
+    merged['id'] = identifier
+    return merged
 
 
 def save_matrix_state(admission: PathLike, row: dict) -> None:
@@ -125,9 +163,13 @@ def save_matrix_state(admission: PathLike, row: dict) -> None:
     os.replace(temporary, path)
 
 
-def retain_completed_checkpoint(admission: PathLike, row: dict, run_dir: PathLike, policy: Mapping) -> None:
+def retain_completed_checkpoint(admission: PathLike, row: dict, run_dir: PathLike,
+                                policy: Mapping, *, coverage_rows: Optional[list] = None,
+                                transfer_origin: Optional[Mapping] = None,
+                                transfer_origin_context: Optional[Mapping] = None) -> None:
     """Persist verified completion before releasing this cell's resumable last state."""
-    verify_completed_state(row)
+    verify_completed_state(
+        row, coverage_rows, transfer_origin, transfer_origin_context)
     if row.get('state') != 'completed':
         raise RuntimeError('checkpoint retention requires completed training and every test split')
     save_matrix_state(admission, row)
@@ -153,14 +195,623 @@ def verify_dataset_identity(root: PathLike, record: Mapping) -> None:
         raise RuntimeError('native manifest/fingerprint/split bytes changed after qualification')
 
 
-def verify_completed_state(row: Mapping) -> None:
-    if row.get('state') != 'completed':
+def _snapshot_regular_file(path: PathLike, label: str, *, keep_bytes: bool) -> dict:
+    """Read one trusted small file once and bind its bytes to its pathname."""
+    path = Path(path)
+    raw_parent = path.parent
+    if raw_parent.is_symlink() or path.is_symlink():
+        raise RuntimeError(f'completed run {label} path must not contain a symlink')
+    try:
+        root = raw_parent.resolve(strict=True)
+        root_before = root.stat(follow_symlinks=False)
+        canonical = path.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'completed run {label} is missing') from exc
+    if canonical.parent != root:
+        raise RuntimeError(f'completed run {label} path escapes its trusted parent')
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+    except OSError as exc:
+        raise RuntimeError(f'completed run {label} cannot be safely read') from exc
+    with os.fdopen(fd, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise RuntimeError(f'completed run {label} is not a regular file')
+        digest = hashlib.sha256()
+        chunks = [] if keep_bytes else None
+        size = 0
+        for chunk in iter(lambda: stream.read(1 << 20), b''):
+            digest.update(chunk)
+            size += len(chunk)
+            if chunks is not None:
+                chunks.append(chunk)
+        after = os.fstat(stream.fileno())
+    identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+    if identity(before) != identity(after) or size != after.st_size:
+        raise RuntimeError(f'completed run {label} changed during validation')
+    try:
+        current = path.stat(follow_symlinks=False)
+        root_after = root.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'completed run {label} pathname changed') from exc
+    directory_identity = lambda value: (value.st_dev, value.st_ino, value.st_mode)
+    if (not stat.S_ISREG(current.st_mode) or identity(current) != identity(after)
+            or directory_identity(root_before) != directory_identity(root_after)
+            or path.is_symlink() or path.resolve(strict=True).parent != root):
+        raise RuntimeError(f'completed run {label} pathname changed')
+    snapshot = {'path': canonical, 'sha256': digest.hexdigest(), 'size': size}
+    if chunks is not None:
+        snapshot['bytes'] = b''.join(chunks)
+    return snapshot
+
+
+def _completed_file_context(row: Mapping) -> dict:
+    checkpoint = _snapshot_regular_file(
+        row.get('checkpoint', ''), 'checkpoint', keep_bytes=False)
+    if checkpoint['sha256'] != row.get('checkpoint_sha256'):
+        raise RuntimeError('completed run checkpoint changed; refusing implicit reuse')
+    identity = _snapshot_regular_file(
+        row.get('run_identity_path', ''), 'run_identity_path', keep_bytes=True)
+    if identity['sha256'] != row.get('run_identity_sha256'):
+        raise RuntimeError('completed run run_identity_path changed; refusing implicit reuse')
+    try:
+        payload = json.loads(identity['bytes'].decode('utf-8'))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError('completed run identity is not valid UTF-8 JSON') from exc
+    if not isinstance(payload, Mapping):
+        raise RuntimeError('completed run identity must be a JSON object')
+    return {'checkpoint': checkpoint, 'run_identity': dict(payload),
+            'run_identity_file': identity}
+
+
+def _verify_transfer_provenance(row: Mapping, coverage_rows: Optional[list] = None,
+                                transfer_origin: Optional[Mapping] = None,
+                                transfer_origin_context: Optional[Mapping] = None) -> None:
+    """Bind a test-only cell to the exact qualified training cell and checkpoint."""
+    if row.get('trainable') is True:
+        if row.get('checkpoint_source') is not None or row.get('cross_domain_transfer') is not None:
+            raise RuntimeError('trainable completed run carries transfer-only provenance')
         return
-    for path_key, hash_key in (('checkpoint', 'checkpoint_sha256'),
-                               ('run_identity_path', 'run_identity_sha256')):
-        path = Path(row.get(path_key, ''))
-        if not path.is_file() or _sha(path) != row.get(hash_key):
-            raise RuntimeError(f'completed run {path_key} changed; refusing implicit reuse')
+    source_dataset = row.get('checkpoint_training_source')
+    # Static/legacy non-matrix rows have neither field and no transfer claim to verify.
+    if source_dataset is None and row.get('checkpoint_source') is None:
+        return
+    if not isinstance(source_dataset, str) or not source_dataset:
+        raise RuntimeError('transfer completed run lacks checkpoint_training_source')
+    source = row.get('checkpoint_source')
+    if not isinstance(source, Mapping) or set(source) != {'run_id', 'path', 'sha256'}:
+        raise RuntimeError('transfer completed run checkpoint_source is not a strict provenance object')
+    expected_id = matrix_row_id(
+        row.get('profile'), source_dataset, row.get('seed'), row.get('input_track'))
+    if source.get('run_id') != expected_id:
+        raise RuntimeError('transfer completed run checkpoint_source run_id mismatch')
+    checkpoint = Path(str(row.get('checkpoint', '')))
+    source_path = Path(str(source.get('path', '')))
+    try:
+        same_path = source_path.resolve(strict=True) == checkpoint.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise RuntimeError('transfer completed run checkpoint_source path is missing') from exc
+    if not same_path:
+        raise RuntimeError('transfer completed run checkpoint_source path mismatch')
+    if source.get('sha256') != row.get('checkpoint_sha256'):
+        raise RuntimeError('transfer completed run checkpoint_source sha256 mismatch')
+    cross_domain = row.get('cross_domain_transfer')
+    if type(cross_domain) is not bool:
+        raise RuntimeError('transfer completed run cross_domain_transfer must be boolean')
+    if coverage_rows is not None:
+        authoritative = next((candidate for candidate in coverage_rows
+                              if candidate.get('profile') == row.get('profile')
+                              and candidate.get('dataset') == source_dataset
+                              and candidate.get('seed') == row.get('seed')
+                              and candidate.get('input_track') == row.get('input_track')), None)
+        if authoritative is None or authoritative.get('id', expected_id) != expected_id:
+            raise RuntimeError('transfer completed run has no authoritative source row')
+        origin = transfer_origin or authoritative
+        if (origin.get('id', expected_id) != expected_id
+                or origin.get('profile') != authoritative.get('profile')
+                or origin.get('dataset') != authoritative.get('dataset')
+                or origin.get('seed') != authoritative.get('seed')
+                or origin.get('input_track') != authoritative.get('input_track')):
+            raise RuntimeError('transfer completed run source row identity mismatch')
+        if origin.get('state') != 'completed':
+            raise RuntimeError('transfer completed run authoritative source is not completed')
+        if origin.get('trainable') is not True:
+            raise RuntimeError('transfer completed run authoritative source is not trainable')
+        origin_context = transfer_origin_context
+        if origin_context is None:
+            origin_context = verify_completed_state(origin, coverage_rows)
+        if not isinstance(origin_context, Mapping):
+            raise RuntimeError('transfer completed run lacks verified source context')
+        try:
+            origin_path = Path(str(origin['checkpoint'])).resolve(strict=True)
+        except (KeyError, FileNotFoundError) as exc:
+            raise RuntimeError('transfer completed run source checkpoint is missing') from exc
+        context_checkpoint = origin_context.get('checkpoint')
+        if (not isinstance(context_checkpoint, Mapping)
+                or context_checkpoint.get('path') != origin_path
+                or context_checkpoint.get('sha256') != origin.get('checkpoint_sha256')
+                or str(row.get('checkpoint')) != str(origin_path)
+                or source.get('path') != str(origin_path)
+                or source_path.resolve(strict=True) != origin_path
+                or source.get('sha256') != origin.get('checkpoint_sha256')):
+            raise RuntimeError(
+                'transfer completed run checkpoint_source differs from authoritative origin')
+        origin_identity = origin_context.get('run_identity')
+        if not isinstance(origin_identity, Mapping):
+            raise RuntimeError('transfer completed run source identity is not verified')
+        identity_fields = ('profile', 'seed', 'input_track', 'dataset_fingerprint',
+                           'profile_config_sha256', 'scientific_input_spec')
+        if any(origin.get(key) is not None and origin_identity.get(key) != origin.get(key)
+               for key in identity_fields):
+            raise RuntimeError('transfer completed run source scientific identity mismatch')
+        expected_cross_domain = origin.get('domain') != row.get('domain')
+        if cross_domain != expected_cross_domain:
+            raise RuntimeError('transfer completed run cross_domain_transfer mismatch')
+
+
+def verify_completed_state(row: Mapping, coverage_rows: Optional[list] = None,
+                           transfer_origin: Optional[Mapping] = None,
+                           transfer_origin_context: Optional[Mapping] = None) -> Optional[dict]:
+    if row.get('state') != 'completed':
+        return None
+    context = _completed_file_context(row)
+    _verify_transfer_provenance(
+        row, coverage_rows, transfer_origin, transfer_origin_context)
+    spec, expected = _expected_eval_splits(row)
+    taskview = row.get('taskview_receipt') or {}
+    if taskview.get('status') != 'passed':
+        raise RuntimeError('completed campaign row lacks passed taskview qualification')
+    receipts = taskview.get('splits')
+    split_snapshots = {}
+    qualified_applicable, qualified_na = _qualified_eval_splits(
+        spec, expected, receipts, row=row, snapshots=split_snapshots)
+    statuses = (row.get('result') or {}).get('splits')
+    if not isinstance(statuses, Mapping) or list(statuses) != expected:
+        raise RuntimeError('completed run status omits, invents, or reorders an evaluation split')
+    if any(statuses[split] not in ('evaluated', 'skipped (done)')
+           for split in qualified_applicable):
+        raise RuntimeError('completed run has an applicable split without an evaluation result')
+    for split in qualified_na:
+        if statuses[split] != 'N/A (not_applicable_missing_split)':
+            raise RuntimeError('completed run N/A split status is inconsistent')
+
+    run_root = Path(str(row.get('run_identity_path', ''))).parent
+    artifacts = row.get('result_artifacts')
+    # Legacy completed states predate hash bindings.  They remain reusable only
+    # after the same strict, read-only validation of every currently qualified
+    # result.  We deliberately do not mutate/backfill their state here.
+    if artifacts is None:
+        for split in qualified_applicable:
+            _validate_result_split(
+                row, split, run_dir=run_root, split_snapshot=split_snapshots[split])
+        return context
+    if not isinstance(artifacts, Mapping) or artifacts.get('schema') != 'ib.completed-results.v1':
+        raise RuntimeError('completed run has an unsupported evaluation result binding')
+    bound_applicable = artifacts.get('applicable_splits')
+    bound_not_applicable = artifacts.get('not_applicable_splits')
+    split_records = artifacts.get('splits')
+    if (not isinstance(bound_applicable, list) or not bound_applicable
+            or not isinstance(bound_not_applicable, Mapping) or not isinstance(split_records, Mapping)):
+        raise RuntimeError('completed run has no applicable verified evaluation splits')
+    if (bound_applicable != qualified_applicable or list(split_records) != qualified_applicable
+            or bound_not_applicable != {split: 'not_applicable_missing_split'
+                                       for split in qualified_na}):
+        raise RuntimeError('completed run evaluation split manifest is inconsistent')
+    for split in qualified_applicable:
+        record = split_records.get(split)
+        if not isinstance(record, Mapping):
+            raise RuntimeError(f'completed run lacks result binding for split {split!r}')
+        _validate_result_split(
+            row, split, record=record, split_snapshot=split_snapshots[split])
+    return context
+
+
+def _safe_split_name(split: Any) -> str:
+    if (not isinstance(split, str) or not split or split in ('.', '..')
+            or '/' in split or '\\' in split or '\x00' in split
+            or Path(split).name != split):
+        raise RuntimeError(f'unsafe evaluation split name: {split!r}')
+    return split
+
+
+def _expected_eval_splits(row: Mapping, spec: Optional[Any] = None) -> tuple:
+    """Return the exact non-official evaluation contract from the dataset spec."""
+    spec = spec or resolve_dataset(row.get('data_root') or row.get('data'))
+    expected = []
+    for split in spec.test_splits:
+        split = _safe_split_name(split)
+        if split.startswith('official_'):
+            continue
+        if split in expected:
+            raise RuntimeError(f'dataset repeats evaluation split {split!r}')
+        expected.append(split)
+    if not expected:
+        raise RuntimeError('dataset declares no non-official evaluation splits')
+    return spec, expected
+
+
+def _split_snapshot(row: Optional[Mapping], spec: Any, split: str) -> Optional[dict]:
+    """Read one split once and bind the parsed IDs to its qualified bytes."""
+    split = _safe_split_name(split)
+    raw_root = Path(spec.root) / 'splits'
+    path = spec.split_file(split)
+    hashes = row.get('split_sha256') if row is not None else None
+    bound_when_qualified = isinstance(hashes, Mapping) and path.name in hashes
+
+    def missing() -> None:
+        if bound_when_qualified:
+            raise RuntimeError(
+                f'evaluation split {split!r} disappeared after qualified split_sha256')
+        return None
+
+    if raw_root.is_symlink():
+        raise RuntimeError('dataset split root must not be a symlink')
+    try:
+        root = raw_root.resolve(strict=True)
+        root_before = root.stat(follow_symlinks=False)
+    except FileNotFoundError:
+        return missing()
+    if not stat.S_ISDIR(root_before.st_mode):
+        raise RuntimeError('dataset split root is not a directory')
+    if path.is_symlink():
+        raise RuntimeError(f'evaluation split {split!r} resolves outside the dataset split root')
+    if not path.exists():
+        return missing()
+    try:
+        canonical = path.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'evaluation split {split!r} pathname changed') from exc
+    if canonical.parent != root:
+        raise RuntimeError(f'evaluation split {split!r} resolves outside the dataset split root')
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+    except OSError as exc:
+        raise RuntimeError(f'evaluation split {split!r} cannot be safely read') from exc
+    with os.fdopen(fd, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise RuntimeError(f'evaluation split {split!r} is not a regular split file')
+        payload = stream.read()
+        after = os.fstat(stream.fileno())
+    identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+    if identity(before) != identity(after) or len(payload) != after.st_size:
+        raise RuntimeError(f'evaluation split {split!r} changed during validation')
+    try:
+        current = path.stat(follow_symlinks=False)
+        root_after = root.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'evaluation split {split!r} pathname changed') from exc
+    directory_identity = lambda value: (value.st_dev, value.st_ino, value.st_mode)
+    if (not stat.S_ISREG(current.st_mode) or identity(current) != identity(after)
+            or directory_identity(root_before) != directory_identity(root_after)
+            or path.is_symlink() or path.resolve(strict=True).parent != root):
+        raise RuntimeError(f'evaluation split {split!r} pathname changed')
+    digest = hashlib.sha256(payload).hexdigest()
+    if row is not None:
+        if not isinstance(hashes, Mapping) or hashes.get(path.name) != digest:
+            raise RuntimeError(
+                f'evaluation split {split!r} changed from qualified split_sha256')
+    try:
+        text = payload.decode('utf-8')
+    except UnicodeDecodeError as exc:
+        raise RuntimeError(f'evaluation split {split!r} is not UTF-8') from exc
+    identifiers = []
+    for line in text.splitlines():
+        value = line.split('#', 1)[0].strip()
+        if value:
+            identifiers.append(value)
+    return {'ids': identifiers, 'sha256': digest, 'path': str(canonical)}
+
+
+def _split_applicable(spec: Any, split: str, receipts: Optional[Mapping],
+                      row: Optional[Mapping] = None,
+                      snapshots: Optional[dict] = None) -> bool:
+    """Return the qualified applicability of one evaluation split.
+
+    Dynamic campaigns must use their taskview receipt rather than infer from a
+    directory left by an older run.  Static plans have no receipt, so both a
+    split file and at least one declared sequence are required.
+    """
+    split = _safe_split_name(split)
+    snapshot = _split_snapshot(row, spec, split)
+    if snapshots is not None:
+        snapshots[split] = snapshot
+    ids = snapshot['ids'] if snapshot is not None else None
+    if receipts is not None:
+        if split not in receipts or not isinstance(receipts[split], Mapping):
+            raise RuntimeError(f'taskview receipt lacks evaluation split {split!r}')
+        status = receipts[split].get('status')
+        if status == 'not_applicable_missing_split':
+            if ids:
+                raise RuntimeError(f'evaluation split {split!r} is nonempty but taskview marks it N/A')
+            return False
+        if status != 'passed':
+            raise RuntimeError(f'evaluation split {split!r} taskview is not passed: {status!r}')
+        if not ids:
+            raise RuntimeError(f'qualified applicable split {split!r} is now missing or empty')
+        _int_field(receipts[split].get('valid_windows'), 'taskview valid_windows', minimum=1)
+        return True
+    return bool(ids)
+
+
+def _qualified_eval_splits(spec: Any, expected: list,
+                           receipts: Optional[Mapping], *, require_applicable: bool = True,
+                           row: Optional[Mapping] = None, snapshots: Optional[dict] = None
+                           ) -> tuple[list, list]:
+    if not isinstance(receipts, Mapping):
+        raise RuntimeError('completed campaign row lacks taskview split qualification')
+    auxiliary = {'train', 'val'} - set(expected)
+    receipt_eval = [split for split in receipts if split not in auxiliary]
+    if receipt_eval != expected:
+        raise RuntimeError('taskview receipt does not exactly cover dataset evaluation splits')
+    applicable, not_applicable = [], []
+    for split in expected:
+        (applicable if _split_applicable(spec, split, receipts, row, snapshots)
+         else not_applicable).append(split)
+    if require_applicable and not applicable:
+        raise RuntimeError('coverage cell has no applicable nonempty evaluation split')
+    return applicable, not_applicable
+
+
+def _int_field(value: Any, name: str, *, minimum: int = 0) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise RuntimeError(f'evaluation result {name} must be an integer >= {minimum}')
+    return value
+
+
+def _validate_result_split(row: Mapping, split: str, run_dir: Optional[PathLike] = None,
+                           record: Optional[Mapping] = None,
+                           split_snapshot: Optional[Mapping] = None) -> dict:
+    """Validate and optionally bind the two small, authoritative result files."""
+    if (run_dir is None) == (record is None):
+        raise ValueError('provide exactly one of run_dir or record')
+    split = _safe_split_name(split)
+    run_root = Path(run_dir) if record is None else Path(str(row.get('run_identity_path', ''))).parent
+    if run_root.is_symlink():
+        raise RuntimeError('evaluation run root must not be a symlink')
+    canonical_root = run_root.resolve()
+    split_dir = run_root / split
+    if split_dir.is_symlink() or split_dir.resolve().parent != canonical_root:
+        raise RuntimeError(f'evaluation split {split!r} output resolves outside the run root')
+    try:
+        root_before = canonical_root.stat(follow_symlinks=False)
+        split_before = split_dir.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'applicable split {split!r} output directory is missing') from exc
+    if not stat.S_ISDIR(root_before.st_mode) or not stat.S_ISDIR(split_before.st_mode):
+        raise RuntimeError(f'evaluation split {split!r} output parent is not a directory')
+    metrics_path = split_dir / 'metrics.json'
+    sequences_path = split_dir / 'sequences.csv'
+    canonical_paths = (metrics_path.resolve(), sequences_path.resolve())
+    if record is not None and (Path(str(record.get('metrics_path', ''))) != canonical_paths[0]
+            or Path(str(record.get('sequences_path', ''))) != canonical_paths[1]):
+        raise RuntimeError(f'completed split {split!r} result paths changed')
+
+    def read_once(path: Path, label: str) -> tuple[bytes, str]:
+        if path.is_symlink():
+            raise RuntimeError(f'applicable split {split!r} {label} must not be a symlink')
+        try:
+            fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        except FileNotFoundError as exc:
+            raise RuntimeError(f'applicable split {split!r} lacks {label}') from exc
+        except OSError as exc:
+            raise RuntimeError(f'applicable split {split!r} cannot safely read {label}') from exc
+        with os.fdopen(fd, 'rb') as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise RuntimeError(f'applicable split {split!r} {label} is not a regular file')
+            payload = stream.read()
+            after = os.fstat(stream.fileno())
+        identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+        if identity(before) != identity(after) or len(payload) != after.st_size:
+            raise RuntimeError(f'applicable split {split!r} {label} changed during validation')
+        try:
+            current = path.stat(follow_symlinks=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f'applicable split {split!r} {label} pathname changed') from exc
+        if (not stat.S_ISREG(current.st_mode)
+                or identity(current) != identity(after)
+                or path.is_symlink() or path.resolve().parent != split_dir.resolve()):
+            raise RuntimeError(f'applicable split {split!r} {label} pathname changed')
+        return payload, hashlib.sha256(payload).hexdigest()
+
+    metrics_bytes, metrics_sha = read_once(metrics_path, 'metrics.json')
+    sequences_bytes, sequences_sha = read_once(sequences_path, 'sequences.csv')
+    try:
+        root_after = canonical_root.stat(follow_symlinks=False)
+        split_after = split_dir.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f'evaluation split {split!r} output directory changed') from exc
+    directory_identity = lambda value: (value.st_dev, value.st_ino, value.st_mode)
+    if (directory_identity(root_before) != directory_identity(root_after)
+            or directory_identity(split_before) != directory_identity(split_after)
+            or split_dir.is_symlink() or split_dir.resolve().parent != canonical_root):
+        raise RuntimeError(f'evaluation split {split!r} output directory changed')
+    if record is not None:
+        if metrics_sha != record.get('metrics_sha256'):
+            raise RuntimeError(f'completed split {split!r} metrics.json changed')
+        if sequences_sha != record.get('sequences_sha256'):
+            raise RuntimeError(f'completed split {split!r} sequences.csv changed')
+    try:
+        metrics = json.loads(metrics_bytes)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f'evaluation split {split!r} metrics.json is invalid') from exc
+    if not isinstance(metrics, Mapping):
+        raise RuntimeError(f'evaluation split {split!r} metrics.json is not an object')
+    if metrics.get('mode') != 'val':
+        raise RuntimeError(f'evaluation split {split!r} is not a mode=val result')
+    expected = {'model': row.get('profile'), 'dataset': row.get('dataset'),
+                'split': split, 'seed': row.get('seed')}
+    for key, value in expected.items():
+        if metrics.get(key) != value:
+            raise RuntimeError(f'evaluation split {split!r} {key} identity mismatch')
+    dims = row.get('dims')
+    if dims not in (2, 3):
+        raise RuntimeError('coverage row lacks a valid 2D/3D evaluation dimension')
+    axes = list('xyz'[:dims])
+    evidence = (metrics.get('metric_dims_requested'), metrics.get('metric_dims_effective'),
+                metrics.get('predicted_axes'))
+    if ((metrics.get('protocol') or {}).get('metric_dims') != dims
+            or evidence != (dims, dims, axes)):
+        raise RuntimeError(f'evaluation split {split!r} dimension evidence mismatch')
+    num_sequences = _int_field(metrics.get('num_sequences'), 'num_sequences', minimum=1)
+    num_skipped = _int_field(metrics.get('num_skipped'), 'num_skipped')
+    aggregates = {}
+    for name in ('metrics', 'median', 'std', 'count'):
+        value = metrics.get(name)
+        if not isinstance(value, Mapping):
+            raise RuntimeError(f'evaluation split {split!r} {name} must be a mapping')
+        aggregates[name] = value
+    metric_keys = set(aggregates['metrics'])
+    if (not metric_keys or any(set(aggregates[name]) != metric_keys
+                               for name in ('median', 'std', 'count'))):
+        raise RuntimeError(f'evaluation split {split!r} aggregate metric keys are inconsistent or empty')
+
+    try:
+        with io.StringIO(sequences_bytes.decode('utf-8'), newline='') as stream:
+            reader = csv.DictReader(stream)
+            fieldnames = reader.fieldnames
+            rows = list(reader)
+    except UnicodeDecodeError as exc:
+        raise RuntimeError(f'evaluation split {split!r} sequences.csv is not UTF-8') from exc
+    required = {'sequence_id', 'skipped', 'metric_dims_requested',
+                'metric_dims_effective', 'predicted_axes'}
+    if (not fieldnames or len(fieldnames) != len(set(fieldnames))
+            or not required <= set(fieldnames)):
+        raise RuntimeError(f'evaluation split {split!r} sequences.csv lacks required headers')
+    if any(None in entry for entry in rows):
+        raise RuntimeError(f'evaluation split {split!r} sequences.csv has malformed extra fields')
+    if len(rows) != num_sequences + num_skipped:
+        raise RuntimeError(f'evaluation split {split!r} CSV row count disagrees with metrics.json')
+    evaluated = [entry for entry in rows if not entry.get('skipped')]
+    if len(evaluated) != num_sequences:
+        raise RuntimeError(f'evaluation split {split!r} evaluated CSV rows disagree with metrics.json')
+    identifiers = [entry.get('sequence_id') for entry in rows]
+    if any(not value for value in identifiers) or len(identifiers) != len(set(identifiers)):
+        raise RuntimeError(f'evaluation split {split!r} sequence IDs are empty or duplicated')
+    if split_snapshot is None:
+        split_snapshot = _split_snapshot(
+            row, resolve_dataset(row.get('data_root') or row.get('data')), split)
+    expected_ids = split_snapshot['ids'] if split_snapshot is not None else None
+    if not expected_ids or len(expected_ids) != len(set(expected_ids)):
+        raise RuntimeError(f'evaluation split {split!r} dataset sequence IDs are empty or duplicated')
+    # Dataset order is not a result invariant: Validator may schedule/load rows
+    # differently.  Completeness is exact set equality; CSV uniqueness above
+    # makes the comparison cardinality-preserving.
+    if set(identifiers) != set(expected_ids):
+        raise RuntimeError(f'evaluation split {split!r} CSV sequence IDs do not exactly match the split')
+    for entry in evaluated:
+        try:
+            csv_dims = (int(entry['metric_dims_requested']), int(entry['metric_dims_effective']))
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(f'evaluation split {split!r} CSV dimension evidence is invalid') from exc
+        if csv_dims != (dims, dims) or entry['predicted_axes'] != ','.join(axes):
+            raise RuntimeError(f'evaluation split {split!r} CSV dimension evidence mismatch')
+
+    def finite_number(value: Any) -> bool:
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+                and math.isfinite(float(value)))
+
+    if not metric_keys <= set(fieldnames):
+        raise RuntimeError(f'evaluation split {split!r} CSV lacks aggregate metric columns')
+    for key in metric_keys:
+        count = _int_field(aggregates['count'][key], f'count[{key}]')
+        if count > num_sequences:
+            raise RuntimeError(f'evaluation split {split!r} count[{key}] exceeds num_sequences')
+        values, value_rows = [], []
+        for index, entry in enumerate(evaluated):
+            raw = entry.get(key)
+            if raw is None or not str(raw).strip():
+                continue
+            try:
+                value = float(raw)
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError(
+                    f'evaluation split {split!r} CSV metric {key!r} is not numeric') from exc
+            if not math.isfinite(value):
+                raise RuntimeError(
+                    f'evaluation split {split!r} CSV metric {key!r} is not finite')
+            values.append(value)
+            value_rows.append(index)
+        if count != len(values):
+            raise RuntimeError(f'evaluation split {split!r} count[{key}] disagrees with CSV')
+        for name in ('metrics', 'median', 'std'):
+            value = aggregates[name][key]
+            if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
+                raise RuntimeError(f'evaluation split {split!r} {name}[{key}] must be numeric or null')
+        if count and (not finite_number(aggregates['metrics'][key])
+                      or not finite_number(aggregates['median'][key])):
+            raise RuntimeError(f'evaluation split {split!r} aggregate {key} is non-finite')
+        if not count and any(aggregates[name][key] is not None
+                             for name in ('metrics', 'median', 'std')):
+            raise RuntimeError(f'evaluation split {split!r} aggregate {key} disagrees with zero count')
+        if count == 1 and aggregates['std'][key] is not None:
+            raise RuntimeError(f'evaluation split {split!r} std[{key}] disagrees with one sample')
+        if count >= 2 and not finite_number(aggregates['std'][key]):
+            raise RuntimeError(f'evaluation split {split!r} std[{key}] is non-finite')
+        if count:
+            mean = float(np.mean(values))
+            if key == 'loss' and 'num_windows' in fieldnames:
+                weights = []
+                for index in value_rows:
+                    try:
+                        weight = float(evaluated[index].get('num_windows', ''))
+                    except (TypeError, ValueError) as exc:
+                        raise RuntimeError(
+                            f'evaluation split {split!r} loss num_windows is not numeric') from exc
+                    if not math.isfinite(weight) or weight < 0:
+                        raise RuntimeError(
+                            f'evaluation split {split!r} loss num_windows is invalid')
+                    weights.append(weight)
+                if sum(weights) > 0:
+                    mean = float(np.average(values, weights=weights))
+            expected_aggregates = {
+                'metrics': mean,
+                'median': float(np.median(values)),
+                'std': float(np.std(values, ddof=1)) if count > 1 else None,
+            }
+            for name, target in expected_aggregates.items():
+                actual = aggregates[name][key]
+                if target is None:
+                    if actual is not None:
+                        raise RuntimeError(
+                            f'evaluation split {split!r} {name}[{key}] disagrees with CSV')
+                elif (not finite_number(actual)
+                      or not math.isclose(float(actual), target,
+                                          rel_tol=1e-9, abs_tol=1e-12)):
+                    raise RuntimeError(
+                        f'evaluation split {split!r} {name}[{key}] disagrees with CSV')
+    if not any(key in MAIN_METRICS and aggregates['count'][key] > 0
+               and finite_number(aggregates['metrics'][key]) for key in metric_keys):
+        raise RuntimeError(f'evaluation split {split!r} has no finite publishable main metric')
+
+    bound = {'metrics_path': str(canonical_paths[0]), 'metrics_sha256': metrics_sha,
+             'sequences_path': str(canonical_paths[1]),
+             'sequences_sha256': sequences_sha, 'num_sequences': num_sequences,
+             'num_skipped': num_skipped, 'csv_rows': len(rows)}
+    if record is not None and any(record.get(key) != value for key, value in bound.items()):
+        raise RuntimeError(f'completed split {split!r} result binding changed')
+    return bound
+
+
+def bind_completed_results(row: Mapping, run_dir: PathLike, splits: list,
+                           receipts: Optional[Mapping]) -> dict:
+    """Validate every applicable split and return state-file hash bindings."""
+    if (row.get('taskview_receipt') or {}).get('status') != 'passed':
+        raise RuntimeError('completed campaign row lacks passed taskview qualification')
+    spec, expected = _expected_eval_splits(row)
+    if list(splits) != expected:
+        raise RuntimeError('requested evaluation splits do not exactly match dataset test_splits')
+    snapshots = {}
+    applicable, na_splits = _qualified_eval_splits(
+        spec, expected, receipts, row=row, snapshots=snapshots)
+    not_applicable = {split: 'not_applicable_missing_split' for split in na_splits}
+    records = {}
+    for split in applicable:
+        records[split] = _validate_result_split(
+            row, split, run_dir=run_dir, split_snapshot=snapshots[split])
+    return {'schema': 'ib.completed-results.v1', 'applicable_splits': applicable,
+            'not_applicable_splits': not_applicable, 'splits': records}
 
 
 def verify_capacity_policy(policy: Mapping, source_sha: str, hardware: Optional[Mapping] = None) -> dict:
@@ -416,25 +1067,33 @@ def _admit_dynamic(item: BenchmarkItem) -> Optional[str]:
         return "awaiting_taskview_and_model_cpu_acceptance"
     verify_dataset_identity(item.data, meta)
     row = matrix_state(admission, row)
-    verify_completed_state(row)
-    meta['admitted_row'] = row
+    item.coverage_rows = records
+    training = None
+    training_context = None
     if not meta["trainable"]:
         origin = meta.get("checkpoint_training_source")
         if not origin:
             return "test_only_transfer_source_unspecified"
-        training = next((r for r in records if r.get("profile") == item.label and r.get("dataset") == origin
-                         and r.get("seed") == item.seed and r.get("input_track") == meta["input_track"]), None)
+        training = next((r for r in records if r.get("profile") == item.label
+                         and r.get("dataset") == origin and r.get("seed") == item.seed
+                         and r.get("input_track") == meta["input_track"]), None)
         if training:
             training = matrix_state(admission, training)
-            verify_completed_state(training)
+            if training.get('state') == 'completed':
+                training_context = verify_completed_state(training, records)
+    completed_context = verify_completed_state(
+        row, records, training, training_context)
+    meta['admitted_row'] = row
+    item.completed_verification = completed_context
+    item.transfer_origin = training
+    item.transfer_origin_verification = training_context
+    if not meta["trainable"]:
         if (not training or training.get('state') != 'completed' or not training.get("checkpoint")
                 or not Path(training["checkpoint"]).is_file()):
             return "awaiting_same_profile_track_seed_transfer_checkpoint"
-        identity_path = Path(training.get('run_identity_path', ''))
-        if (not identity_path.is_file() or _sha(identity_path) != training.get('run_identity_sha256')
-                or _sha(training['checkpoint']) != training.get('checkpoint_sha256')):
+        if training_context is None:
             return 'awaiting_verified_transfer_run_identity'
-        identity = json_load(identity_path)
+        identity = training_context['run_identity']
         if (identity.get('source_manifest_sha256') != meta['source_manifest_sha256']
                 or identity.get('seed_record_sha256') != meta['seeds_record_sha256']
                 or identity.get('seed') != item.seed or identity.get('policy_sha256') != meta['policy_sha256']
@@ -443,8 +1102,15 @@ def _admit_dynamic(item: BenchmarkItem) -> Optional[str]:
                 or identity.get('dataset_fingerprint') != training.get('dataset_fingerprint')
                 or identity.get('scientific_input_spec') != meta['scientific_input_spec']):
             return 'awaiting_matching_transfer_scientific_identity'
-        item.model = training["checkpoint"]
-        meta["transfer_checkpoint_sha256"] = _sha(item.model)
+        item.model = str(training_context['checkpoint']['path'])
+        checkpoint_sha = training_context['checkpoint']['sha256']
+        checkpoint_source = {'run_id': training['id'], 'path': str(item.model),
+                             'sha256': checkpoint_sha}
+        row['checkpoint_source'] = checkpoint_source
+        row['cross_domain_transfer'] = training.get('domain') != row.get('domain')
+        meta['checkpoint_source'] = checkpoint_source
+        meta['cross_domain_transfer'] = row['cross_domain_transfer']
+        meta["transfer_checkpoint_sha256"] = checkpoint_sha
     elif not meta["sequence_calibration"]:
         import torch
         if not torch.cuda.is_available() or torch.cuda.device_count() < 1:
@@ -500,8 +1166,12 @@ def run_item(item: BenchmarkItem) -> dict:
                         'dir': str(item.run_dir), 'train': blocked, 'splits': {}, 'error': blocked}
             row = meta['admitted_row']
             if row.get('state') == 'completed':
-                verify_completed_state(row)
-                if json_load(row['run_identity_path']) != scientific_run_identity(item):
+                context = item.completed_verification
+                if context is None:
+                    context = verify_completed_state(
+                        row, item.coverage_rows, item.transfer_origin,
+                        item.transfer_origin_verification)
+                if context['run_identity'] != scientific_run_identity(item):
                     raise RuntimeError('completed shared run requested scientific identity changed')
                 return {**row['result'], 'train': 'skipped (completed shared state)',
                         'dir': str(Path(row['run_identity_path']).parent),
@@ -523,14 +1193,26 @@ def run_item(item: BenchmarkItem) -> dict:
 
 def _run_item(item: BenchmarkItem) -> dict:
     """训练（或跳过/续训）并在各测试划分上评测一项。"""
-    from .trainer import Trainer
-    from .validator import Validator
-
     status = {"label": item.label, "data": str(item.data), "seed": item.seed,
               "dir": str(item.run_dir), "train": None, "splits": {}}
     blocked = _admit_dynamic(item)
     if blocked:
         return {**status, "train": blocked, "coverage": item.metadata, "error": blocked}
+    spec = resolve_dataset(item.data)
+    splits = list(item.splits or spec.test_splits)
+    for split in splits:
+        _safe_split_name(split)
+    receipts = item.split_receipts
+    if receipts is None and item.metadata:
+        receipts = item.metadata.get('admitted_row', {}).get('taskview_receipt', {}).get('splits')
+    if receipts is not None:
+        contract = item.metadata.get('admitted_row', {}) if item.metadata else {'data_root': item.data}
+        _, expected = _expected_eval_splits(contract, spec)
+        if splits != expected:
+            raise RuntimeError('requested evaluation splits do not exactly match dataset test_splits')
+        _qualified_eval_splits(
+            spec, expected, receipts, require_applicable=True,
+            row=item.metadata.get('admitted_row') if item.metadata else None)
     # Static plans also need an opt-in identity boundary. Legacy disabled plans
     # create no new file; they cannot silently reuse an enabled plan's outputs.
     alias_identity = item.run_dir / 'eval-alias-policy.json'
@@ -568,27 +1250,26 @@ def _run_item(item: BenchmarkItem) -> dict:
             status["train"] = "resumed"
         else:
             status["train"] = "trained"
+        from .trainer import Trainer
         Trainer(overrides=over, save_dir=train_dir).train()
 
-    spec = resolve_dataset(item.data)
-    splits = item.splits or spec.test_splits
     alias_session = None
     if item.eval_alias_reuse:
         from .eval_aliases import ExactAliasSession
         alias_session = ExactAliasSession(spec, splits)
     for split in splits:
+        if not _split_applicable(spec, split, receipts):
+            status["splits"][split] = "N/A (not_applicable_missing_split)"
+            continue
         out = item.run_dir / split
         if (out / "metrics.json").exists():
             status["splits"][split] = "skipped (done)"
-            continue
-        if not spec.has_split(split):
-            LOGGER.warning(f"benchmark: {spec.name} has no split {split!r}; skipped")
-            status["splits"][split] = "missing split"
             continue
         over = {k: v for k, v in item.overrides.items()
                 if k not in TRAIN_ONLY and k not in INPUT_KEYS}
         cfg = get_cfg({**over, "model": str(weights), "data": item.data, "split": split,
                        "mode": "val"})
+        from .validator import Validator
         if alias_session is None:
             Validator(cfg, save_dir=out, label=item.label)()
         else:
@@ -597,13 +1278,25 @@ def _run_item(item: BenchmarkItem) -> dict:
     status.update(train_summary(train_dir))
     status["test"] = any(s.startswith("test") and v == "evaluated"
                          for s, v in status["splits"].items())
-    if item.metadata and all(v in ('evaluated', 'skipped (done)') for v in status['splits'].values()):
+    if item.metadata:
         verify_dataset_identity(item.data, item.metadata)
-        row = {**item.metadata['admitted_row'], 'state': 'completed', 'result': status,
+        admitted = item.metadata['admitted_row']
+        artifacts = bind_completed_results(admitted, item.run_dir, list(splits), receipts)
+        if item.transfer_origin_verification is not None:
+            checkpoint_snapshot = item.transfer_origin_verification['checkpoint']
+        else:
+            checkpoint_snapshot = _snapshot_regular_file(
+                weights, 'checkpoint', keep_bytes=False)
+        row = {**admitted, 'state': 'completed', 'result': status,
                'run_identity_path': str(identity_path), 'run_identity_sha256': _sha(identity_path),
-               'checkpoint': str(weights), 'checkpoint_sha256': _sha(weights)}
+               'checkpoint': str(checkpoint_snapshot['path']),
+               'checkpoint_sha256': checkpoint_snapshot['sha256'],
+               'result_artifacts': artifacts}
         retain_completed_checkpoint(item.metadata['admission_path'], row, item.run_dir,
-                                    json_load(item.metadata['policy_path']))
+                                    json_load(item.metadata['policy_path']),
+                                    coverage_rows=item.coverage_rows,
+                                    transfer_origin=item.transfer_origin,
+                                    transfer_origin_context=item.transfer_origin_verification)
     return status
 
 

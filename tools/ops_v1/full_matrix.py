@@ -654,10 +654,13 @@ def run(args):
         return _run(args)
 
 
-def verify_current_completed(row, policy, policy_sha, source_sha, seeds_sha):
+def verify_current_completed(row, policy, policy_sha, source_sha, seeds_sha,
+                             coverage_rows=None, transfer_origin=None,
+                             transfer_origin_context=None):
     """File integrity alone cannot admit an old result into a new protocol."""
     from inertial_benchmark.engine.benchmark import BenchmarkItem, scientific_run_identity, verify_completed_state
-    verify_completed_state(row)
+    context = verify_completed_state(
+        row, coverage_rows, transfer_origin, transfer_origin_context)
     if row.get('state') != 'completed': return
     overrides = {**policy['overrides'], 'recipe': 'unified', 'device': 'cpu' if row['classic'] else '0',
                  'seed': row['seed'], 'metric_dims': row['dims'], 'workers': policy['overrides'].get('workers', 2)}
@@ -665,8 +668,46 @@ def verify_current_completed(row, policy, policy_sha, source_sha, seeds_sha):
         metadata={**row, 'source_manifest_sha256': source_sha, 'policy_sha256': policy_sha,
                   'seeds_record_sha256': seeds_sha,
                   'transfer_checkpoint_sha256': row.get('checkpoint_source', {}).get('sha256')})
-    if load(row['run_identity_path']) != scientific_run_identity(item):
+    if context['run_identity'] != scientific_run_identity(item):
         raise RuntimeError('completed run requested scientific identity mismatch; refusing old-result reuse')
+
+
+def verified_transfer_origin(row, coverage_rows, admission):
+    """Resolve the one authoritative completed training row and snapshot it once."""
+    from inertial_benchmark.engine.benchmark import matrix_state, verify_completed_state
+    source_dataset = row.get('checkpoint_training_source')
+    if not isinstance(source_dataset, str) or not source_dataset:
+        raise RuntimeError('Transfer row lacks an explicit checkpoint training source')
+    origin = next((candidate for candidate in coverage_rows
+                   if candidate.get('profile') == row.get('profile')
+                   and candidate.get('dataset') == source_dataset
+                   and candidate.get('seed') == row.get('seed')
+                   and candidate.get('input_track') == row.get('input_track')), None)
+    if origin is None:
+        raise RuntimeError('Matching declared-source origin is absent from qualified coverage')
+    origin = matrix_state(admission, origin)
+    if origin.get('state') != 'completed':
+        raise RuntimeError('Matching declared-source origin is not completed')
+    context = verify_completed_state(origin, coverage_rows)
+    if context is None:
+        raise RuntimeError('Matching declared-source origin lacks verified completion context')
+    return origin, context
+
+
+def checkpoint_source_from_verified_origin(origin, context):
+    """Build transfer provenance from the already verified fd snapshot, without rereading it."""
+    checkpoint = context.get('checkpoint') if isinstance(context, dict) else None
+    if (not isinstance(checkpoint, dict) or not isinstance(checkpoint.get('path'), Path)
+            or checkpoint.get('sha256') != origin.get('checkpoint_sha256')):
+        raise RuntimeError('Verified transfer origin checkpoint context is inconsistent')
+    try:
+        origin_path = Path(origin['checkpoint']).resolve(strict=True)
+    except (KeyError, FileNotFoundError) as exc:
+        raise RuntimeError('Verified transfer origin checkpoint path is missing') from exc
+    if checkpoint['path'] != origin_path:
+        raise RuntimeError('Verified transfer origin checkpoint path is inconsistent')
+    path = str(checkpoint['path'])
+    return path, {'run_id': origin['id'], 'path': path, 'sha256': checkpoint['sha256']}
 
 
 def _run(args):
@@ -676,7 +717,8 @@ def _run(args):
                     'visible_cpu_count': os.cpu_count()}
     else:
         torch, hardware = cuda_gate(args)
-    from inertial_benchmark.engine.benchmark import (BenchmarkItem, run_item, dependency_order,
+    from inertial_benchmark.engine.benchmark import (BenchmarkItem, _snapshot_regular_file,
+        bind_completed_results, run_item, dependency_order,
         matrix_state, save_matrix_state, scientific_run_identity, verify_dataset_identity,
         verify_completed_state, retain_completed_checkpoint)
     from inertial_benchmark.data.manifest import resolve_dataset
@@ -710,10 +752,17 @@ def _run(args):
             proof = cpu_proofs(args, row['profile'])
             row['model_cpu_accepted'] = True; row['model_cpu_receipt_sha256'] = proof['sha256']
             verify_dataset_identity(row['data_root'], row)
-            verify_completed_state(row)
+            origin = None
+            origin_context = None
+            if row.get('state') == 'completed' and not row['trainable']:
+                origin, origin_context = verified_transfer_origin(
+                    row, rows, Path(args.output) / 'coverage.json')
             if row.get('state') == 'completed':
-                verify_current_completed(row, policy, policy_sha, source['source_manifest_sha256'], seeds_sha)
+                verify_current_completed(
+                    row, policy, policy_sha, source['source_manifest_sha256'], seeds_sha, rows,
+                    origin, origin_context)
                 continue
+            verify_completed_state(row)
             if row.get('sampling_spec') != {key: policy['overrides'][key] for key in ('stride', 'eval_stride')}:
                 raise RuntimeError('Qualified sampling differs from the frozen common recipe')
             over = {**policy['overrides'], 'recipe': 'unified', 'device': 'cpu' if row['classic'] else '0', 'seed': row['seed'],
@@ -729,24 +778,19 @@ def _run(args):
                     row.update(state='dependency_pending', dependency_reason='explicit training source unspecified')
                     save_matrix_state(Path(args.output) / 'coverage.json', row)
                     continue
-                origin = next((r for r in rows if r['profile'] == row['profile'] and r['dataset'] == transfer_source
-                               and r['seed'] == row['seed'] and r['input_track'] == row['input_track']), None)
-                if origin:
-                    origin_file = Path(args.output) / 'run-states' / f'{origin["id"]}.json'
-                    origin.update(matrix_state(Path(args.output) / 'coverage.json', origin))
-                if not origin or origin['state'] != 'completed':
+                candidate = next((r for r in rows if r['profile'] == row['profile'] and r['dataset'] == transfer_source
+                                  and r['seed'] == row['seed'] and r['input_track'] == row['input_track']), None)
+                if not candidate or matrix_state(
+                        Path(args.output) / 'coverage.json', candidate).get('state') != 'completed':
                     row.update(state='dependency_pending', dependency_reason='matching declared-source origin not completed')
                     save_matrix_state(Path(args.output) / 'coverage.json', row)
                     continue
-                verify_completed_state(origin)
+                origin, origin_context = verified_transfer_origin(
+                    row, rows, Path(args.output) / 'coverage.json')
                 verify_dataset_identity(origin['data_root'], origin)
-                model = origin['checkpoint']
-                if sha(model) != origin['checkpoint_sha256']:
-                    raise RuntimeError('Transfer checkpoint changed since completed origin')
-                identity_path = Path(origin['run_identity_path'])
-                if sha(identity_path) != origin['run_identity_sha256']:
-                    raise RuntimeError('Transfer source run identity changed')
-                origin_identity = load(identity_path)
+                model, checkpoint_source = checkpoint_source_from_verified_origin(
+                    origin, origin_context)
+                origin_identity = origin_context['run_identity']
                 if (origin_identity['source_manifest_sha256'] != source['source_manifest_sha256']
                         or origin_identity['policy_sha256'] != policy_sha
                         or origin_identity['seed_record_sha256'] != seeds_sha
@@ -757,13 +801,17 @@ def _run(args):
                         or origin_identity['scientific_input_spec'] != row['scientific_input_spec']
                         or origin_identity['dataset_fingerprint'] != origin['dataset_fingerprint']):
                     raise RuntimeError('Transfer source scientific run identity mismatch')
-                row['checkpoint_source'] = {'run_id': origin['id'], 'path': model, 'sha256': sha(model)}
+                row['checkpoint_source'] = checkpoint_source
                 row['cross_domain_transfer'] = origin['domain'] != row['domain']
             test_splits = [s for s in resolve_dataset(row['data_root']).test_splits if not s.startswith('official_')]
             if not test_splits:
                 raise RuntimeError('No declared primary or extra scientific evaluation splits')
             item = BenchmarkItem(row['profile'], model, row['data_root'], row['seed'], over,
-                                 test_splits, Path(args.output) / 'runs' / row['id'])
+                                 test_splits, Path(args.output) / 'runs' / row['id'],
+                                 split_receipts=row['taskview_receipt']['splits'],
+                                 transfer_origin=origin,
+                                 transfer_origin_verification=origin_context,
+                                 coverage_rows=rows)
             item.metadata = {**row, 'source_manifest_sha256': source['source_manifest_sha256'],
                              'policy_sha256': policy_sha, 'seeds_record_sha256': seeds_sha,
                              'transfer_checkpoint_sha256': row.get('checkpoint_source', {}).get('sha256')}
@@ -786,14 +834,22 @@ def _run(args):
                 save_matrix_state(Path(args.output) / 'coverage.json', row)
                 status = run_item(item)
                 if not row['classic']: torch.cuda.synchronize()
-            if any(v == 'missing split' for v in status['splits'].values()):
-                raise RuntimeError('Declared evaluation split was not executed')
-            checkpoint = Path(model) if not row['trainable'] else item.run_dir / 'train/weights/best.pt'
+            if row['trainable']:
+                checkpoint_context = _snapshot_regular_file(
+                    item.run_dir / 'train/weights/best.pt', 'checkpoint', keep_bytes=False)
+            else:
+                checkpoint_context = origin_context['checkpoint']
+            artifacts = bind_completed_results(row, item.run_dir, test_splits,
+                                                row['taskview_receipt']['splits'])
             row.update(state='completed', result=status, run_identity_sha256=sha(identity_file),
-                       run_identity_path=str(identity_file), checkpoint=str(checkpoint),
-                       checkpoint_sha256=sha(checkpoint))
+                       run_identity_path=str(identity_file),
+                       checkpoint=str(checkpoint_context['path']),
+                       checkpoint_sha256=checkpoint_context['sha256'], result_artifacts=artifacts)
             verify_dataset_identity(row['data_root'], row)
-            retain_completed_checkpoint(Path(args.output) / 'coverage.json', row, item.run_dir, policy)
+            retain_completed_checkpoint(
+                Path(args.output) / 'coverage.json', row, item.run_dir, policy,
+                coverage_rows=rows, transfer_origin=origin,
+                transfer_origin_context=origin_context)
         except BlockingIOError as exc:
             row.update(state='pending_resource', resource_reason=f'{type(exc).__name__}: {exc}')
         except Exception as exc:
@@ -873,7 +929,14 @@ def dispatch(args):
                     if args.profiles and row['profile'] not in args.profiles.split(','): continue
                     if args.datasets and row['dataset'] not in args.datasets.split(','): continue
                     if row.get('state') == 'completed':
-                        verify_current_completed(row, policy, sha(args.policy), source['source_manifest_sha256'], seeds_sha)
+                        origin = None
+                        origin_context = None
+                        if not row['trainable']:
+                            origin, origin_context = verified_transfer_origin(
+                                row, rows, report_path)
+                        verify_current_completed(
+                            row, policy, sha(args.policy), source['source_manifest_sha256'],
+                            seeds_sha, rows, origin, origin_context)
                         continue
                     if row.get('taskview_receipt', {}).get('status') != 'passed': continue
                     if not row['trainable']:
@@ -883,7 +946,7 @@ def dispatch(args):
                         if not origin: continue
                         origin = {**origin, **matrix_state(report_path, origin)}
                         if origin.get('state') != 'completed': continue
-                        verify_completed_state(origin)
+                        verified_transfer_origin(row, rows, report_path)
                     ready.append(row)
                 ready.sort(key=lambda r: (r['trainable'], not r['main_xyz'],
                     r['dataset'] not in ('euroc', 'ridi'), report['seeds'].index(r['seed']), r['profile'], r['dataset']))
