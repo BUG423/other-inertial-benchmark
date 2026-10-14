@@ -1,6 +1,6 @@
 # 交付与执行总览
 
-> 状态基线：`dev/v1@8c1d818`。本文建立于 2026-10-14，服务于当前冻结实验、结果验收和论文交付。
+> 状态基线：`dev/v1@4fdcb0c`。本文建立于 2026-10-14，服务于当前冻结实验、结果验收和论文交付。
 > 它不是实时监控面板，也不替代[冻结共同协议](protocols/common-benchmark-v1.json)、
 > [数据/实验状态](DEV_V1_INTEGRATION.md)或逐项机器收据。
 
@@ -65,22 +65,28 @@
 
 ## 5. 动态训练快照
 
-**事实，观测时间 2026-10-14 17:35 CST（UTC+08:00）**：
+**事实，观测时间 2026-10-14 18:03 CST（UTC+08:00）**：
 
 | 状态 | 单元数 | 解释 |
 | :--- | ---: | :--- |
-| completed | 643 | 执行状态为完成；仍须经过 L3 结果验收，不能直接等同 643 个可发表结果 |
+| completed | 649 | 执行状态为完成；不能直接等同 649 个全链验收或可发表结果 |
 | running | 4 | 瞬时状态，下一次读取可变化 |
-| qualified | 1,371 | 已通过 taskview，但尚未进入终态 |
+| qualified | 1,365 | 已通过 taskview，但尚未进入终态 |
 | failed | 1 | CTIN/TLIO/seed 1735231569 的数值/科学失败；保留证据，未自动重试 |
 | unsupported_taskview | 48 | 冻结的不支持输入单元，保留为明确 N/A/unsupported |
 | **合计** | **2,067** | 与冻结 coverage 一致 |
 
 这个快照只回答“当时状态文件写了什么”。它不证明矩阵完成、模型收敛、结果有效或服务器随后仍保持相同计数。
-当前 completed 按 seed 为 267 / 189 / 187；按执行类型为 260 个训练、7 个校准、376 个仅评测；
-其中 637 个标记为 primary XYZ。冻结 source/policy/seed 身份无错误。
-已知至少一个历史 completed 单元存在空/无效 evaluation；因此不能把 `completed` 数直接写入论文结果覆盖数，
-必须先由 L3 matrix-report 记为 accepted 或 invalid。
+当前 completed 按 seed 为 273 / 189 / 187；按执行类型为 266 个训练、7 个校准、376 个仅评测；
+其中 643 个标记为 primary XYZ。冻结 source/policy/seed 身份无错误。
+已知至少一个历史 completed 单元存在空/无效 validation evaluation；因此不能把 `completed` 数直接写入论文证据完整覆盖数。
+L3 matrix-report 验收测试小结果，validation、checkpoint 与 transfer 仍须全链只读验收；两者不能互相替代。
+
+**首份 partial 结果验收事实**：17:58:50–17:59:01 CST 的独立采样保留全部 2,067 cells；
+649 个 completed 至少各有一个 accepted 测试 split，共 **1,251 accepted 测试 splits / 23,788 逐序列行 / 0 rejected**。
+569 个汇总 strata 中 341 有三 seed、228 仅一 seed；逐序列配对未验收，且全部 accepted 属于 reference_oracle。
+这不覆盖 deployable 主表、train/val、checkpoint 或 transfer 全链。
+精确收据、可用性台账、时间区间和限制见[partial report 交接](FORMAL_PARTIAL_RESULTS_HANDOFF.md)。
 
 ## 6. 当前 Git 里程碑
 
@@ -97,6 +103,7 @@
 | 评估别名复用 | `e795f9d` | exact CPU 等价复用证据；不等于正式 GPU 加速声明 |
 | KITTI 候选链 | `b25b5d9`、`92edf25` | raw/derived converter 与候选证据；保持正式 13 来源不变 |
 | 完成态与矩阵报告加固 | `8c1d818` | completed-state fail-closed 验收、matrix-aware report 与 178 项组合回归；尚未热部署到冻结训练源 |
+| 跨领域 baseline 隔离研究 | `4fdcb0c` | ModernTCN/PatchTST/S4D、108 项 AutoDL CPU 验收和阶段交接；未注册、未进正式矩阵 |
 
 completed-state/result-report 加固已通过本地独立审查；是否已经提交以 Git 记录为准，且在产生服务器 preflight receipt 前，
 **不能写成已部署到当前冻结矩阵**。
@@ -110,7 +117,7 @@ completed-state/result-report 加固已通过本地独立审查；是否已经�
 | P0.1 | 保护冻结矩阵和运行资源 | L1 | 执行/运维 Owner | source、coverage、policy、seed、native guards 无漂移；监控不占用唯一训练锁；异常保留原收据 |
 | P0.2 | 完成态结果闸门 | P0.1 | 引擎 Owner + 独立审计 | 适用 split 非空、身份/维度/数量/哈希一致；N/A 不创建伪 eval；篡改或缺失使单元非成功；正负测试通过 |
 | P0.3 | 安全矩阵结果聚合 | P0.2 | 结果工具 Owner | 不收 running/failed；拒绝路径穿越、重复 row/split、state 改写科学身份与跨 seed 协议混合；invalid 进入台账而不污染结果；原 `ipb report` 回归通过 |
-| P0.4 | 首份可复核 partial snapshot | P0.3 | 结果工具 Owner + 统计 Owner | availability、accepted/invalid hashes、逐序列与分层汇总闭合；明确 observed time 和不完整性；不把 partial 排名写成最终结论 |
+| P0.4 | 首份可复核 partial snapshot（已通过，18:00 CST） | P0.3 | 结果工具 Owner + 统计 Owner | 首份全范围台账、1,251 accepted 测试 splits、原字节哈希与分层汇总闭合；仍不完整、不含 checkpoint/val 全链，不当作最终结论 |
 | P0.5 | 发布许可风险清单 | 可并行 | 来源/许可 Owner + Legal | 对仓库代码、第三方源码、数据、权重、图表逐项给出可分发/仅本地/需授权/禁止四态，未决项有负责人和截止条件 |
 
 ### P1：P0 通过后推进的正式交付
@@ -147,8 +154,9 @@ P0/P1 组合回归为 **178 passed / 0 failed**（另有 4 条既有 multiproces
 - checkpoint 使用流式快照，结果/identity/split 的解析与哈希使用同一受控字节视图；report 持久化 manifest 根哈希；
 - 现有旧 completed state 没有 `result_artifacts` 时仍可走严格的只读现场重验，不自动回填或改写历史 state。
 
-这表示代码具备生成首份可复核 partial snapshot 的条件，不表示远端所有 completed 已全部验收。新实现未热部署到当前运行源码；
-部署前仍须在服务器对旧 checkpoint/result 做只读 preflight，并由 Owner 决定已知 invalid completed 的重跑策略。
+独立服务器分析 snapshot 已生成并验收[首份 partial report](FORMAL_PARTIAL_RESULTS_HANDOFF.md)，
+其测试小结果链已闭合，不表示远端所有 checkpoint/validation/transfer 已验收。新实现未热部署到当前运行源码；
+部署前仍须完成旧 checkpoint/result 全链只读 preflight，并由 Owner 决定已知 invalid completed 的重跑策略。
 
 ### 8.2 CTIN/TLIO 正式失败
 
