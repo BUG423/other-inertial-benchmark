@@ -6,7 +6,9 @@ in 16.866 seconds: 12 actual NumPy/h5py scientific checks passed; all 41,556
 original members retained their acquisition SHA. HDF5 readback preserved every
 packet value, original text, source index, clock and quality flag. Torch and
 CUDA were not imported or requested. Existing 13 formal datasets and the 2,067
-cell experiment plan were unchanged. Root review of this handoff is pending.
+cell experiment plan were unchanged. Root review accepted this only as an
+unregistered lossless candidate. The separately reviewed generic 200 Hz result
+is recorded in [KITTI_200HZ_CPU_HANDOFF.md](KITTI_200HZ_CPU_HANDOFF.md).
 
 | Preregistered recording split | Original packets | Longest clock-contiguous run | Clock backjumps / gaps over 50 ms | Whole-run 800 m pairs |
 | --- | ---: | ---: | ---: | ---: |
@@ -62,6 +64,8 @@ invalidate a generic estimated-reference native track.
 
 Actual receipt SHA256:
 `cefe15a9e3e8550189204f69202f83b0ded2535976ff4dcb9702c99939e81af4`.
+Scientific JUnit SHA256:
+`4f7c7e863afaf8127cf395f5836335cacf41b4b51c8a710b5b4f00c3b1fd733f`.
 Quality manifest:
 `d5f3edb4a505db2dc4aae7c8f91022bab6467f9cd3e51006c67285998eabd653`.
 Before/after protected-source, native-manifest, split and experiment-identity
