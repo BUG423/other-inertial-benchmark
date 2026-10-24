@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Post a bounded, read-only formal-matrix status report to GitHub Issue #1.
 
-The reporter reads the current matrix and run-state files over the existing
-private SSH config. It never launches or signals benchmark work. A stale
-matrix snapshot is reported as stale evidence instead of being presented as a
-live result.
+The reporter reads the authoritative matrix on the live Agent through the
+app-remote-terminal WSS relay. It never launches or signals benchmark work,
+and it never uses the old SSH snapshot as a fallback.
 """
 
 from __future__ import annotations
@@ -16,7 +15,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import re
 import shlex
 import subprocess
 import sys
@@ -26,8 +24,11 @@ from textwrap import dedent
 ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY = "BUG423/other-inertial-benchmark"
 ISSUE = "1"
-CONFIG = ROOT / ".local/autodl-dual4090.json"
-REMOTE_HELPER = ROOT / ".local/acquisition/ops/.venv/bin/python"
+PAIRING_PROFILE = Path(os.environ.get(
+    "REMOTE_TERMINAL_APP_PROFILE",
+    str(ROOT.parent / "app-remote-terminal/pairing/20261023/remote-pc-1.app.json"),
+))
+RELAY_HELPER = ROOT / "tools/ops_v1/relay_browser.js"
 STATE_DIR = Path.home() / ".local/state/other-inertial-benchmark-issue-reporter"
 LOCK_PATH = STATE_DIR / "reporter.lock"
 MENTIONS = ("@BUG423", "@RicardoCDUT", "@Sarah-123886")
@@ -39,8 +40,7 @@ REMOTE_SCRIPT = dedent(
     import datetime, hashlib, json, os, socket, subprocess
     from pathlib import Path
 
-    root = Path('/root/autodl-tmp/other-inertial-benchmark-v1')
-    matrix = root / '.local/matrix/main'
+    matrix = Path('/home/ps/RAL/cloud-import-20261023/runtime/primary-local/matrix/main')
     coverage_path = matrix / 'coverage.json'
     if not coverage_path.is_file():
         raise RuntimeError('coverage.json missing')
@@ -70,8 +70,12 @@ REMOTE_SCRIPT = dedent(
         if state == 'running':
             active.append({key: value.get(key) for key in ('id', 'profile', 'dataset', 'seed', 'state')})
 
-    process_text = subprocess.run(
-        ['bash', '-lc', "ps -eo pid=,args= | egrep '(full_matrix|benchmark|train)' | egrep -v 'egrep|grep' | head -40"],
+    state_mtimes = [
+        path.stat().st_mtime for path in states.glob('*.json')
+        if path.is_file()
+    ]
+    controller_text = subprocess.run(
+        ['bash', '-lc', "ps -eo pid=,args= | egrep '(agent/index\\.js|continue-formal\\.py|formal-bridge\\.py)' | egrep -v 'egrep|grep' | head -40"],
         text=True, capture_output=True, check=False,
     ).stdout.splitlines()
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -84,7 +88,13 @@ REMOTE_SCRIPT = dedent(
         'full_scope': len(rows),
         'counts': counts,
         'active': active,
-        'matching_processes': process_text,
+        'run_state_files': len(state_mtimes),
+        'latest_run_state_mtime_utc': (
+            datetime.datetime.fromtimestamp(max(state_mtimes), datetime.timezone.utc).isoformat()
+            if state_mtimes else None
+        ),
+        'matching_processes': controller_text,
+        'controller_present': any('continue-formal.py' in line for line in controller_text),
     }, ensure_ascii=False))
     """
 ).strip()
@@ -103,13 +113,14 @@ def run(argv: list[str], timeout: int = 90) -> subprocess.CompletedProcess[str]:
 
 
 def fetch_remote() -> dict:
-    if not CONFIG.is_file() or CONFIG.stat().st_mode & 0o077:
-        raise RuntimeError("private SSH config is missing or not mode 0600")
-    helper = REMOTE_HELPER if REMOTE_HELPER.is_file() else Path(sys.executable)
+    if not PAIRING_PROFILE.is_file() or PAIRING_PROFILE.stat().st_mode & 0o077:
+        raise RuntimeError("private relay APP pairing profile is missing or not mode 0600")
+    if not RELAY_HELPER.is_file():
+        raise RuntimeError("relay browser helper is missing")
     command = [
-        str(helper), str(ROOT / "tools/ops_v1/remote.py"),
-        "--config", str(CONFIG), "--timeout", "60", "exec",
-        "/root/miniconda3/bin/python -c " + shlex.quote(REMOTE_SCRIPT),
+        "node", str(RELAY_HELPER), "--profile", str(PAIRING_PROFILE),
+        "--timeout", "90", "--command",
+        "/home/ps/anaconda3/bin/python3 -c " + shlex.quote(REMOTE_SCRIPT),
     ]
     result = run(command, timeout=90)
     if result.returncode:
@@ -117,7 +128,13 @@ def fetch_remote() -> dict:
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     if not lines:
         raise RuntimeError("remote read returned no metadata")
-    value = json.loads(lines[-1])
+    relay_result = json.loads(lines[-1])
+    if relay_result.get("ok") is not True or relay_result.get("exitCode") != 0:
+        raise RuntimeError("relay command failed")
+    output_lines = [line.strip() for line in relay_result.get("output", "").splitlines() if line.strip()]
+    if not output_lines:
+        raise RuntimeError("relay command returned no metadata")
+    value = json.loads(output_lines[-1])
     if value.get("full_scope") != 2067:
         raise RuntimeError("remote formal scope changed")
     return value
@@ -133,11 +150,12 @@ def write_receipt(value: dict) -> None:
 
 def render(value: dict) -> tuple[str, str]:
     now = utc_now()
-    observed = datetime.fromisoformat(value["observed_utc"])
-    mtime = datetime.fromisoformat(value["coverage_mtime_utc"])
-    age_hours = max(0.0, (now - mtime).total_seconds() / 3600.0)
-    fresh = age_hours <= 6.0
-    status = "fresh" if fresh else "stale_snapshot"
+    latest_state = value.get("latest_run_state_mtime_utc")
+    state_age_hours = None
+    if latest_state:
+        state_age_hours = max(0.0, (now - datetime.fromisoformat(latest_state)).total_seconds() / 3600.0)
+    live = value.get("controller_present") is True and state_age_hours is not None and state_age_hours <= 6.0
+    status = "live_agent" if live else "agent_state_needs_review"
     marker = f"<!-- ib-live-matrix-reporter/{now:%Y%m%dT%H%M%SZ} -->"
     counts = value.get("counts", {})
     active = value.get("active", [])
@@ -147,16 +165,18 @@ def render(value: dict) -> tuple[str, str]:
         "",
         *MENTIONS,
         "",
-        f"状态源：{status}；主机 `{value.get('hostname')}`；coverage SHA256 `{value.get('coverage_sha256')}`。",
-        f"coverage 文件最后修改：{value.get('coverage_mtime_utc')}（约 {age_hours:.1f} 小时前）。",
+        f"状态源：{status}；通过阿里云 WSS Agent 读取；主机 `{value.get('hostname')}`；coverage SHA256 `{value.get('coverage_sha256')}`。",
+        f"run-states 文件数：{value.get('run_state_files', 0)}；最新修改：{latest_state or 'unknown'}"
+        + (f"（约 {state_age_hours:.1f} 小时前）。" if state_age_hours is not None else "。"),
+        f"coverage 文件最后修改：{value.get('coverage_mtime_utc')}（冻结范围文件，不作为实时进度依据）。",
         f"正式范围：{value.get('full_scope')}；文件中记录的 completed={counts.get('completed', 0)}、"
         f"running={counts.get('running', 0)}、qualified={counts.get('qualified', 0)}、"
         f"failed={counts.get('failed', 0)}、unsupported={counts.get('unsupported_taskview', 0)}。",
     ]
-    if not fresh:
+    if not live:
         lines += [
             "",
-            "该 coverage 快照已超过 6 小时，以上计数只作为过期文件证据，不能解释为当前服务器实时进度。",
+            "未检测到近期 run-state 更新或正式控制器；本次计数需要人工复核，不能解释为实时进度。",
         ]
     if active:
         lines += ["", "文件中标为 running 的单元："]
@@ -168,7 +188,7 @@ def render(value: dict) -> tuple[str, str]:
         lines.extend(f"- `{line[:240]}`" for line in processes[:8])
     lines += [
         "",
-        "本 reporter 只读 coverage/run-states 并发布 Issue；不启动、停止、重试、下载或修改训练。",
+        "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",
     ]
     return "\n".join(lines), marker
 
