@@ -1,0 +1,29 @@
+{
+  "schema": "ib.trajectory-shortening.sage-io-proposal.v1",
+  "observed_utc": "2026-10-24T06:05:54.601984Z",
+  "status": "proposal_only",
+  "formal_matrix_changed": false,
+  "formal_matrix": "53 profiles x 13 sources x 3 seeds = 2067 cells",
+  "current_completed_test_cells": 981,
+  "current_failed_cells": 2,
+  "trajectory_metric": "plr = L_1s(prediction) / L_1s(reference)",
+  "summary": {
+    "all_completed_test": {"n": 981, "below_one": 850, "fraction_below_one": 0.8665, "median": 0.8506},
+    "human_in_domain": {"n": 405, "below_one": 392, "fraction_below_one": 0.9679, "median": 0.9084},
+    "uav_robot_test_only": {"n": 576, "below_one": 458, "fraction_below_one": 0.7951, "median": 0.4267},
+    "paired_profile_dataset_groups": {"n": 290, "groups_below_one": 250, "fraction_below_one": 0.8621, "groups_with_at_least_three_seeds": 256}
+  },
+  "interpretation": {
+    "claim_supported": "conditional shortening in human in-domain completed cells",
+    "claims_proven": [],
+    "not_supported": ["universal algorithm law", "90 percent universal claim", "PLR correction implies lower ATE/RTE", "causal explanation from cell-level PLR alone"],
+    "required_next_statistics": ["recording-group bootstrap", "paired seed analysis", "plr_oracle versus oracle_ratio", "speed_ratio/along_bias/direction error", "ATE/RTE and fixed-horizon drift jointly"]
+  },
+  "bases": [
+    {"family": "ResNet/ConvNeXt/TCN", "role": "multi-scale residual temporal trunk", "official_inertial_reproduction": false},
+    {"family": "MS-Temba", "role": "multi-scale temporal context inspiration", "official_inertial_reproduction": false},
+    {"family": "RIO/TartanIMU", "role": "inertial velocity backbone and window contract context", "official_inertial_reproduction": false}
+  ],
+  "pilot": {"profiles": ["ronin_resnet18_3d", "rio_3d"], "datasets": ["ridi", "ronin", "idol"], "seeds": [1735231569, 843628571, 951150512], "cells": 27, "registered": false},
+  "source_files": ["scale_guard.py", "test_scale_guard.py", "aggregate_current.py"]
+}
