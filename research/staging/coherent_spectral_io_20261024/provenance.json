@@ -1,0 +1,45 @@
+{
+  "schema": "ib.coherent-spectral-io.provenance.v1",
+  "status": "cpu_engineering_passed",
+  "formal_matrix_enrolled": false,
+  "registered": false,
+  "official_inertial_reproduction": false,
+  "novelty_established": false,
+  "accuracy_gain_established": false,
+  "paper_evidence": [
+    {
+      "title": "PFGNet: A Fully Convolutional Frequency-Guided Peripheral Gating Network for Efficient Spatiotemporal Predictive Learning",
+      "venue": "CVPR 2026 main",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cai_PFGNet_A_Fully_Convolutional_Frequency-Guided_Peripheral_Gating_Network_for_Efficient_CVPR_2026_paper.html",
+      "rechecked_date": "2026-10-24",
+      "http_status": 200,
+      "html_sha256": "db6314cba651aaf61e9bd491da65d1bc73030e36daca321d587216a69a732ca7",
+      "role": "multi-scale peripheral gating inspiration; independently implemented new recipe"
+    },
+    {
+      "title": "Spectral Scalpel: Amplifying Adjacent Action Discrepancy via Frequency-Selective Filtering for Skeleton-based Temporal Action Segmentation",
+      "venue": "CVPR 2026 main",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ji_Spectral_Scalpel_Amplifying_Adjacent_Action_Discrepancy_via_Frequency-Selective_Filtering_for_CVPR_2026_paper.html",
+      "rechecked_date": "2026-10-24",
+      "http_status": 200,
+      "html_sha256": "03b73bb5a278a10e787a1eea95a653e497d6c5501f0c29f785fedb22334da50e",
+      "role": "spectral modeling inspiration; does not reproduce MASF/FACM"
+    }
+  ],
+  "executed_source_sha256": {
+    "model.py": "bec13ad027c0cf0456b76fba85916ff7a5c2c298464417b949419db516ea0336",
+    "test_candidate.py": "4062c3bce16205d7846b3d98762fc391da146bd0eaa3c3f7b9d0ec83e0b4cd5f",
+    "adapter.py": "3e6ecab23503af48ecf0838e1ff2c83a1bad840b7ad75c2196570ec5ee5232e6",
+    "native_lifecycle.py": "aa398941f8e8023258826d1812e713a3b033b538cc87f74f980ff64b10a181ac"
+  },
+  "framework_snapshot": "598646e7d0c2a17963e2f038242c32305f934691cf91192b67aece61f673c6be",
+  "parameters": 65262,
+  "cpu_tests": 6,
+  "cpu_native_updates": 2,
+  "tests_on_agent": true,
+  "raw_data_or_weights_copied_to_control_terminal": false,
+  "cuda_capacity_accepted": false,
+  "gpu_training_started": false,
+  "pilot_plan_sha256": "153e3342833e29d65621422cc20966aa64bfa9484617f91fda056b4457a7732b",
+  "tail_queue_modified": false
+}

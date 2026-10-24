@@ -1,5 +1,12 @@
 # AutoDL v1 operations
 
+**Current live execution (2026-10-24):** the formal campaign runs on the `ps`
+Agent through Alibaba WSS. Its authoritative matrix is
+`/home/ps/RAL/cloud-import-20261023/runtime/primary-local/matrix/main`.
+This workstation only edits source, sends control commands and publishes reports.
+The AutoDL SSH paths and hardware receipts below describe earlier deployment
+procedures; they are not evidence of the current Agent's status or capacity.
+
 These tools use the `dev/v1` registry, converters, `NIO` / `Trainer` lifecycle and
 public `ipb` interface. The current project has migrated to a **4090D 24 GiB,
 16 CPU, approximately 62 GiB RAM** AutoDL instance. Read the actual device and
@@ -70,6 +77,13 @@ then deletes the temporary PTY. The relay APP pairing profile is read from
 `app-remote-terminal/pairing/20261023/remote-pc-1.app.json`) and must be mode
 `0600`; its token is never written to the repository or the Issue body.
 
+The generic transport lives in the sibling repository at
+`app-remote-terminal/scripts/relay-exec.js`; the benchmark repository no longer
+keeps a second implementation. Install the sibling relay's existing Node `ws`
+dependency before running the reporter. A command is accepted only with remote
+exit code zero and an acknowledgement that its temporary terminal was deleted.
+Do not install or launch a local Agent for this workflow.
+
 Use a read-only dry run to inspect the same evidence that the scheduled report
 will publish:
 
@@ -78,10 +92,29 @@ python3 tools/ops_v1/live_progress_reporter.py --dry-run
 ```
 
 The user-level `other-inertial-benchmark-issue-reporter.timer` runs this report
-every five hours. It is fail-closed if the Agent is offline, the pairing profile
+every five hours and mentions `@BUG423 @RicardoCDUT @Sarah-123886` in
+`BUG423/other-inertial-benchmark` Issue #1. Its service needs `node` and `gh`
+in its own `PATH`, plus the existing GitHub CLI authentication; an interactive
+shell's PATH is not inherited automatically. The installed user service has a
+`cli-paths.conf` drop-in for those executable directories. Check scheduling with
+`systemctl --user list-timers other-inertial-benchmark-issue-reporter.timer`.
+The reporter fails closed if the Agent is offline, the pairing profile
 is missing, the formal scope is not exactly 2,067 cells, or the live run-state
 evidence cannot be read. The reporter never starts, stops, retries, downloads,
 or edits a benchmark run.
+
+The Agent also runs an independent, low-priority diagnostic supervisor from
+`research/staging/trajectory_shortening_20261024/research_supervisor.py`.
+It refreshes completed-result length statistics every five hours, for at most
+34 cycles or until there are no qualified/running formal cells. Outputs are
+new leaves under `/home/ps/RAL/research-20261024/length-refresh`; the small
+`research-status.json` carries its own observation time. The Issue reporter
+reads that timestamped summary and the independent candidate's CPU qualification.
+It does not imply that the diagnostic snapshot covers the latest live count,
+or that CPU qualification proves accuracy. This supervisor never starts GPU
+training. Source-bound CUDA capacity and the 63-cell candidate pilot remain
+pending resource handover after prior authorized queues; see the
+[candidate plan](../../research/staging/coherent_spectral_io_20261024/README.md).
 
 Install the optional SSH client dependencies locally with
 `python3 -m pip install -e '.[ops]'`. Copy

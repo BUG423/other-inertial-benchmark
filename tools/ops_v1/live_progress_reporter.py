@@ -18,6 +18,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import tempfile
 from textwrap import dedent
 
 
@@ -28,7 +29,7 @@ PAIRING_PROFILE = Path(os.environ.get(
     "REMOTE_TERMINAL_APP_PROFILE",
     str(ROOT.parent / "app-remote-terminal/pairing/20261023/remote-pc-1.app.json"),
 ))
-RELAY_HELPER = ROOT / "tools/ops_v1/relay_browser.js"
+RELAY_HELPER = ROOT.parent / "app-remote-terminal/scripts/relay-exec.js"
 STATE_DIR = Path.home() / ".local/state/other-inertial-benchmark-issue-reporter"
 LOCK_PATH = STATE_DIR / "reporter.lock"
 MENTIONS = ("@BUG423", "@RicardoCDUT", "@Sarah-123886")
@@ -80,6 +81,10 @@ REMOTE_SCRIPT = dedent(
     ).stdout.splitlines()
     now = datetime.datetime.now(datetime.timezone.utc)
     mtime = datetime.datetime.fromtimestamp(coverage_path.stat().st_mtime, datetime.timezone.utc)
+    research_path = Path('/home/ps/RAL/research-20261024/research-status.json')
+    research = None
+    if research_path.is_file() and research_path.stat().st_size <= 1024 * 1024:
+        research = json.loads(research_path.read_bytes())
     print(json.dumps({
         'observed_utc': now.isoformat(),
         'hostname': socket.gethostname(),
@@ -95,6 +100,7 @@ REMOTE_SCRIPT = dedent(
         ),
         'matching_processes': controller_text,
         'controller_present': any('continue-formal.py' in line for line in controller_text),
+        'research': research,
     }, ensure_ascii=False))
     """
 ).strip()
@@ -122,14 +128,14 @@ def fetch_remote() -> dict:
         "--timeout", "90", "--command",
         "/home/ps/anaconda3/bin/python3 -c " + shlex.quote(REMOTE_SCRIPT),
     ]
-    result = run(command, timeout=90)
+    result = run(command, timeout=105)
     if result.returncode:
         raise RuntimeError(f"remote read failed with exit {result.returncode}")
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     if not lines:
         raise RuntimeError("remote read returned no metadata")
     relay_result = json.loads(lines[-1])
-    if relay_result.get("ok") is not True or relay_result.get("exitCode") != 0:
+    if relay_result.get("exitCode") != 0 or relay_result.get('cleanupConfirmed') is not True:
         raise RuntimeError("relay command failed")
     output_lines = [line.strip() for line in relay_result.get("output", "").splitlines() if line.strip()]
     if not output_lines:
@@ -186,6 +192,25 @@ def render(value: dict) -> tuple[str, str]:
     lines += ["", f"远端匹配到的 benchmark 进程行数：{len(processes)}。"]
     if processes:
         lines.extend(f"- `{line[:240]}`" for line in processes[:8])
+    research = value.get('research') or {}
+    length = research.get('length') or {}
+    if length:
+        lines += ['', f"轨迹研究快照：{length.get('observed_utc')}；当时 completed={length.get('completed')}。",
+                  f"人体 XYZ 神经可训练配置主 test：{length.get('human_cells')} 个单元；"
+                  f"PLR<1 比例 {length.get('human_fraction_below_one'):.2%}。"]
+        canonical = (length.get('canonical_cluster') or {}).get('metrics') or {}
+        for metric in ('plr', 'plr_oracle', 'speed_ratio'):
+            entry = canonical.get(metric)
+            if entry:
+                low, high = entry['conditional_subject_bootstrap_95']
+                lines.append(f"- T200/reference/平均速度、三 seed 齐全组的 `{metric}`："
+                             f"{entry['estimate']:.4f}，条件性受试者分组 bootstrap 95% CI [{low:.4f}, {high:.4f}]。")
+        lines += ["以上为已观察算法/来源的探索性诊断；不代表算法总体区间、因果证明或完整结果验收。"]
+    candidate = research.get('candidate') or {}
+    if candidate:
+        lines += ['', f"新网络候选：{candidate.get('status')}；参数 {candidate.get('parameters')}；"
+                  f"CPU 科学检查 {candidate.get('tests_passed')} 项；原生生命周期 {candidate.get('native_lifecycle')}。",
+                  "完整数据三 seed 精度与 CUDA 容量待验证；当前 CPU 工程结果不能作为精度提升证据。"]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",
@@ -204,8 +229,11 @@ def already_posted(marker: str) -> bool:
 def post(body: str, marker: str) -> str:
     if already_posted(marker):
         return "duplicate_prevented"
-    result = run(["gh", "issue", "comment", ISSUE, "--repo", REPOSITORY,
-                  "--body", body], timeout=60)
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', encoding='utf-8') as draft:
+        draft.write(body)
+        draft.flush()
+        result = run(["gh", "issue", "comment", ISSUE, "--repo", REPOSITORY,
+                      "--body-file", draft.name], timeout=60)
     if result.returncode:
         raise RuntimeError("GitHub Issue comment failed")
     return result.stdout.strip()

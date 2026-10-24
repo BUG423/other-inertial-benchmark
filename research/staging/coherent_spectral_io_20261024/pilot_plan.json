@@ -1,0 +1,178 @@
+{
+  "schema": "ib.coherent-spectral-io.pilot-design.v1",
+  "status": "awaiting_capacity_and_source_acceptance",
+  "execution_enabled": false,
+  "formal_matrix_changed": false,
+  "datasets": [
+    "ridi",
+    "ronin",
+    "idol"
+  ],
+  "seeds": [
+    1735231569,
+    843628571,
+    951150512
+  ],
+  "profiles": [
+    {
+      "id": "backbone_gap",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": false,
+        "cross_sensor": false,
+        "moments": false,
+        "temporal_moments": true
+      }
+    },
+    {
+      "id": "spectral_only",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": true,
+        "cross_sensor": false,
+        "moments": false,
+        "temporal_moments": true
+      }
+    },
+    {
+      "id": "cross_sensor_only",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": false,
+        "cross_sensor": true,
+        "moments": false,
+        "temporal_moments": true
+      }
+    },
+    {
+      "id": "moments_only",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": false,
+        "cross_sensor": false,
+        "moments": true,
+        "temporal_moments": true
+      }
+    },
+    {
+      "id": "equal_parameter_mean_mlp",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": true,
+        "cross_sensor": true,
+        "moments": true,
+        "temporal_moments": false
+      }
+    },
+    {
+      "id": "full_candidate",
+      "arch": "coherent_spectral_io_private",
+      "args": {
+        "width": 48,
+        "depth": 3,
+        "spectral": true,
+        "cross_sensor": true,
+        "moments": true,
+        "temporal_moments": true
+      }
+    },
+    {
+      "id": "ronin_resnet18_3d",
+      "reference_profile": "src/inertial_benchmark/cfg/models/ronin_resnet18_3d.yaml"
+    }
+  ],
+  "planned_training_cells": 63,
+  "recipe": {
+    "epochs": 30,
+    "patience": 0,
+    "min_epochs": 30,
+    "batch": 128,
+    "val_batch": 128,
+    "workers": 2,
+    "amp": false,
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "scheduler": "cosine",
+    "lr_final": 0.01,
+    "grad_clip": 0,
+    "augment": [
+      "random_yaw",
+      "time_shift"
+    ],
+    "stride": 200,
+    "eval_stride": 10,
+    "val_interval": 5,
+    "fitness": "ate",
+    "fitness_stat": "mean",
+    "loss": "mse",
+    "pretrained": false
+  },
+  "input": {
+    "channels": [
+      "gyro_x",
+      "gyro_y",
+      "gyro_z",
+      "acc_x",
+      "acc_y",
+      "acc_z"
+    ],
+    "window": 200,
+    "rate": 200,
+    "frame": "gravity_world",
+    "orientation": "reference",
+    "track": "reference_oracle",
+    "remove_gravity": false,
+    "target": "avg_velocity",
+    "dims": 3,
+    "history": 0,
+    "extra_inputs": []
+  },
+  "primary_outcomes": [
+    "ate",
+    "t_rte_10s"
+  ],
+  "diagnostics": [
+    "plr",
+    "plr_oracle",
+    "speed_ratio",
+    "dir_err_mean",
+    "position_p95"
+  ],
+  "criteria": {
+    "minimum_relative_ate_reduction": 0.05,
+    "required_primary_datasets_improved": 2,
+    "maximum_per_source_ate_degradation": 0.02,
+    "maximum_relative_t_rte_10s_degradation": 0.02,
+    "condition": "paired subject-group bootstrap; fixed observed datasets, all three seeds and all failures reported"
+  },
+  "gain_control": {
+    "fit_split": "val",
+    "objective": "unweighted vector MSE on predicted and target velocity; gain=sum(pred*target)/sum(pred**2)",
+    "bounds": [
+      0.5,
+      1.5
+    ],
+    "apply_to": "frozen backbone_gap predictions",
+    "identity_if_zero_denominator": true,
+    "test_fitting": false
+  },
+  "requirements": [
+    "prior authorized GPU queues terminal and leases handed over",
+    "exact source hashes and native datasets/splits bound before training",
+    "B128 CUDA capacity on same source; no silent batch or width reductions",
+    "parameter-matched mean-only MLP included",
+    "validation selects checkpoint; test evaluated only after freezing",
+    "no formal-state or recipe edits; failed/N/A retained"
+  ]
+}

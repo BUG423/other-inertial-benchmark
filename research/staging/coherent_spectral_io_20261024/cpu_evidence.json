@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "engineering_only": true,
+  "elapsed_s": 1.9804491996765137,
+  "optimizer_updates": 2,
+  "train_windows": 4,
+  "fixture_ids": {
+    "train": [
+      "dan_bag1"
+    ],
+    "val": [
+      "hao_bag1"
+    ],
+    "test": [
+      "dan_bag2"
+    ]
+  },
+  "source_hashes": {
+    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/dan_bag1.h5": "b1ca673ad7c18dd245c7f277921076860da43f0f66bd021dad7f9c960ca52fe1",
+    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/hao_bag1.h5": "0a1b11445939627c7df626297409ddd17c5267d74d3a3f8c2dbc2e0f15d6c6de",
+    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/dan_bag2.h5": "444addd5638c75b569ba22772ffac2852bd550a8ba2f1ca47cd74f33f915936f"
+  },
+  "params": 65262,
+  "checkpoint_reload_exact": true,
+  "native_export_reload_exact": true,
+  "cuda_initialized": false,
+  "torch": "2.12.1+cu130",
+  "full_dataset_accuracy_established": false,
+  "remote_leaf": "/home/ps/RAL/research-20261024/candidate-04685c01c14d",
+  "execution": {
+    "exit_code": 0,
+    "elapsed_s": 8.673202514648438
+  },
+  "source_sha256": {
+    "model.py": "bec13ad027c0cf0456b76fba85916ff7a5c2c298464417b949419db516ea0336",
+    "test_candidate.py": "4062c3bce16205d7846b3d98762fc391da146bd0eaa3c3f7b9d0ec83e0b4cd5f",
+    "adapter.py": "3e6ecab23503af48ecf0838e1ff2c83a1bad840b7ad75c2196570ec5ee5232e6",
+    "native_lifecycle.py": "aa398941f8e8023258826d1812e713a3b033b538cc87f74f980ff64b10a181ac"
+  },
+  "junit_sha256": "f8b5d76ac37428f394d5ce4a33ddb79bacfa86a594d7a66d3e6a5cc658d34ea8",
+  "tests_passed": 6,
+  "framework_snapshot": "598646e7d0c2a17963e2f038242c32305f934691cf91192b67aece61f673c6be"
+}

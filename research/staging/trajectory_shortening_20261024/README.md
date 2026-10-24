@@ -1,9 +1,46 @@
-# 轨迹长度偏差与 SAGE-IO 保底候选
+# 轨迹长度偏差研究
 
 本目录记录 2026-10-24 对正式矩阵当前结果的只读统计，以及一个隔离的新版本候选。
 它不注册模型、不改变 `53 profiles × 13 sources × 3 seeds = 2,067` 的冻结矩阵，也不继承旧结果的身份。
 
-## 当前能支持的结论
+## 2026-10-24 的 Agent 新证据
+
+[observed_999_subject_clusters.json](observed_999_subject_clusters.json) 是阿里云 WSS 连接到
+`ps` Agent 后，在其实时 run-states 上读取的只读探索性统计；不使用旧 SSH 快照。
+当时 999 completed、2 failed、1 running。999 个主 test cell 中 868 个 PLR<1（86.89%），
+但混合样本的算术均值为 1.159，说明少数扩张结果很大；不能只报告发生比例。
+
+进一步排除二维、经典方法、test-only 迁移，只看人体 XYZ 可训练神经配置：465 个 cell，
+446 个 PLR<1（95.91%），中位数 0.911；与下方旧 981 汇总口径不同，不直接作时间趋势比较。
+94 个 profile/source 组合具有全部三个 seed；折叠重复 seed/profile 后有 266 条录制、92 个既有 group_id。
+group_id 按数据集既有身份使用，不保证跨来源都是等价的独立受试者。
+
+限定 T200/reference/平均速度的子组，再按来源等权、来源内受试者分组 bootstrap（2,000 次）：
+
+| 指标 | 条件性均值估计 | 95% 分组 bootstrap 区间 |
+| --- | ---: | --- |
+| PLR | 0.9073 | [0.8906, 0.9232] |
+| plr_oracle | 0.9163 | [0.8990, 0.9310] |
+| speed_ratio | 0.9262 | [0.9118, 0.9392] |
+
+这支持“已观察人体配置存在条件性幅值/长度低估”，尚不能归结为纯协议平滑。
+区间条件于已观察算法/来源，不覆盖算法总体、不证明因果，也不代替逐结果全链验收。
+TinyOdom/IDOL、VeloBins/TLIO、NIO-Lie-Events/RNIN 等扩张反例全部保留。
+去除 oracle ATE 大于模型 ATE 的片段及多有效段录制的敏感性分析也随原件保存；该筛选本身会改变来源构成。
+
+`audit_recordings.py` 只读 completed 的 metrics.json/sequences.csv，验证身份和逐录制分解恒等式，
+记录输入哈希；3 项 Agent 单测验证重复 seed 不膨胀受试者数、subject grouping 和坏结果原子拒收。
+`research_supervisor.py` 已在 Agent 新研究目录运行，每 5 小时刷新；最多 34 次，或矩阵不再有 qualified/running 时结束。
+Issue reporter 读取带独立时间戳的 research-status.json，不把上一轮研究摘要当成当下全矩阵计数。
+
+解决路线先比较 identity、validation-only 标量 gain、等参数读出和显式新模块；
+ATE、10s RTE、方向及 P95 风险必须一起改善。新的独立网络及工程证据见
+[Coherent Spectral IO](../coherent_spectral_io_20261024/README.md)。
+
+## 历史快照：981 completed（保留原始口径）
+
+本节及下方 SAGE-IO 是本轮较早的记录；当前统计与区间以上方 999-cell 分组分析及
+Agent 定时刷新为准。SAGE-IO 保留为未执行草稿，当前推进的独立候选为 Coherent Spectral IO。
 
 远端正式矩阵观察到 981 个已完成主 `test` split 的单元。以指标文档定义的
 `plr = L_1s(prediction) / L_1s(reference)` 计算：
@@ -37,7 +74,7 @@ plr_dense = oracle_ratio × plr_oracle
 4. 只有在 ATE/RTE 或固定时域漂移同时改善时，才保留可学习模块；只改善 PLR 就停止。
 5. 对保留的模块使用新 profile、新 recipe、新 coverage 身份，不能回填当前正式结果。
 
-## SAGE-IO 候选
+## 历史 SAGE-IO 草稿（未执行）
 
 `SAGE-IO`（Scale-Aware Gated Estimator for Inertial Odometry）是一个保底候选，组合了成熟的多尺度残差时序算子和针对当前现象的幅度/方向解耦读出：
 
