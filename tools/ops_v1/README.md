@@ -59,6 +59,30 @@ is not established by this finite engineering acceptance.
 
 ## Connection and source deployment
 
+### Relay-authoritative formal-matrix reporting
+
+The live formal campaign runs on the Agent host, not on this workstation and
+not on an old SSH snapshot. `tools/ops_v1/live_progress_reporter.py` therefore
+opens a short-lived browser session through the `app-remote-terminal` WSS relay,
+reads the Agent's `coverage.json`, `run-states` and controller process list,
+then deletes the temporary PTY. The relay APP pairing profile is read from
+`REMOTE_TERMINAL_APP_PROFILE` (defaulting to the sibling
+`app-remote-terminal/pairing/20261023/remote-pc-1.app.json`) and must be mode
+`0600`; its token is never written to the repository or the Issue body.
+
+Use a read-only dry run to inspect the same evidence that the scheduled report
+will publish:
+
+```bash
+python3 tools/ops_v1/live_progress_reporter.py --dry-run
+```
+
+The user-level `other-inertial-benchmark-issue-reporter.timer` runs this report
+every five hours. It is fail-closed if the Agent is offline, the pairing profile
+is missing, the formal scope is not exactly 2,067 cells, or the live run-state
+evidence cannot be read. The reporter never starts, stops, retries, downloads,
+or edits a benchmark run.
+
 Install the optional SSH client dependencies locally with
 `python3 -m pip install -e '.[ops]'`. Copy
 [ssh-config.example.json](ssh-config.example.json) to `.local/autodl-v1.json`,
