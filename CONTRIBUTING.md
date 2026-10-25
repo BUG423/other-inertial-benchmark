@@ -2,6 +2,15 @@
 
 Contributions to other-inertial-benchmark should support common data contracts, faithful algorithm interfaces, comparable evaluation and auditable experiments.
 
+## Incremental change policy
+
+- Work on one logical objective at a time. Keep each patch and commit small enough to review in one sitting; do not generate a large batch of source files, reports or documentation in one step.
+- Before editing, inspect the target files and repository status. After editing, review `git diff --check` and the complete staged diff before committing.
+- Keep runtime code, research evidence, generated outputs and documentation in separate commits. Never add unrelated or merely present untracked directories to a task commit.
+- Run the narrowest relevant static check or test after each change, then run the broader suite only when the accumulated change requires it.
+- Before publishing, scan tracked files and the full Git history for credentials, pairing exports, raw data, checkpoints, logs and private absolute paths. Research evidence must contain redacted metadata only.
+- Prefer a follow-up commit for the next logical change. Do not replace a reviewable incremental patch with a one-shot generated rewrite.
+
 ## Scope and conventions
 
 - Use dev/v1, NIO/ipb and native IPB v1 model/converter interfaces for all new integrations.
