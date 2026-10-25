@@ -35,13 +35,22 @@ LOCK_PATH = STATE_DIR / "reporter.lock"
 MENTIONS = ("@BUG423", "@RicardoCDUT", "@Sarah-123886")
 MAX_METADATA_BYTES = 32 * 1024 * 1024
 
+# These values describe the private Agent runtime and must be supplied by the
+# host that owns that runtime.  Keeping them out of the public source prevents
+# the repository from disclosing usernames, directory layouts and interpreter
+# installations.  The matrix/research roots are intentionally separate so a
+# reporter cannot silently read an unrelated checkout.
+REMOTE_AGENT_MATRIX_ROOT = os.environ.get("REMOTE_AGENT_MATRIX_ROOT", "").strip()
+REMOTE_AGENT_RESEARCH_ROOT = os.environ.get("REMOTE_AGENT_RESEARCH_ROOT", "").strip()
+REMOTE_AGENT_PYTHON = os.environ.get("REMOTE_AGENT_PYTHON", "python3").strip()
+
 
 REMOTE_SCRIPT = dedent(
     r"""
     import datetime, hashlib, json, os, socket, subprocess
     from pathlib import Path
 
-    matrix = Path('/home/ps/RAL/cloud-import-20261023/runtime/primary-local/matrix/main')
+    matrix = Path('__REMOTE_AGENT_MATRIX_ROOT__')
     coverage_path = matrix / 'coverage.json'
     if not coverage_path.is_file():
         raise RuntimeError('coverage.json missing')
@@ -81,11 +90,11 @@ REMOTE_SCRIPT = dedent(
     ).stdout.splitlines()
     now = datetime.datetime.now(datetime.timezone.utc)
     mtime = datetime.datetime.fromtimestamp(coverage_path.stat().st_mtime, datetime.timezone.utc)
-    research_path = Path('/home/ps/RAL/research-20261024/research-status.json')
+    research_path = Path('__REMOTE_AGENT_RESEARCH_STATUS_ROOT__')
     research = None
     if research_path.is_file() and research_path.stat().st_size <= 1024 * 1024:
         research = json.loads(research_path.read_bytes())
-    cause_path = Path('/home/ps/RAL/research-20261024/cause-status.json')
+    cause_path = Path('__REMOTE_AGENT_CAUSE_STATUS_ROOT__')
     cause = None
     if cause_path.is_file() and cause_path.stat().st_size <= 1024 * 1024:
         cause = json.loads(cause_path.read_bytes())
@@ -128,10 +137,26 @@ def fetch_remote() -> dict:
         raise RuntimeError("private relay APP pairing profile is missing or not mode 0600")
     if not RELAY_HELPER.is_file():
         raise RuntimeError("relay browser helper is missing")
+    if not REMOTE_AGENT_MATRIX_ROOT:
+        raise RuntimeError("REMOTE_AGENT_MATRIX_ROOT must point to the private Agent matrix")
+    if not REMOTE_AGENT_RESEARCH_ROOT:
+        raise RuntimeError("REMOTE_AGENT_RESEARCH_ROOT must point to the private Agent research root")
+    if not REMOTE_AGENT_PYTHON:
+        raise RuntimeError("REMOTE_AGENT_PYTHON must name the private Agent Python executable")
+    remote_script = REMOTE_SCRIPT.replace(
+        "Path('__REMOTE_AGENT_MATRIX_ROOT__')",
+        f"Path({REMOTE_AGENT_MATRIX_ROOT!r})",
+    ).replace(
+        "Path('__REMOTE_AGENT_RESEARCH_STATUS_ROOT__')",
+        f"Path({REMOTE_AGENT_RESEARCH_ROOT!r}) / 'research-status.json'",
+    ).replace(
+        "Path('__REMOTE_AGENT_CAUSE_STATUS_ROOT__')",
+        f"Path({REMOTE_AGENT_RESEARCH_ROOT!r}) / 'cause-status.json'",
+    )
     command = [
         "node", str(RELAY_HELPER), "--profile", str(PAIRING_PROFILE),
         "--timeout", "90", "--command",
-        "/home/ps/anaconda3/bin/python3 -c " + shlex.quote(REMOTE_SCRIPT),
+        shlex.quote(REMOTE_AGENT_PYTHON) + " -c " + shlex.quote(remote_script),
     ]
     result = run(command, timeout=105)
     if result.returncode:
