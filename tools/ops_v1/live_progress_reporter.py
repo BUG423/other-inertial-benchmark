@@ -85,6 +85,10 @@ REMOTE_SCRIPT = dedent(
     research = None
     if research_path.is_file() and research_path.stat().st_size <= 1024 * 1024:
         research = json.loads(research_path.read_bytes())
+    cause_path = Path('/home/ps/RAL/research-20261024/cause-status.json')
+    cause = None
+    if cause_path.is_file() and cause_path.stat().st_size <= 1024 * 1024:
+        cause = json.loads(cause_path.read_bytes())
     print(json.dumps({
         'observed_utc': now.isoformat(),
         'hostname': socket.gethostname(),
@@ -101,6 +105,7 @@ REMOTE_SCRIPT = dedent(
         'matching_processes': controller_text,
         'controller_present': any('continue-formal.py' in line for line in controller_text),
         'research': research,
+        'cause': cause,
     }, ensure_ascii=False))
     """
 ).strip()
@@ -211,6 +216,20 @@ def render(value: dict) -> tuple[str, str]:
         lines += ['', f"新网络候选：{candidate.get('status')}；参数 {candidate.get('parameters')}；"
                   f"CPU 科学检查 {candidate.get('tests_passed')} 项；原生生命周期 {candidate.get('native_lifecycle')}。",
                   "完整数据三 seed 精度与 CUDA 容量待验证；当前 CPU 工程结果不能作为精度提升证据。"]
+    cause = value.get('cause') or {}
+    canonical = cause.get('canonical') or {}
+    if canonical:
+        direction = canonical.get('direction_strata') or {}
+        low_direction = direction.get('low_dir_err_lt20') or {}
+        high_direction = direction.get('high_dir_err_ge45') or {}
+        lines += ['', f"缩短原因分解：{cause.get('updated_utc')}；远端只读叶 `{cause.get('leaf')}`。",
+                   f"T200/reference/avg_velocity：oracle_ratio 中位数 {canonical.get('protocol_oracle_ratio', {}).get('median', float('nan')):.4f}；"
+                   f"plr_oracle 中位数 {canonical.get('model_plr_oracle', {}).get('median', float('nan')):.4f}；"
+                   f"speed_ratio 中位数 {canonical.get('speed_ratio', {}).get('median', float('nan')):.4f}。",
+                   f"方向误差<20°组 speed_ratio 中位数 {(low_direction.get('speed_ratio') or {}).get('median', float('nan')):.4f}；"
+                   f"方向误差≥45°组 {(high_direction.get('speed_ratio') or {}).get('median', float('nan')):.4f}；"
+                   f"train/test speed_ratio 差中位数 {canonical.get('train_test_speed_gap', {}).get('median', float('nan')):.6f}。",
+                   "该分解支持模型幅值低估与方向不确定性放大是主要机制；目标/损失比较仍是描述性证据。"]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

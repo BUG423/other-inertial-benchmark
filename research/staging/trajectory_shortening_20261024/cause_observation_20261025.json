@@ -1,0 +1,51 @@
+{
+  "schema": "ib.trajectory-cause-observation.v1",
+  "observed_utc": "2026-10-25T13:18:06.191587Z",
+  "remote_leaf": "/home/ps/RAL/research-20261024/cause-681197ac3321",
+  "source_binding_sha256": "681197ac3321dbe8edb3c32b8c1218d1ab546057e7cc487b6f83203a65d67a00",
+  "scope": {
+    "completed_human_xyz_trainable_cells": 519,
+    "canonical_t200_avg_velocity_reference_oracle_cells": 220,
+    "formal_matrix_rows": 2067,
+    "full_chain_admission": false
+  },
+  "canonical": {
+    "oracle_ratio_median": 0.9808227412,
+    "plr_oracle_median": 0.9164352083,
+    "speed_ratio_median": 0.9246330190,
+    "speed_ratio_below_one_fraction": 0.9545454545,
+    "train_test_speed_gap_median": 0.0000034152,
+    "low_direction_error_lt20deg": {
+      "n": 192,
+      "speed_ratio_median": 0.9324074107,
+      "speed_bias_median": -0.0612367311,
+      "along_bias_median": -0.0849328062,
+      "speed_ratio_below_one_fraction": 0.953125
+    },
+    "high_direction_error_ge45deg": {
+      "n": 14,
+      "speed_ratio_median": 0.0190233025,
+      "speed_bias_median": -0.7793192157,
+      "along_bias_median": -0.8804202037
+    },
+    "correlations": {
+      "speed_ratio_vs_direction_error": -0.9460387373,
+      "speed_ratio_vs_speed_bias": 0.9396724699,
+      "speed_ratio_vs_cross_rmse": 0.4151874973,
+      "plr_oracle_vs_speed_ratio": 0.998005538
+    }
+  },
+  "interpretation": [
+    "Metric/reference smoothing is small in the canonical median: oracle_ratio is about 0.981.",
+    "Most canonical shortening remains after replacing the sampled reference with the oracle: plr_oracle is about 0.916.",
+    "A radial magnitude bias exists even when direction error is below 20 degrees: median speed_ratio is about 0.932 and speed/along bias is negative.",
+    "Direction ambiguity amplifies the effect: the high-direction-error tail has median speed_ratio about 0.019.",
+    "The near-zero median train/test speed-ratio gap argues against dropout or train/eval mode as the primary explanation.",
+    "Target and loss comparisons remain descriptive because the formal matrix does not randomize those factors."
+  ],
+  "next_interventions": [
+    "Hold architecture, data, seed and budget fixed; compare vector MSE with a magnitude-plus-direction loss.",
+    "Hold architecture and loss fixed; compare avg_velocity with velocity_at_end on the same recordings.",
+    "Report radial, directional and total velocity errors together; accept a mechanism only if ATE and 10-second RTE do not worsen."
+  ]
+}

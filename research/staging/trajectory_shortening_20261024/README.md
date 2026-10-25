@@ -37,6 +37,24 @@ Issue reporter 读取带独立时间戳的 research-status.json，不把上一�
 ATE、10s RTE、方向及 P95 风险必须一起改善。新的独立网络及工程证据见
 [Coherent Spectral IO](../coherent_spectral_io_20261024/README.md)。
 
+## 原因分解：2026-10-25 Agent 只读结果
+
+用户提出的核心问题是“为什么会缩短”，而不是强行把长度乘回 1。
+[cause_decomposition.py](cause_decomposition.py) 在 Agent 上读取 519 个已完成的人体 XYZ 可训练单元，
+并在其中 220 个 T200、`avg_velocity`、`reference_oracle` 单元上分解参考协议、模型幅值、方向误差和训练/测试模式差异。
+完整小收据见 [cause_observation_20261025.json](cause_observation_20261025.json)，远端执行叶和源码绑定写在其中。
+
+| 可能原因 | 远端观察 | 当前判断 |
+|---|---|---|
+| 1 秒参考采样/Oracle 平滑 | `oracle_ratio` 中位数 **0.9808** | 只解释约 2% 的中位差异，不能解释主要缩短 |
+| 模型输出幅值低估 | `plr_oracle` 中位数 **0.9164**；`speed_ratio` 中位数 **0.9246** | 主要现象在模型输出中已经存在 |
+| 纯方向错误导致向量相消 | 方向误差小于 20° 的 192 个单元中，`speed_ratio` 中位数 **0.9324**，speed/along bias 均为负 | 存在独立的径向幅值偏差；高方向误差尾部会进一步放大缩短，14 个单元中位 `speed_ratio=0.0190` |
+| Dropout 或 train/eval 模式 | train/test `speed_ratio` 差的中位数约 **3.4×10⁻⁶** | 不是当前主因；仍需按模型族检查异常单元 |
+
+`speed_ratio` 与方向误差的相关系数为 **−0.946**，说明方向不确定性会放大幅值塌缩；但低方向误差分层仍有约 6.8% 的中位速度低估，因此不能把全部现象归结为方向相消。`plr_oracle` 与 `speed_ratio` 的相关系数为 **0.998**，支持“轨迹变短主要来自输出速度幅值变小”。
+
+这些数字是已观察算法/来源上的条件性证据，不是随机化因果效应。目标和损失本身在正式矩阵中与架构绑定，不能直接比较后称为原因。下一步按 [cause experiment plan](cause_experiment_plan.json) 做固定架构、固定数据、固定 seed 的干预：向量 MSE 对比幅值+方向损失，`avg_velocity` 对比 `velocity_at_end`，并保留 validation-only 标量 gain 作为控制。只有 ATE、10 秒 RTE 和速度/方向误差共同不恶化，才接受对应机制。
+
 ## 历史快照：981 completed（保留原始口径）
 
 本节及下方 SAGE-IO 是本轮较早的记录；当前统计与区间以上方 999-cell 分组分析及

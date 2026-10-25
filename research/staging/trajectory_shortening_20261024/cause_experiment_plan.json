@@ -1,0 +1,51 @@
+{
+  "schema": "ib.trajectory-cause-intervention-plan.v1",
+  "status": "planned_after_formal_queue_resource_handoff",
+  "formal_matrix_changed": false,
+  "purpose": "Identify mechanisms of shortening rather than tune a scalar length gain.",
+  "datasets": ["ridi", "ronin", "idol"],
+  "seeds": [1735231569, 843628571, 951150512],
+  "architecture": "ronin_resnet18_3d",
+  "fixed": [
+    "same source snapshot and data split fingerprints",
+    "same window 200, 200 Hz, reference_oracle input",
+    "same optimizer, epochs, batch, augmentation and checkpoint selection",
+    "test remains untouched until validation selection is frozen"
+  ],
+  "interventions": [
+    {
+      "id": "avg_velocity_vector_mse",
+      "target": "avg_velocity",
+      "loss": "mse",
+      "role": "baseline"
+    },
+    {
+      "id": "avg_velocity_magnitude_direction",
+      "target": "avg_velocity",
+      "loss": "vector_mse_plus_magnitude_smooth_l1_plus_direction_cosine",
+      "role": "tests whether vector loss and conditional directional ambiguity drive radial shrinkage"
+    },
+    {
+      "id": "velocity_at_end_vector_mse",
+      "target": "velocity_at_end",
+      "loss": "mse",
+      "role": "tests whether averaging the target over the window is a primary driver"
+    },
+    {
+      "id": "avg_velocity_validation_gain_only",
+      "target": "avg_velocity",
+      "loss": "mse",
+      "role": "validation-only scalar calibration control; no test fitting"
+    }
+  ],
+  "planned_cells": 36,
+  "primary_metrics": ["ate", "t_rte_10s", "vel_rmse", "speed_bias", "along_bias", "cross_rmse", "dir_err_mean", "plr_oracle"],
+  "decision_rules": [
+    "A loss mechanism is supported only if magnitude error improves without a paired ATE or 10-second RTE degradation.",
+    "A target-averaging mechanism is supported only if velocity_at_end changes the shortening while architecture and loss are held fixed.",
+    "A scalar gain is a control and cannot be called a causal explanation or a publishable method.",
+    "All three seeds, all failures and subject-group paired intervals must be reported."
+  ],
+  "execution_enabled": false,
+  "full_chain_admission": false
+}

@@ -116,6 +116,14 @@ training. Source-bound CUDA capacity and the 63-cell candidate pilot remain
 pending resource handover after prior authorized queues; see the
 [candidate plan](../../research/staging/coherent_spectral_io_20261024/README.md).
 
+The separate `cause_decomposition.py` audit reads the same completed-result
+metadata and writes `cause-status.json` on the Agent. It compares the oracle
+reference ratio with model-side `plr_oracle`, separates speed bias from direction
+error, and checks train/test speed-ratio gaps. The reporter includes this
+timestamped cause snapshot when available. It is descriptive evidence on the
+observed cells; target and loss comparisons remain confounded until the fixed
+architecture interventions in the trajectory research plan are run.
+
 Install the optional SSH client dependencies locally with
 `python3 -m pip install -e '.[ops]'`. Copy
 [ssh-config.example.json](ssh-config.example.json) to `.local/autodl-v1.json`,
