@@ -29,21 +29,21 @@
       "url": "https://arxiv.org/html/2511.08277v2",
       "bytes": 232776,
       "sha256": "e4b91e555b51cc42029a0907392b79c75658b681fd7770488cb88f9afa145c43",
-      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/paper-v2.html"
+      "remote_path": "<agent-project-root>/.local/research/x-ionet-primary-design/paper-v2.html"
     },
     {
       "name": "classifier-v2.png",
       "url": "https://arxiv.org/html/2511.08277v2/figures/classifier.png",
       "bytes": 1227280,
       "sha256": "0e8ddb73fca16f7f903db46d53d07c39640ef193aa61e26f1166a90e77d3a2bf",
-      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/classifier-v2.png"
+      "remote_path": "<agent-project-root>/.local/research/x-ionet-primary-design/classifier-v2.png"
     },
     {
       "name": "paper-v2.pdf",
       "url": "https://arxiv.org/pdf/2511.08277v2",
       "bytes": 5416626,
       "sha256": "1a5fba159b6bf8d6f3807dbd1da28ecbef6139b7bb4e122e81f234c57d633bda",
-      "remote_path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/x-ionet-primary-design/paper-v2.pdf"
+      "remote_path": "<agent-project-root>/.local/research/x-ionet-primary-design/paper-v2.pdf"
     }
   ],
   "paper_pdf_downloaded_to_local": false,

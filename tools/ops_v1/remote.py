@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import io
 import json
+import os
 import shlex
 import subprocess
 import sys
@@ -16,9 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-REMOTE_ROOT = "/root/autodl-tmp/other-inertial-benchmark-v1"
-CPU_LOCK = "/root/autodl-tmp/inertial-benchmark/.local/campaigns/cpu-resource.lock"
-GPU_LOCK = "/root/autodl-tmp/inertial-benchmark/.local/campaigns/gpu-0.lock"
+REMOTE_ROOT = os.environ.get("IPB_V1_REMOTE_ROOT", "<agent-project-root>")
+CPU_LOCK = os.environ.get("IPB_V1_CPU_LOCK", "<agent-runtime-root>/campaigns/cpu-resource.lock")
+GPU_LOCK = os.environ.get("IPB_V1_GPU_LOCK", "<agent-runtime-root>/campaigns/gpu-0.lock")
+REMOTE_PYTHON = os.environ.get("IPB_V1_REMOTE_PYTHON", "python3")
 EXCLUDED = (".git/", ".local/", "datasets/", "runs/", "external/", "data/raw/")
 
 
@@ -145,7 +147,7 @@ def deploy(client, selected: list | None, timeout: float) -> int:
                "  try:p.rmdir()\n"
                "  except OSError:break\n"
                "  p=p.parent\n")
-    install = ("set -e\n/root/miniconda3/bin/python -c " + shlex.quote(pruning)
+    install = ("set -e\n" + shlex.quote(REMOTE_PYTHON) + " -c " + shlex.quote(pruning)
                + "\ntar -xzf " + shlex.quote(location + "/source.tar.gz")
                + " -C " + shlex.quote(REMOTE_ROOT)
                + "\ncp " + shlex.quote(location + "/manifest.json")

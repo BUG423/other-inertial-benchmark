@@ -1,8 +1,8 @@
 # AutoDL v1 operations
 
-**Current live execution (2026-10-24):** the formal campaign runs on the `ps`
-Agent through Alibaba WSS. Its authoritative matrix is
-`/home/ps/RAL/cloud-import-20261023/runtime/primary-local/matrix/main`.
+**Current live execution (2026-10-24):** the formal campaign runs on a private
+Agent host through Alibaba WSS. Its authoritative matrix is
+`<agent-matrix-root>`.
 This workstation only edits source, sends control commands and publishes reports.
 The AutoDL SSH paths and hardware receipts below describe earlier deployment
 procedures; they are not evidence of the current Agent's status or capacity.
@@ -84,6 +84,16 @@ dependency before running the reporter. A command is accepted only with remote
 exit code zero and an acknowledgement that its temporary terminal was deleted.
 Do not install or launch a local Agent for this workflow.
 
+Set the private Agent paths in the user service environment before running the
+reporter. These values belong in an ignored service drop-in or local shell and
+must never be committed:
+
+```bash
+export REMOTE_AGENT_MATRIX_ROOT=/srv/agent/matrix
+export REMOTE_AGENT_RESEARCH_ROOT=/srv/agent/research
+export REMOTE_AGENT_PYTHON=python3
+```
+
 Use a read-only dry run to inspect the same evidence that the scheduled report
 will publish:
 
@@ -107,7 +117,7 @@ The Agent also runs an independent, low-priority diagnostic supervisor from
 `research/staging/trajectory_shortening_20261024/research_supervisor.py`.
 It refreshes completed-result length statistics every five hours, for at most
 34 cycles or until there are no qualified/running formal cells. Outputs are
-new leaves under `/home/ps/RAL/research-20261024/length-refresh`; the small
+new leaves under `<agent-research-root>/length-refresh`; the small
 `research-status.json` carries its own observation time. The Issue reporter
 reads that timestamped summary and the independent candidate's CPU qualification.
 It does not imply that the diagnostic snapshot covers the latest live count,
@@ -132,9 +142,12 @@ file. Do not commit credentials or print their contents. The migrated instance
 uses port **33160**; the old port is not part of this workflow.
 
 ```bash
+export IPB_V1_REMOTE_ROOT=/srv/agent/project
+export IPB_V1_LOCK_ROOT=/srv/agent/runtime/campaigns
+export IPB_V1_REMOTE_PYTHON=python3
 python3 tools/ops_v1/remote.py status
 python3 tools/ops_v1/remote.py sync
-python3 tools/ops_v1/remote.py exec 'cd /root/autodl-tmp/other-inertial-benchmark-v1 && .venv/bin/ipb info'
+python3 tools/ops_v1/remote.py exec "cd '$IPB_V1_REMOTE_ROOT' && .venv/bin/ipb info"
 ```
 
 `sync` admits tracked and nonignored source files, excludes symlinks, data, runs,
@@ -149,8 +162,8 @@ Install the server environment once; do not reinstall Torch or dependencies
 between accepted receipts and formal runs without new environment acceptance:
 
 ```bash
-cd /root/autodl-tmp/other-inertial-benchmark-v1
-/root/miniconda3/bin/python -m venv --system-site-packages .venv
+cd "$IPB_V1_REMOTE_ROOT"
+"$IPB_V1_REMOTE_PYTHON" -m venv --system-site-packages .venv
 .venv/bin/python -m pip install --cache-dir .local/pip-cache -e '.[train,test,ops]'
 ```
 
@@ -169,7 +182,7 @@ An existing coordinator-provided snapshot may be reused instead.
 .venv/bin/python - <<'PY'
 import hashlib, json, shutil
 from pathlib import Path
-root = Path('/root/autodl-tmp/other-inertial-benchmark-v1')
+root = Path('<agent-project-root>')
 manifest_path = root / 'source_manifest.json'
 manifest_bytes = manifest_path.read_bytes()
 manifest = json.loads(manifest_bytes)
@@ -255,7 +268,7 @@ Set `<deployment-id>` to an actually verified snapshot and `<campaign-id>` to a
 new receipt/output scope. Keep datasets and outputs outside the source snapshot.
 
 ```bash
-IPB_V1_ROOT=/root/autodl-tmp/other-inertial-benchmark-v1
+IPB_V1_ROOT=<agent-project-root>
 IPB_SNAPSHOT_ROOT="$IPB_V1_ROOT/.local/source-snapshots/<deployment-id>/repo"
 IPB_OPS_PYTHON="$IPB_V1_ROOT/.venv/bin/python"
 IPB_MATRIX_OUTPUT="$IPB_V1_ROOT/.local/matrix/<campaign-id>"

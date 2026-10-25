@@ -962,7 +962,7 @@
     "Pending profiles can change estimates; no test-based tuning or gain fit.",
     "No causal explanation from aggregated length ratios."
   ],
-  "remote_leaf": "/home/ps/RAL/research-20261024/length-a03e78746981",
+  "remote_leaf": "<agent-research-root>/length-a03e78746981",
   "audit_source_sha256": "a03e787469810770b65583606f47de4e9f15cf68041dc9ce73707ef5273f6b9d",
   "input_hash_manifest_sha256": "72c5fdc482c4fcd561702d8b6c24524522c2cf7f565ebe275a9e5bc9647fe8fb"
 }

@@ -27,9 +27,9 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
-SERVER_ROOT = Path('/root/autodl-tmp/other-inertial-benchmark-v1')
+SERVER_ROOT = Path(os.environ.get('IPB_V1_REMOTE_ROOT', '<agent-project-root>'))
 SNAPSHOTS = SERVER_ROOT / '.local/source-snapshots'
-LOCK_ROOT = Path('/root/autodl-tmp/inertial-benchmark/.local/campaigns')
+LOCK_ROOT = Path(os.environ.get('IPB_V1_LOCK_ROOT', '<agent-runtime-root>/campaigns'))
 
 
 def sha(path):

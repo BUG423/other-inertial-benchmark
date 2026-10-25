@@ -50,7 +50,10 @@ def test_admitted_native_train_validate_predict_reload(method, dims, tmp_path):
     if not fixture_value:
         pytest.fail("set IPB_CROSS_DOMAIN_FIXTURE to the accepted server engineering excerpt")
     fixture = Path(fixture_value).resolve(strict=True)
-    assert str(fixture).startswith("/root/autodl-tmp/other-inertial-benchmark-v1/.local/")
+    private_fixture_root = os.environ.get(
+        "IPB_V1_PRIVATE_EVIDENCE_ROOT", "<agent-project-root>/.local"
+    )
+    assert str(fixture).startswith(private_fixture_root.rstrip("/") + "/")
     manifest_bytes = (fixture / "dataset.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     assert manifest["engineering_only"] is True

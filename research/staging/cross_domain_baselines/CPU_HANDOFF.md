@@ -47,11 +47,11 @@
 | 共享 lifecycle test SHA256 | `722d6b196135dba1196d6f681ac96b3c9c9265edd24bc7b08a9568116c38082e` |
 
 服务器原始证据根目录：
-`/root/autodl-tmp/other-inertial-benchmark-v1/.local/reports/cross-domain-cpu-4c482569ef8b-20261014T093620Z/`。
+`<agent-project-root>/.local/reports/cross-domain-cpu-4c482569ef8b-20261014T093620Z/`。
 包含 `receipt.json`、`nodes.json`、`junit.xml`、`pytest.log` 和六份独立生命周期 receipt；
 前四份已按原字节镜像到本仓库同名 `.local/reports/` 子目录。
 源码 snapshot 为
-`/root/autodl-tmp/other-inertial-benchmark-v1/.local/source-snapshots/cross-domain-4c482569ef8b3a90-20261014T093620Z/repo/`；
+`<agent-project-root>/.local/source-snapshots/cross-domain-4c482569ef8b3a90-20261014T093620Z/repo/`；
 对应 request、manifest 和 runner 保存在服务器 `.local/research/cross-domain-cpu/4c482569ef8b-20261014T093620Z/`。
 凭据、checkpoint、fixture 数据和私有运行目录不加入 Git。
 

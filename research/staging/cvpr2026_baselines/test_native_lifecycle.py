@@ -61,7 +61,10 @@ def test_native_xyz_train_val_predict_checkpoint_reload(method, tmp_path):
     if not value:
         pytest.fail("set IPB_CROSS_DOMAIN_FIXTURE to the admitted AutoDL engineering excerpt")
     fixture = Path(value).resolve(strict=True)
-    assert str(fixture).startswith("/root/autodl-tmp/other-inertial-benchmark-v1/.local/")
+    private_fixture_root = os.environ.get(
+        "IPB_V1_PRIVATE_EVIDENCE_ROOT", "<agent-project-root>/.local"
+    )
+    assert str(fixture).startswith(private_fixture_root.rstrip("/") + "/")
     manifest_path = (fixture / "dataset.json").resolve(strict=True)
     assert manifest_path.is_relative_to(fixture) and manifest_path.is_file()
     manifest_bytes = _bounded_bytes(manifest_path, 1024 * 1024)

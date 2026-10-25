@@ -31,7 +31,7 @@
     "source_bytes": 85169,
     "source_manifest_sha256": "7c317f0d8288ba533d97478117bd2ef54e4b036f515cf591d4cca0c22ae792f1",
     "audited_findings_sha256": "30d757675af65ab8d19b1f24b20576be59330b5c5a1f53273c9210dacd96e8cf",
-    "server_root": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/research/algorithm-primary/ai-imu-dr-stage1-32967812",
+    "server_root": "<agent-project-root>/.local/research/algorithm-primary/ai-imu-dr-stage1-32967812",
     "used_files": [
       "src/utils_torch_filter.py",
       "src/utils_numpy_filter.py",

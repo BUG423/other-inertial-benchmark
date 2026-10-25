@@ -45,6 +45,8 @@ from ..metrics import MAIN_METRICS
 from ..utils import CFG_DIR, LOGGER, json_load, json_save, to_builtin, yaml_load
 
 PathLike = Union[str, Path]
+PRIVATE_REMOTE_ROOT = os.environ.get('IPB_V1_REMOTE_ROOT', '<agent-project-root>').rstrip('/') + '/'
+PRIVATE_LOCK_ROOT = Path(os.environ.get('IPB_V1_LOCK_ROOT', '<agent-runtime-root>/campaigns'))
 # 基准 YAML 允许的顶层键
 PLAN_KEYS = ("name", "project", "models", "datasets", "seeds", "splits", "overrides", "report",
              "continue_on_error", "native_registry", "seed_record", "policy", "admission",
@@ -1178,9 +1180,9 @@ def run_item(item: BenchmarkItem) -> dict:
                         'shared_completed_run': True, 'checkpoint': row['checkpoint']}
             with ExitStack() as resources:
                 # AutoDL legacy live-source deployers use the same resource files.
-                if str(meta.get('source_root', '')).startswith('/root/autodl-tmp/other-inertial-benchmark-v1/'):
+                if str(meta.get('source_root', '')).startswith(PRIVATE_REMOTE_ROOT):
                     kind = 'cpu-resource.lock' if meta.get('sequence_calibration') else 'gpu-0.lock'
-                    path = Path('/root/autodl-tmp/inertial-benchmark/.local/campaigns') / kind
+                    path = PRIVATE_LOCK_ROOT / kind
                     path.parent.mkdir(parents=True, exist_ok=True)
                     handle = resources.enter_context(path.open('a+'))
                     fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)

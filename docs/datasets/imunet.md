@@ -156,7 +156,7 @@ ipb cfg model=imunet_3d data=imunet metric_dims=3 recipe=unified
 
 ## 11. 转换结果（IPB v1）
 
-2026-10-13 AutoDL 完整接入，执行源 `dev/v1@fc6ce90`，沿用 `imunet@1.0`，无另外重写转换器。实际 raw：`/root/autodl-tmp/other-inertial-benchmark-v1/datasets/raw-incoming/imunet/d873476439b115ae/extracted/IMUNet_dataset`；输出：`/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/imunet`。
+2026-10-13 AutoDL 完整接入，执行源 `dev/v1@fc6ce90`，沿用 `imunet@1.0`，无另外重写转换器。实际 raw：`<agent-project-root>/datasets/raw-incoming/imunet/d873476439b115ae/extracted/IMUNet_dataset`；输出：`<agent-project-root>/datasets/ipb-v1/full-core/imunet`。
 
 用户 ZIP **2,592,746,775 B**，SHA256 `d873476439b115aee77cbde6b40efcafdcfe62a736c2c3d5492d9079062275cb`；263 个文件 / 516 个 ZIP 成员 CRC 全部通过，raw 解压文件 **5,828,310,200 B**，126 个 `processed/data.csv`。原生输出文件合计 **327,224,823 B**（包含 metadata，区别于文件系统分配字节）；dataset fingerprint 为 `3fe0f633264ab36a82814ea75211b359e91143e085d60ea8c26c7c31bdaca0a1`，`dataset.json` SHA256 为 `68d861bdca3ba2d7654b06f5e1b4875c744688f58031126209c171d2dcb217b4`。
 

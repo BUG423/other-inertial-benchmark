@@ -1,7 +1,7 @@
 {
   "schema": "ib.trajectory-cause-observation.v1",
   "observed_utc": "2026-10-25T13:18:06.191587Z",
-  "remote_leaf": "/home/ps/RAL/research-20261024/cause-681197ac3321",
+  "remote_leaf": "<agent-research-root>/cause-681197ac3321",
   "source_binding_sha256": "681197ac3321dbe8edb3c32b8c1218d1ab546057e7cc487b6f83203a65d67a00",
   "scope": {
     "completed_human_xyz_trainable_cells": 519,

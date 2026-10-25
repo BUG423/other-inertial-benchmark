@@ -25,7 +25,9 @@ def main():
     torch.set_num_threads(2)
     torch.set_num_interop_threads(1)
     root = Path.cwd()
-    source = Path('/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi')
+    source = Path(os.environ.get(
+        'IPB_V1_RIDI_ROOT', '<agent-project-root>/datasets/ipb-v1/full-core/ridi'
+    ))
     fixture = root / 'engineering-fixture'
     fixture.mkdir(exist_ok=False)
     (fixture / 'splits').mkdir()

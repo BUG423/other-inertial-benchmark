@@ -190,7 +190,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--production", type=Path,
-                        default=Path("/root/autodl-tmp/inertial-benchmark"))
+                        default=Path(os.environ.get("IPB_V1_PRODUCTION_ROOT",
+                                                    "<agent-production-root>")))
     parser.add_argument("--stage", default="baseline-faee13c")
     args = parser.parse_args()
     root = args.root.resolve()

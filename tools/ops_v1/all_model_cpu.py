@@ -28,8 +28,11 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-REMOTE_ROOT = Path('/root/autodl-tmp/other-inertial-benchmark-v1')
-LOCK_ROOT = Path('/root/autodl-tmp/inertial-benchmark/.local/campaigns')
+# The execution checkout and shared locks live on a private Agent host.  The
+# public source carries only safe placeholders; operators set these variables
+# in that host's service environment.
+REMOTE_ROOT = Path(os.environ.get('IPB_V1_REMOTE_ROOT', '<agent-project-root>'))
+LOCK_ROOT = Path(os.environ.get('IPB_V1_LOCK_ROOT', '<agent-runtime-root>/campaigns'))
 THREAD_NAMES = ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
                 'NUMEXPR_NUM_THREADS')
 

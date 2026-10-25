@@ -40,9 +40,10 @@ def pytest_collect_file(file_path, parent):
         )
     try:
         receipt_path = Path(value).resolve(strict=True)
-        if not str(receipt_path).startswith(
-            "/root/autodl-tmp/other-inertial-benchmark-v1/.local/"
-        ):
+        private_evidence_root = os.environ.get(
+            "IPB_V1_PRIVATE_EVIDENCE_ROOT", "<agent-project-root>/.local"
+        )
+        if not str(receipt_path).startswith(private_evidence_root.rstrip("/") + "/"):
             raise ValueError("tail receipt must reside in the isolated AutoDL private evidence scope")
         receipt = json.loads(_bounded_bytes(receipt_path, 256 * 1024))
         plan_path = HERE / "tail_queue.json"
@@ -98,7 +99,7 @@ def pytest_collect_file(file_path, parent):
         used = 0
         for artifact in references:
             target = Path(artifact["path"]).resolve(strict=True)
-            if not str(target).startswith("/root/autodl-tmp/other-inertial-benchmark-v1/.local/"):
+            if not str(target).startswith(private_evidence_root.rstrip("/") + "/"):
                 raise ValueError("handoff evidence outside isolated server scope")
             if target.suffix.lower() not in {".json", ".csv", ".md", ".txt"}:
                 raise ValueError("handoff artifacts must be small metadata, never checkpoints/datasets")

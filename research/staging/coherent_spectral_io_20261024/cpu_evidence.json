@@ -16,9 +16,9 @@
     ]
   },
   "source_hashes": {
-    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/dan_bag1.h5": "b1ca673ad7c18dd245c7f277921076860da43f0f66bd021dad7f9c960ca52fe1",
-    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/hao_bag1.h5": "0a1b11445939627c7df626297409ddd17c5267d74d3a3f8c2dbc2e0f15d6c6de",
-    "/root/autodl-tmp/other-inertial-benchmark-v1/datasets/ipb-v1/full-core/ridi/sequences/dan_bag2.h5": "444addd5638c75b569ba22772ffac2852bd550a8ba2f1ca47cd74f33f915936f"
+    "<agent-project-root>/datasets/ipb-v1/full-core/ridi/sequences/dan_bag1.h5": "b1ca673ad7c18dd245c7f277921076860da43f0f66bd021dad7f9c960ca52fe1",
+    "<agent-project-root>/datasets/ipb-v1/full-core/ridi/sequences/hao_bag1.h5": "0a1b11445939627c7df626297409ddd17c5267d74d3a3f8c2dbc2e0f15d6c6de",
+    "<agent-project-root>/datasets/ipb-v1/full-core/ridi/sequences/dan_bag2.h5": "444addd5638c75b569ba22772ffac2852bd550a8ba2f1ca47cd74f33f915936f"
   },
   "params": 65262,
   "checkpoint_reload_exact": true,
@@ -26,7 +26,7 @@
   "cuda_initialized": false,
   "torch": "2.12.1+cu130",
   "full_dataset_accuracy_established": false,
-  "remote_leaf": "/home/ps/RAL/research-20261024/candidate-04685c01c14d",
+  "remote_leaf": "<agent-research-root>/candidate-04685c01c14d",
   "execution": {
     "exit_code": 0,
     "elapsed_s": 8.673202514648438

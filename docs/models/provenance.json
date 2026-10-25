@@ -135,7 +135,7 @@
         "url": "https://github.com/Sachini/ronin",
         "commit": "805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
         "head": "805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
+        "path": "<agent-project-root>/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 28,
@@ -148,7 +148,7 @@
             "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/ronin/805b7f0f28bb164ce89ada9ac05a9470dbe3d715-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -220,7 +220,7 @@
         "url": "https://github.com/CathIAS/TLIO",
         "commit": "d7051c4ff14834b93931984b75b40f894e39654d",
         "head": "d7051c4ff14834b93931984b75b40f894e39654d",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d",
+        "path": "<agent-project-root>/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 66,
@@ -248,7 +248,7 @@
             "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/TLIO/d7051c4ff14834b93931984b75b40f894e39654d-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -325,7 +325,7 @@
         "url": "https://github.com/zju3dv/rnin-vio",
         "commit": "b030ecc94f151159973a9086c8ba76e22bdbc56e",
         "head": "b030ecc94f151159973a9086c8ba76e22bdbc56e",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e",
+        "path": "<agent-project-root>/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 48,
@@ -343,7 +343,7 @@
             "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/rnin-vio/b030ecc94f151159973a9086c8ba76e22bdbc56e-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -472,14 +472,14 @@
         "url": "https://github.com/BehnamZeinali/IMUNet",
         "commit": "c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
         "head": "c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
+        "path": "<agent-project-root>/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 24,
         "source_bytes": 231135,
         "python_files": 23,
         "license_files": [],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/IMUNet/c57f14d0f4f5bbb8e29d836dabacc8718ca825e1-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": true
       }
@@ -562,7 +562,7 @@
         "url": "https://github.com/RoyinaJayanth/EqNIO",
         "commit": "97b7a60a5e5cc8f0132bba343c83de114211f827",
         "head": "97b7a60a5e5cc8f0132bba343c83de114211f827",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827",
+        "path": "<agent-project-root>/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 99,
@@ -575,7 +575,7 @@
             "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/EqNIO/97b7a60a5e5cc8f0132bba343c83de114211f827-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": true
       }
@@ -649,7 +649,7 @@
         "url": "https://github.com/i2Nav-WHU/LightweightLearnedInertialOdometer",
         "commit": "e225ab8f3080c35c92481673b6af1d68692941f6",
         "head": "e225ab8f3080c35c92481673b6af1d68692941f6",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6",
+        "path": "<agent-project-root>/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 4,
@@ -662,7 +662,7 @@
             "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/LightweightLearnedInertialOdometer/e225ab8f3080c35c92481673b6af1d68692941f6-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -736,7 +736,7 @@
         "url": "https://github.com/nesl/tinyodom",
         "commit": "7958781baeddf1b99a4f365fb54fb7bac5e96845",
         "head": "7958781baeddf1b99a4f365fb54fb7bac5e96845",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845",
+        "path": "<agent-project-root>/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 371,
@@ -769,7 +769,7 @@
             "sha256": "ddd1400f963747b305bfa39e21206e58805a1c650451e2ee5ce81ed86bc0b1ab"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/tinyodom/7958781baeddf1b99a4f365fb54fb7bac5e96845-source-manifest.json",
         "fidelity_upgrade": false,
         "generated_source_note": "Source-only selection includes tinyodom_tcn/model.cc, which may contain embedded trained parameter arrays; no standalone dataset or checkpoint artifacts were selected.",
         "license_review_required": false
@@ -851,14 +851,14 @@
         "url": "https://github.com/OmerTariq-KAIST/DeepILS-IoT-Journal-2025",
         "commit": "4fd65aa9564075810dab494d43610857dc3e1d01",
         "head": "4fd65aa9564075810dab494d43610857dc3e1d01",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01",
+        "path": "<agent-project-root>/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 20,
         "source_bytes": 186365,
         "python_files": 15,
         "license_files": [],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/DeepILS-IoT-Journal-2025/4fd65aa9564075810dab494d43610857dc3e1d01-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": true
       }
@@ -920,7 +920,7 @@
         "url": "https://github.com/superxslam/TartanIMU",
         "commit": "8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
         "head": "8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
+        "path": "<agent-project-root>/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 102,
@@ -933,7 +933,7 @@
             "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/TartanIMU/8a8025000f85d2c6b0692b88e15c2c91e761f7d7-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -1013,7 +1013,7 @@
         "url": "https://github.com/decargroup/DIVE",
         "commit": "e982ddd0643c9d831de77a95467b282b07cceec1",
         "head": "e982ddd0643c9d831de77a95467b282b07cceec1",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1",
+        "path": "<agent-project-root>/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 65,
@@ -1026,7 +1026,7 @@
             "sha256": "8f042ebe11c51cc0e7cf9132dba047db14d4854d977c786c8dccb8bef0fc8d40"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/DIVE/e982ddd0643c9d831de77a95467b282b07cceec1-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -1095,7 +1095,7 @@
         "url": "https://github.com/Air-IO/Air-IO",
         "commit": "7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
         "head": "7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
+        "path": "<agent-project-root>/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 33,
@@ -1108,7 +1108,7 @@
             "sha256": "9fcf2eec83619e34a6a17824022030b3e14853cf80cd1ca2cd924a17f86ff9cc"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/Air-IO/7214e8a6ddee95ca07a64f01f1fa3e2f8f60df73-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -1189,7 +1189,7 @@
         "url": "https://github.com/RoyinaJayanth/NIO_Lie_Events",
         "commit": "1e87470f6479c198875c5f1a32b392a46eb5af74",
         "head": "1e87470f6479c198875c5f1a32b392a46eb5af74",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74",
+        "path": "<agent-project-root>/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 106,
@@ -1202,7 +1202,7 @@
             "sha256": "65dc498735b07b4db649245f7dbb7d612d15d247dc748e7331a0846e39424ab9"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/NIO_Lie_Events/1e87470f6479c198875c5f1a32b392a46eb5af74-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": true
       }
@@ -1340,7 +1340,7 @@
         "url": "https://github.com/bingrao/ctin",
         "commit": "1441c726811ac87283903471562023fd429e3a08",
         "head": "1441c726811ac87283903471562023fd429e3a08",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08",
+        "path": "<agent-project-root>/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 2,
@@ -1353,7 +1353,7 @@
             "sha256": "890a96e5a660425a0ca2700c367435ad6fb2e372ed475e3683253517f15a9fa5"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/ctin/1441c726811ac87283903471562023fd429e3a08-source-manifest.json",
         "fidelity_upgrade": false,
         "network_source_present": false,
         "license_review_required": false
@@ -1425,7 +1425,7 @@
         "url": "https://github.com/Minh-Son-Nguyen/iMoT",
         "commit": "7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
         "head": "7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
+        "path": "<agent-project-root>/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 2,
@@ -1438,7 +1438,7 @@
             "sha256": "3f19af235b925ba2eca3eb23b83be8d575c6f2c58282e92e1c36f851e05a75a3"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/iMoT/7f275702bd9b0dbdb60bb4d5dae802f8e9ab9dac-source-manifest.json",
         "fidelity_upgrade": false,
         "network_source_present": false,
         "license_review_required": false
@@ -1769,7 +1769,7 @@
         "url": "https://github.com/higerra/ridi_imu",
         "commit": "ce5d772a1ef8ce590121f0f0b254910bc07a2949",
         "head": "ce5d772a1ef8ce590121f0f0b254910bc07a2949",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949",
+        "path": "<agent-project-root>/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 35,
@@ -1782,7 +1782,7 @@
             "sha256": "6b37dd1f2ddf409be33497d43e7d109e5b56f77b1bc68ca3f1b7d4e16522e136"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/ridi_imu/ce5d772a1ef8ce590121f0f0b254910bc07a2949-source-manifest.json",
         "fidelity_upgrade": false,
         "license_review_required": false
       }
@@ -1864,7 +1864,7 @@
         "url": "https://github.com/SunXuehang/MEIO-Net",
         "commit": "e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
         "head": "e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
-        "path": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
+        "path": "<agent-project-root>/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e",
         "state": "source_verified",
         "source_verified": true,
         "source_files": 4,
@@ -1877,7 +1877,7 @@
             "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
           }
         ],
-        "source_manifest": "/root/autodl-tmp/other-inertial-benchmark-v1/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e-source-manifest.json",
+        "source_manifest": "<agent-project-root>/.local/external/reference-code/MEIO-Net/e93e5b82ef9cdb9920e13ab0c056f6525c5d4d2e-source-manifest.json",
         "fidelity_upgrade": false,
         "core_network_present": false,
         "license_review_required": false
