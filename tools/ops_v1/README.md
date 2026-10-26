@@ -138,8 +138,8 @@ Install the optional SSH client dependencies locally with
 `python3 -m pip install -e '.[ops]'`. Copy
 [ssh-config.example.json](ssh-config.example.json) to `.local/autodl-v1.json`,
 fill in the **current** private connection fields and use `chmod 600` on that
-file. Do not commit credentials or print their contents. The migrated instance
-uses port **33160**; the old port is not part of this workflow.
+file. Do not commit credentials or print their contents. Keep the actual SSH
+host, port and remote paths in private configuration.
 
 ```bash
 export IPB_V1_REMOTE_ROOT=/srv/agent/project
@@ -149,6 +149,14 @@ python3 tools/ops_v1/remote.py status
 python3 tools/ops_v1/remote.py sync
 python3 tools/ops_v1/remote.py exec "cd '$IPB_V1_REMOTE_ROOT' && .venv/bin/ipb info"
 ```
+
+The private SSH config's `remote_root` must match `IPB_V1_REMOTE_ROOT`. Set the
+same absolute `IPB_V1_LOCK_ROOT` for deployment and Agent workers so they share
+the same CPU/GPU leases. Tools refuse to execute with placeholder paths. Use
+`IPB_V1_PRODUCTION_ROOT` for the acceptance helper's original data checkout,
+`IPB_V1_RIDI_ROOT` for the candidate's RIDI source, and
+`IPB_V1_PRIVATE_EVIDENCE_ROOT` for guarded lifecycle evidence. These values
+belong in the private environment of the machine running the corresponding tool.
 
 `sync` admits tracked and nonignored source files, excludes symlinks, data, runs,
 weights, external references and private configuration, and records SHA-256
@@ -180,9 +188,9 @@ An existing coordinator-provided snapshot may be reused instead.
 
 ```bash
 .venv/bin/python - <<'PY'
-import hashlib, json, shutil
+import hashlib, json, os, shutil
 from pathlib import Path
-root = Path('<agent-project-root>')
+root = Path(os.environ['IPB_V1_REMOTE_ROOT'])
 manifest_path = root / 'source_manifest.json'
 manifest_bytes = manifest_path.read_bytes()
 manifest = json.loads(manifest_bytes)
@@ -268,7 +276,7 @@ Set `<deployment-id>` to an actually verified snapshot and `<campaign-id>` to a
 new receipt/output scope. Keep datasets and outputs outside the source snapshot.
 
 ```bash
-IPB_V1_ROOT=<agent-project-root>
+IPB_V1_ROOT="$IPB_V1_REMOTE_ROOT"
 IPB_SNAPSHOT_ROOT="$IPB_V1_ROOT/.local/source-snapshots/<deployment-id>/repo"
 IPB_OPS_PYTHON="$IPB_V1_ROOT/.venv/bin/python"
 IPB_MATRIX_OUTPUT="$IPB_V1_ROOT/.local/matrix/<campaign-id>"
