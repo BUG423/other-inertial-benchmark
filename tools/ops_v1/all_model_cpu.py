@@ -64,6 +64,8 @@ def write_json(path, value):
 
 
 def server_only(root):
+    if not REMOTE_ROOT.is_absolute() or not LOCK_ROOT.is_absolute():
+        raise RuntimeError('Set absolute IPB_V1_REMOTE_ROOT and IPB_V1_LOCK_ROOT on the Agent')
     resolved = Path(root).resolve()
     if resolved != REMOTE_ROOT and not resolved.is_relative_to(REMOTE_ROOT / '.local/source-snapshots'):
         raise RuntimeError('CPU framework execution is restricted to the AutoDL v1 checkout')

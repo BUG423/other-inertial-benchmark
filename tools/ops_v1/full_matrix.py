@@ -57,6 +57,8 @@ def load(path):
 
 
 def source_identity(root):
+    if not SERVER_ROOT.is_absolute() or not LOCK_ROOT.is_absolute():
+        raise RuntimeError('Set absolute IPB_V1_REMOTE_ROOT and IPB_V1_LOCK_ROOT on the Agent')
     root = Path(root).resolve()
     if not root.is_relative_to(SNAPSHOTS) or not (root / 'source_manifest.json').is_file():
         raise RuntimeError('Full queue requires an immutable AutoDL source snapshot')

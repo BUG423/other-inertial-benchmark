@@ -194,6 +194,8 @@ def main() -> int:
                                                     "<agent-production-root>")))
     parser.add_argument("--stage", default="baseline-faee13c")
     args = parser.parse_args()
+    if not args.production.is_absolute():
+        parser.error('Set --production or IPB_V1_PRODUCTION_ROOT to an absolute Agent data root')
     root = args.root.resolve()
     os.environ.update(OMP_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1",
                       NUMEXPR_NUM_THREADS="1")

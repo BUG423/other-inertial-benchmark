@@ -18,13 +18,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REMOTE_ROOT = os.environ.get("IPB_V1_REMOTE_ROOT", "<agent-project-root>")
-CPU_LOCK = os.environ.get("IPB_V1_CPU_LOCK", "<agent-runtime-root>/campaigns/cpu-resource.lock")
-GPU_LOCK = os.environ.get("IPB_V1_GPU_LOCK", "<agent-runtime-root>/campaigns/gpu-0.lock")
+LOCK_ROOT = Path(os.environ.get("IPB_V1_LOCK_ROOT", "<agent-runtime-root>/campaigns"))
+CPU_LOCK = str(LOCK_ROOT / "cpu-resource.lock")
+GPU_LOCK = str(LOCK_ROOT / "gpu-0.lock")
 REMOTE_PYTHON = os.environ.get("IPB_V1_REMOTE_PYTHON", "python3")
 EXCLUDED = (".git/", ".local/", "datasets/", "runs/", "external/", "data/raw/")
 
 
 def connect(path: Path):
+    if not Path(REMOTE_ROOT).is_absolute() or not LOCK_ROOT.is_absolute():
+        raise ValueError("Set absolute IPB_V1_REMOTE_ROOT and IPB_V1_LOCK_ROOT before connecting")
     import paramiko
 
     if path.stat().st_mode & 0o077:
