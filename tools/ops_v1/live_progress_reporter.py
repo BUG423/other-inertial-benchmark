@@ -47,7 +47,7 @@ REMOTE_AGENT_PYTHON = os.environ.get("REMOTE_AGENT_PYTHON", "python3").strip()
 
 REMOTE_SCRIPT = dedent(
     r"""
-    import datetime, hashlib, json, os, socket, subprocess
+    import datetime, hashlib, json, subprocess
     from pathlib import Path
 
     matrix = Path('__REMOTE_AGENT_MATRIX_ROOT__')
@@ -100,7 +100,6 @@ REMOTE_SCRIPT = dedent(
         cause = json.loads(cause_path.read_bytes())
     print(json.dumps({
         'observed_utc': now.isoformat(),
-        'hostname': socket.gethostname(),
         'coverage_mtime_utc': mtime.isoformat(),
         'coverage_sha256': hashlib.sha256(coverage_bytes).hexdigest(),
         'full_scope': len(rows),
@@ -111,7 +110,7 @@ REMOTE_SCRIPT = dedent(
             datetime.datetime.fromtimestamp(max(state_mtimes), datetime.timezone.utc).isoformat()
             if state_mtimes else None
         ),
-        'matching_processes': controller_text,
+        'matching_process_count': len(controller_text),
         'controller_present': any('continue-formal.py' in line for line in controller_text),
         'research': research,
         'cause': cause,
@@ -201,7 +200,7 @@ def render(value: dict) -> tuple[str, str]:
         "",
         *MENTIONS,
         "",
-        f"状态源：{status}；通过阿里云 WSS Agent 读取；主机 `{value.get('hostname')}`；coverage SHA256 `{value.get('coverage_sha256')}`。",
+        f"状态源：{status}；通过阿里云 WSS Agent 读取；coverage SHA256 `{value.get('coverage_sha256')}`。",
         f"run-states 文件数：{value.get('run_state_files', 0)}；最新修改：{latest_state or 'unknown'}"
         + (f"（约 {state_age_hours:.1f} 小时前）。" if state_age_hours is not None else "。"),
         f"coverage 文件最后修改：{value.get('coverage_mtime_utc')}（冻结范围文件，不作为实时进度依据）。",
@@ -218,10 +217,7 @@ def render(value: dict) -> tuple[str, str]:
         lines += ["", "文件中标为 running 的单元："]
         lines.extend(f"- `{item.get('profile')} / {item.get('dataset')} / seed{item.get('seed')}`"
                      for item in active[:16])
-    processes = value.get("matching_processes") or []
-    lines += ["", f"远端匹配到的 benchmark 进程行数：{len(processes)}。"]
-    if processes:
-        lines.extend(f"- `{line[:240]}`" for line in processes[:8])
+    lines += ["", f"远端匹配到的 benchmark 进程数：{value.get('matching_process_count', 0)}。"]
     research = value.get('research') or {}
     length = research.get('length') or {}
     if length:
@@ -247,7 +243,7 @@ def render(value: dict) -> tuple[str, str]:
         direction = canonical.get('direction_strata') or {}
         low_direction = direction.get('low_dir_err_lt20') or {}
         high_direction = direction.get('high_dir_err_ge45') or {}
-        lines += ['', f"缩短原因分解：{cause.get('updated_utc')}；远端只读叶 `{cause.get('leaf')}`。",
+        lines += ['', f"缩短原因分解：{cause.get('updated_utc')}。",
                    f"T200/reference/avg_velocity：oracle_ratio 中位数 {canonical.get('protocol_oracle_ratio', {}).get('median', float('nan')):.4f}；"
                    f"plr_oracle 中位数 {canonical.get('model_plr_oracle', {}).get('median', float('nan')):.4f}；"
                    f"speed_ratio 中位数 {canonical.get('speed_ratio', {}).get('median', float('nan')):.4f}。",
