@@ -3,6 +3,7 @@
 import ast
 import importlib.util
 import json
+import os
 import shlex
 import tempfile
 import unittest
@@ -17,8 +18,15 @@ SPEC.loader.exec_module(reporter)
 
 
 class ReporterPrivacyTests(unittest.TestCase):
+    def test_issue_target_can_be_replaced_without_changing_source(self):
+        with patch.dict(os.environ, {'IPB_REPORT_ISSUE': '42'}):
+            configured = importlib.util.module_from_spec(SPEC)
+            SPEC.loader.exec_module(configured)
+        self.assertEqual(configured.ISSUE, '42')
+
     def test_public_report_omits_private_runtime_fields(self):
         body, _ = reporter.render({
+            'coverage_sha256': 'f' * 64,
             'hostname': 'private-host-sentinel',
             'matching_processes': ['private-command-token-sentinel'],
             'matching_process_count': 2,
@@ -29,6 +37,7 @@ class ReporterPrivacyTests(unittest.TestCase):
                         '/private/research-sentinel'):
             self.assertNotIn(private, body)
         self.assertIn('benchmark 进程数：2', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
 
     def test_private_paths_are_data_in_quoted_remote_command(self):
         with tempfile.TemporaryDirectory() as directory:

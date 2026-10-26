@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post a bounded, read-only formal-matrix status report to GitHub Issue #1.
+"""Post a bounded, read-only formal-matrix status report to a GitHub Issue.
 
 The reporter reads the authoritative matrix on the live Agent through the
 app-remote-terminal WSS relay. It never launches or signals benchmark work,
@@ -24,7 +24,7 @@ from textwrap import dedent
 
 ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY = "BUG423/other-inertial-benchmark"
-ISSUE = "1"
+ISSUE = os.environ.get("IPB_REPORT_ISSUE", "1")
 PAIRING_PROFILE = Path(os.environ.get(
     "REMOTE_TERMINAL_APP_PROFILE",
     str(ROOT.parent / "app-remote-terminal/pairing/20261023/remote-pc-1.app.json"),
@@ -200,7 +200,7 @@ def render(value: dict) -> tuple[str, str]:
         "",
         *MENTIONS,
         "",
-        f"状态源：{status}；通过阿里云 WSS Agent 读取；coverage SHA256 `{value.get('coverage_sha256')}`。",
+        f"状态源：{status}；通过阿里云 WSS Agent 读取。",
         f"run-states 文件数：{value.get('run_state_files', 0)}；最新修改：{latest_state or 'unknown'}"
         + (f"（约 {state_age_hours:.1f} 小时前）。" if state_age_hours is not None else "。"),
         f"coverage 文件最后修改：{value.get('coverage_mtime_utc')}（冻结范围文件，不作为实时进度依据）。",
