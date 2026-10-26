@@ -103,7 +103,14 @@ python3 tools/ops_v1/live_progress_reporter.py --dry-run
 
 The user-level `other-inertial-benchmark-issue-reporter.timer` runs this report
 every five hours and mentions `@BUG423 @RicardoCDUT @Sarah-123886` in
-`BUG423/other-inertial-benchmark` Issue #1. Its service needs `node` and `gh`
+[`BUG423/other-inertial-benchmark` Issue #2](https://github.com/BUG423/other-inertial-benchmark/issues/2).
+The private service configuration sets `IPB_REPORT_ISSUE=2`; change that variable
+if the destination is replaced. Issue #1 was deleted. Public reports omit hash
+strings, hostnames, private paths and process command lines. File fingerprints
+remain available in the private local receipt for verification.
+The timer uses `OnActiveSec=5h` and `OnUnitActiveSec=5h` so the first scheduled
+comment follows timer activation by five hours, with the same recurring interval.
+Its service needs `node` and `gh`
 in its own `PATH`, plus the existing GitHub CLI authentication; an interactive
 shell's PATH is not inherited automatically. The installed user service has a
 `cli-paths.conf` drop-in for those executable directories. Check scheduling with
