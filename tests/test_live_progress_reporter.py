@@ -3,13 +3,12 @@
 import ast
 import importlib.util
 import json
-from pathlib import Path
 import shlex
 import tempfile
-from types import SimpleNamespace
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
-
 
 SOURCE = Path(__file__).resolve().parents[1] / 'tools/ops_v1/live_progress_reporter.py'
 SPEC = importlib.util.spec_from_file_location('live_progress_reporter', SOURCE)

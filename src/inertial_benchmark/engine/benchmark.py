@@ -1182,7 +1182,8 @@ def run_item(item: BenchmarkItem) -> dict:
                 # AutoDL legacy live-source deployers use the same resource files.
                 if str(meta.get('source_root', '')).startswith(PRIVATE_REMOTE_ROOT):
                     if not PRIVATE_LOCK_ROOT.is_absolute():
-                        raise RuntimeError('IPB_V1_LOCK_ROOT must be an absolute shared lock directory')
+                        raise RuntimeError(
+                            'IPB_V1_LOCK_ROOT must be an absolute shared lock directory')
                     kind = 'cpu-resource.lock' if meta.get('sequence_calibration') else 'gpu-0.lock'
                     path = PRIVATE_LOCK_ROOT / kind
                     path.parent.mkdir(parents=True, exist_ok=True)
