@@ -1,0 +1,243 @@
+{
+  "schema": "ib.radial-loss-diagnostic.v1",
+  "observed_utc": "2026-11-08T08:23:36.138253+00:00",
+  "dataset": "ridi",
+  "checkpoint_profile": "ronin_resnet18_3d",
+  "torch_version": "2.12.1+cu130",
+  "splits": {
+    "train": {
+      "recordings": 45,
+      "windows": 720,
+      "groups": 8
+    },
+    "val": {
+      "recordings": 4,
+      "windows": 64,
+      "groups": 1
+    }
+  },
+  "group_overlap": 0,
+  "gain_fit_split": "train",
+  "gain_objective": "Unweighted sum of per-window vector squared errors or norm sums.",
+  "optimizer_updates": 0,
+  "test_accessed": false,
+  "complete": true,
+  "weights_and_buffers_unchanged": true,
+  "input_files_unchanged": true,
+  "cuda_initialized": false,
+  "elapsed_s": 3.439497048035264,
+  "limitations": [
+    "Sampled moving windows only; vector diagnostics are not trajectory ATE/RTE or PLR.",
+    "Target-derived norm and projection controls use labels and cannot be deployed.",
+    "Oracle projections identify a geometric error component, not a training-loss causal effect.",
+    "Train-fit scalar gains are diagnostic controls; validation was already used for original checkpoint selection.",
+    "Speed/direction bins condition on observed targets/errors and cannot identify causal mechanisms.",
+    "Shared recordings, subjects and checkpoints prevent interpreting pooled windows as independent observations.",
+    "Validation contains only one existing group and four recordings; this is not an independent publication-quality test.",
+    "A negative label-projection residual or improved scalar gain does not identify regularization, optimization or information loss as the cause."
+  ],
+  "source": "research/staging/trajectory_shortening_20261024/radial_loss_probe.py",
+  "source_and_checkpoint_bindings_unchanged": true,
+  "agent_analytical_tests_passed": 4,
+  "selection": "Same sixteen valid moving windows per recording as velocity_state_probe; new validation recordings use the same fixed selection.",
+  "formulas": {
+    "vector_error": "(r-s)^2 + 2*r*s*(1-cos(theta))",
+    "fixed_direction_optimal_amplitude": "max(0,s*cos(theta))",
+    "directional_residual": "r-s*cos(theta); negative indicates amplitude below the label projection along prediction direction",
+    "vector_mse_gain": "max(0,sum(p dot y)/sum(p dot p))",
+    "norm_sum_gain": "sum(norm(y))/sum(norm(p))"
+  },
+  "summary": {
+    "validation_seeds_vector_mse_gain_improves": 3,
+    "validation_seeds_norm_sum_gain_worsens": 2
+  },
+  "evidence_projection": "Compact metadata; all strata, oracle controls and algebra checks retained in the private Agent receipt.",
+  "seeds": [
+    {
+      "seed": 1735231569,
+      "train_fit_gains": {
+        "vector_mse": 1.0835580372780411,
+        "norm_sum": 1.1155778600170114
+      },
+      "train_baseline": {
+        "speed_ratio": 0.8963964200443625,
+        "relative_l2": 0.2326641357944693,
+        "mean_prediction_direction_residual_mps": -0.09150904390918586,
+        "fraction_below_directional_optimum": 0.7361111111111112,
+        "oracle_norm_worse_window_fraction": 0.1
+      },
+      "validation_baseline": {
+        "speed_ratio": 0.8628310330647502,
+        "relative_l2": 0.3109606056103832,
+        "mean_prediction_direction_residual_mps": -0.10240061846323059,
+        "fraction_below_directional_optimum": 0.796875,
+        "oracle_norm_worse_window_fraction": 0.09375
+      },
+      "validation_gain_readouts": {
+        "vector_mse": {
+          "speed_ratio": 0.9349275357458373,
+          "relative_l2": 0.29868830276303954,
+          "relative_l2_change_percent": -3.946577999246692
+        },
+        "norm_sum": {
+          "speed_ratio": 0.9625551620791616,
+          "relative_l2": 0.2985414055716744,
+          "relative_l2_change_percent": -3.993817806706157
+        }
+      },
+      "low_direction": {
+        "train": {
+          "windows": 664,
+          "speed_ratio": 0.9040691684629187,
+          "mean_prediction_direction_residual_mps": -0.09571167330416078
+        },
+        "val": {
+          "windows": 55,
+          "speed_ratio": 0.8734487924795858,
+          "mean_prediction_direction_residual_mps": -0.13985171961587928
+        }
+      },
+      "validation_speed_bins": {
+        "speed_02_to_08": {
+          "windows": 9,
+          "speed_ratio": 0.9234196505127257,
+          "mean_prediction_direction_residual_mps": 0.10248696375526649
+        },
+        "speed_08_to_12": {
+          "windows": 18,
+          "speed_ratio": 0.8894721947143883,
+          "mean_prediction_direction_residual_mps": -0.10367533504010448
+        },
+        "speed_ge12": {
+          "windows": 37,
+          "speed_ratio": 0.8466477365345422,
+          "mean_prediction_direction_residual_mps": -0.151618006073575
+        }
+      }
+    },
+    {
+      "seed": 843628571,
+      "train_fit_gains": {
+        "vector_mse": 1.0151294596021978,
+        "norm_sum": 1.0274386938498667
+      },
+      "train_baseline": {
+        "speed_ratio": 0.9732940816672453,
+        "relative_l2": 0.15182814582864496,
+        "mean_prediction_direction_residual_mps": -0.016273817509504716,
+        "fraction_below_directional_optimum": 0.5694444444444444,
+        "oracle_norm_worse_window_fraction": 0.09166666666666666
+      },
+      "validation_baseline": {
+        "speed_ratio": 0.9634561456566573,
+        "relative_l2": 0.23243558560741148,
+        "mean_prediction_direction_residual_mps": -0.013617452118317597,
+        "fraction_below_directional_optimum": 0.5625,
+        "oracle_norm_worse_window_fraction": 0.125
+      },
+      "validation_gain_readouts": {
+        "vector_mse": {
+          "speed_ratio": 0.9780327086765297,
+          "relative_l2": 0.23209706260395763,
+          "relative_l2_change_percent": -0.1456416419926443
+        },
+        "norm_sum": {
+          "speed_ratio": 0.9898920724090524,
+          "relative_l2": 0.23249169048223792,
+          "relative_l2_change_percent": 0.02413781636740886
+        }
+      },
+      "low_direction": {
+        "train": {
+          "windows": 692,
+          "speed_ratio": 0.976539934867319,
+          "mean_prediction_direction_residual_mps": -0.018748628177264123
+        },
+        "val": {
+          "windows": 55,
+          "speed_ratio": 0.9634887522531915,
+          "mean_prediction_direction_residual_mps": -0.03660587396650062
+        }
+      },
+      "validation_speed_bins": {
+        "speed_02_to_08": {
+          "windows": 9,
+          "speed_ratio": 1.252369998921488,
+          "mean_prediction_direction_residual_mps": 0.17193423963270235
+        },
+        "speed_08_to_12": {
+          "windows": 18,
+          "speed_ratio": 0.9729336819084311,
+          "mean_prediction_direction_residual_mps": -0.011590607655047706
+        },
+        "speed_ge12": {
+          "windows": 37,
+          "speed_ratio": 0.9324467509525373,
+          "mean_prediction_direction_residual_mps": -0.059737679850696994
+        }
+      }
+    },
+    {
+      "seed": 951150512,
+      "train_fit_gains": {
+        "vector_mse": 1.0201530456043528,
+        "norm_sum": 1.067901956162976
+      },
+      "train_baseline": {
+        "speed_ratio": 0.9364155522226489,
+        "relative_l2": 0.2504750431612336,
+        "mean_prediction_direction_residual_mps": -0.03951456671571433,
+        "fraction_below_directional_optimum": 0.5791666666666667,
+        "oracle_norm_worse_window_fraction": 0.1125
+      },
+      "validation_baseline": {
+        "speed_ratio": 0.9241744058483522,
+        "relative_l2": 0.3176500565350224,
+        "mean_prediction_direction_residual_mps": -0.036543049403609806,
+        "fraction_below_directional_optimum": 0.578125,
+        "oracle_norm_worse_window_fraction": 0.15625
+      },
+      "validation_gain_readouts": {
+        "vector_mse": {
+          "speed_ratio": 0.942799337197927,
+          "relative_l2": 0.3171407614271853,
+          "relative_l2_change_percent": -0.16033213196703366
+        },
+        "norm_sum": {
+          "speed_ratio": 0.9869276678280123,
+          "relative_l2": 0.32034168024292653,
+          "relative_l2_change_percent": 0.8473550224624038
+        }
+      },
+      "low_direction": {
+        "train": {
+          "windows": 643,
+          "speed_ratio": 0.9521874863373505,
+          "mean_prediction_direction_residual_mps": -0.04038352776902816
+        },
+        "val": {
+          "windows": 52,
+          "speed_ratio": 0.9420258570209714,
+          "mean_prediction_direction_residual_mps": -0.05673827394611634
+        }
+      },
+      "validation_speed_bins": {
+        "speed_02_to_08": {
+          "windows": 9,
+          "speed_ratio": 1.0389179322552275,
+          "mean_prediction_direction_residual_mps": 0.15026293824153714
+        },
+        "speed_08_to_12": {
+          "windows": 18,
+          "speed_ratio": 0.9998970094459615,
+          "mean_prediction_direction_residual_mps": 0.030165548314316337
+        },
+        "speed_ge12": {
+          "windows": 37,
+          "speed_ratio": 0.8836042822485733,
+          "mean_prediction_direction_residual_mps": -0.1144351750179069
+        }
+      }
+    }
+  ]
+}
