@@ -1,0 +1,86 @@
+{
+  "schema": "ib.dynamic-lag-observation.v1",
+  "observed_utc": "2026-11-08",
+  "dataset": "ridi",
+  "profile": "ronin_resnet18_3d",
+  "split_shapes": {
+    "train": {
+      "recordings": 45,
+      "windows": 720,
+      "groups": 8
+    },
+    "val": {
+      "recordings": 4,
+      "windows": 64,
+      "groups": 1
+    }
+  },
+  "group_overlap": 0,
+  "dynamics_definition": "Endpoint reference velocity change norm across each 200-sample window; IMU roughness is the RMS first difference of the accelerometer channels.",
+  "train_quantile_edges_mps": [
+    0.18029,
+    0.29627,
+    0.47925
+  ],
+  "optimizer_updates": 0,
+  "test_accessed": false,
+  "complete": true,
+  "input_files_unchanged": true,
+  "weights_and_buffers_unchanged": true,
+  "cuda_initialized": false,
+  "seeds": [
+    {
+      "label": "seed_a",
+      "train": {
+        "speed_ratio": 0.8964,
+        "delta_speed_correlation": 0.099,
+        "roughness_speed_correlation": -0.006,
+        "bins": [0.8967, 0.8982, 0.8898, 0.9019]
+      },
+      "val": {
+        "speed_ratio": 0.8628,
+        "delta_speed_correlation": -0.024,
+        "roughness_speed_correlation": 0.254,
+        "bins": [0.8455, 0.8932, 0.8784, 0.8492]
+      }
+    },
+    {
+      "label": "seed_b",
+      "train": {
+        "speed_ratio": 0.9733,
+        "delta_speed_correlation": 0.088,
+        "roughness_speed_correlation": 0.095,
+        "bins": [0.9675, 0.9716, 0.9737, 0.983]
+      },
+      "val": {
+        "speed_ratio": 0.9635,
+        "delta_speed_correlation": 0.064,
+        "roughness_speed_correlation": 0.13,
+        "bins": [0.9145, 1.0068, 0.9835, 0.9629]
+      }
+    },
+    {
+      "label": "seed_c",
+      "train": {
+        "speed_ratio": 0.9364,
+        "delta_speed_correlation": -0.056,
+        "roughness_speed_correlation": 0.198,
+        "bins": [0.9512, 0.9424, 0.9356, 0.9093]
+      },
+      "val": {
+        "speed_ratio": 0.9242,
+        "delta_speed_correlation": 0.103,
+        "roughness_speed_correlation": 0.331,
+        "bins": [0.8925, 0.9335, 0.937, 0.9361]
+      }
+    }
+  ],
+  "limitations": [
+    "Descriptive train/validation windows only; no test, trajectory ATE/RTE or causal intervention.",
+    "Quantile thresholds are defined on train labels and reused on validation; they are not a deployable feature.",
+    "Endpoint reference velocity is a diagnostic label and can mix boundary-state and dynamic effects.",
+    "RMS accelerometer difference depends on sensor noise and frame conversion; correlation is not a lag proof.",
+    "Recordings and seeds are not independent observations; validation contains one group.",
+    "Seed identities, recording identities, starts, paths, checkpoints and file digests are intentionally omitted."
+  ]
+}
