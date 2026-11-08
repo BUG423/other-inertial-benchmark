@@ -323,6 +323,24 @@ def render(value: dict) -> tuple[str, str]:
             '恒定速度扰动是构造的可辨识性检查；参考初速是特权信息。'
             '这不证明真实数据的歧义比例、全矩阵缩短主因或 ATE/RTE 改善。',
         ]
+    radial = cause.get('radial_loss_probe') or {}
+    radial_splits = radial.get('splits') or {}
+    if (radial.get('complete') is True and radial.get('dataset') == 'ridi'
+            and radial.get('gain_fit_split') == 'train' and radial.get('test_accessed') is False
+            and radial.get('optimizer_updates') == 0 and len(radial.get('seeds') or []) == 3
+            and radial_splits.get('train') == dict(recordings=45, windows=720, groups=8)
+            and radial_splits.get('val') == dict(recordings=4, windows=64, groups=1)):
+        counts = radial.get('summary') or {}
+        improved = counts.get('validation_seeds_vector_mse_gain_improves')
+        worse = counts.get('validation_seeds_norm_sum_gain_worsens')
+        if type(improved) is int and type(worse) is int:
+            lines += [
+                '', '径向损失诊断：45 条训练录制拟合标量，4 条验证录制检查；验证仅一个 group。',
+                f"按向量 MSE 拟合的增益使 {improved}/3 seed 的验证窗口误差降低；"
+                f"按训练模长和校准的增益使 {worse}/3 seed 的误差变大。",
+                '低方向误差窗仍有负的预测方向投影残差；统一放大不能解释或解决全部缩短。'
+                '增益差异还受窗口权重影响，不能单独归因于方向歧义；本轮无测试集或 ATE/RTE 结论。',
+            ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

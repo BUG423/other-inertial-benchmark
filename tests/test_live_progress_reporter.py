@@ -120,6 +120,19 @@ class ReporterPrivacyTests(unittest.TestCase):
         body, _ = reporter.render({'cause': {'velocity_state_probe': probe}})
         self.assertNotIn('初速度边界诊断', body)
 
+    def test_radial_gain_counterexamples_keep_validation_scope_and_privacy(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/radial_loss_observation_20261108.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/radial-sentinel', source_sha256='e' * 64)
+        body, _ = reporter.render({'cause': {'radial_loss_probe': probe}})
+        for expected in ('3/3 seed', '2/3 seed', '验证仅一个 group', '窗口权重', '无测试集或 ATE/RTE 结论'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/radial-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        probe['gain_fit_split'] = 'test'
+        body, _ = reporter.render({'cause': {'radial_loss_probe': probe}})
+        self.assertNotIn('径向损失诊断', body)
+
 
 if __name__ == '__main__':
     unittest.main()
