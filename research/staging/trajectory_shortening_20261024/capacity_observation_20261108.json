@@ -1,0 +1,302 @@
+{
+  "schema": "ib.train-capacity-probe.v1",
+  "training_only": true,
+  "dataset": "ridi",
+  "recordings": 1,
+  "windows": 16,
+  "architecture": "ronin_resnet18_3d",
+  "steps_per_arm": 192,
+  "threads": 2,
+  "wall_budget_s": 600,
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0
+  },
+  "augmentation": [],
+  "seeds": [
+    1735231569,
+    843628571,
+    951150512
+  ],
+  "arms": [
+    0.0,
+    0.5
+  ],
+  "parameters": 4635395,
+  "complete": true,
+  "input_files_unchanged": true,
+  "elapsed_s": 71.67458678083494,
+  "cuda_initialized": false,
+  "formal_matrix_changed": false,
+  "full_dataset_accuracy_established": false,
+  "observed_utc": "2026-11-08T03:42:33.327865+00:00",
+  "source": "research/staging/trajectory_shortening_20261024/capacity_probe.py",
+  "source_and_framework_bindings_unchanged": true,
+  "framework_matches_current_checkout": {
+    "models/ronin/model.py": true,
+    "nn/modules/resnet1d.py": true,
+    "nn/base.py": true,
+    "data/views.py": true
+  },
+  "inputs_read_only": true,
+  "network_isolated": true,
+  "selection": {
+    "split": "train",
+    "recording": "first nonempty train entry",
+    "valid_stride": 200,
+    "min_target_speed_mps": 0.2,
+    "windows": "16 uniformly spaced moving candidates"
+  },
+  "protocol": {
+    "bn_modes": "same inputs and weights; dropout disabled in both readouts; BN buffers restored after batch-stat readout",
+    "checkpoints": "0 and every 32 updates through preselected final step 192",
+    "max_steps_chosen_before_run": true
+  },
+  "runs": [
+    {
+      "seed": 1735231569,
+      "dropout": 0.0,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.00015171797713264823,
+        "relative_l2": 0.01696750894188881,
+        "speed_ratio": 0.9836264252662659,
+        "speed_bias_mps": -0.020157048478722572,
+        "direction_deg": 0.06988245248794556,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 8.655643563004745e-11,
+        "relative_l2": 1.2815903573937248e-05,
+        "speed_ratio": 0.9999916553497314,
+        "speed_bias_mps": -1.0145828127861023e-05,
+        "direction_deg": 0.0024727925192564726,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.9836998581886292,
+          0.9836240410804749,
+          0.9836264252662659
+        ],
+        "batch_bn": [
+          1.0000373125076294,
+          0.9999804496765137,
+          0.9999916553497314
+        ]
+      }
+    },
+    {
+      "seed": 1735231569,
+      "dropout": 0.5,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.007280157878994942,
+        "relative_l2": 0.11753574758768082,
+        "speed_ratio": 0.9760381579399109,
+        "speed_bias_mps": -0.029498599469661713,
+        "direction_deg": 1.7174780368804932,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 0.007888543419539928,
+        "relative_l2": 0.12234830111265182,
+        "speed_ratio": 0.9521656632423401,
+        "speed_bias_mps": -0.05888737738132477,
+        "direction_deg": 1.740857720375061,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.9115853905677795,
+          0.9486802220344543,
+          0.9760381579399109
+        ],
+        "batch_bn": [
+          0.8690899610519409,
+          0.9610493183135986,
+          0.9521656632423401
+        ]
+      }
+    },
+    {
+      "seed": 843628571,
+      "dropout": 0.0,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.00011430203448981047,
+        "relative_l2": 0.014727415516972542,
+        "speed_ratio": 0.9866937398910522,
+        "speed_bias_mps": -0.01638094149529934,
+        "direction_deg": 0.03709333762526512,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 2.8170286896056496e-05,
+        "relative_l2": 0.007311310153454542,
+        "speed_ratio": 1.0037529468536377,
+        "speed_bias_mps": 0.004620188847184181,
+        "direction_deg": 0.037972837686538696,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.9836105704307556,
+          0.9834803342819214,
+          0.9866937398910522
+        ],
+        "batch_bn": [
+          1.0001132488250732,
+          1.0000026226043701,
+          1.0037529468536377
+        ]
+      }
+    },
+    {
+      "seed": 843628571,
+      "dropout": 0.5,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.016598328948020935,
+        "relative_l2": 0.177472785115242,
+        "speed_ratio": 0.8790752291679382,
+        "speed_bias_mps": -0.148866668343544,
+        "direction_deg": 3.000905990600586,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 0.017378516495227814,
+        "relative_l2": 0.1815958470106125,
+        "speed_ratio": 0.8661911487579346,
+        "speed_bias_mps": -0.16472774744033813,
+        "direction_deg": 2.9429824352264404,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.9097387790679932,
+          0.9384378790855408,
+          0.8790752291679382
+        ],
+        "batch_bn": [
+          0.9237396121025085,
+          0.9459670782089233,
+          0.8661911487579346
+        ]
+      }
+    },
+    {
+      "seed": 951150512,
+      "dropout": 0.0,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.00015967468789312989,
+        "relative_l2": 0.017406746745109558,
+        "speed_ratio": 0.9828515648841858,
+        "speed_bias_mps": -0.021110931411385536,
+        "direction_deg": 0.044918857514858246,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 5.479614539893873e-09,
+        "relative_l2": 0.00010197050141869113,
+        "speed_ratio": 0.9999975562095642,
+        "speed_bias_mps": -3.030523657798767e-06,
+        "direction_deg": 0.0042213210836052895,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.983083963394165,
+          0.9828617572784424,
+          0.9828515648841858
+        ],
+        "batch_bn": [
+          1.0001561641693115,
+          1.0000085830688477,
+          0.9999975562095642
+        ]
+      }
+    },
+    {
+      "seed": 951150512,
+      "dropout": 0.5,
+      "steps": 192,
+      "identical_initial_state": true,
+      "step": 192,
+      "running_bn": {
+        "mse": 0.004747848492115736,
+        "relative_l2": 0.09491787105798721,
+        "speed_ratio": 0.9676151275634766,
+        "speed_bias_mps": -0.039867937564849854,
+        "direction_deg": 2.309566020965576,
+        "direction_windows": 16
+      },
+      "batch_bn": {
+        "mse": 0.006866490002721548,
+        "relative_l2": 0.11414764076471329,
+        "speed_ratio": 0.939927339553833,
+        "speed_bias_mps": -0.07395344227552414,
+        "direction_deg": 2.330623149871826,
+        "direction_windows": 16
+      },
+      "last_three_checkpoints_speed_ratio": {
+        "running_bn": [
+          0.9614734053611755,
+          1.0309628248214722,
+          0.9676151275634766
+        ],
+        "batch_bn": [
+          0.9416394829750061,
+          1.0142227411270142,
+          0.939927339553833
+        ]
+      }
+    }
+  ],
+  "median_over_three_seeds": {
+    "0.0": {
+      "running_bn": {
+        "speed_ratio": 0.9836264252662659,
+        "relative_l2": 0.01696750894188881,
+        "direction_deg": 0.044918857514858246
+      },
+      "batch_bn": {
+        "speed_ratio": 0.9999975562095642,
+        "relative_l2": 0.00010197050141869113,
+        "direction_deg": 0.0042213210836052895
+      }
+    },
+    "0.5": {
+      "running_bn": {
+        "speed_ratio": 0.9676151275634766,
+        "relative_l2": 0.11753574758768082,
+        "direction_deg": 2.309566020965576
+      },
+      "batch_bn": {
+        "speed_ratio": 0.939927339553833,
+        "relative_l2": 0.12234830111265182,
+        "direction_deg": 2.330623149871826
+      }
+    }
+  },
+  "limitations": [
+    "One recording and sixteen training windows; seeds repeat optimization, not independent subjects.",
+    "Finite-budget memorization control uses no augmentation or weight decay; does not reproduce formal training.",
+    "Speed ratio is a norm-sum ratio on selected windows, not trajectory PLR or test accuracy.",
+    "Dropout intervention changes finite-budget training dynamics; convergence and whole-matrix causation remain untested.",
+    "Batch-stat BN is diagnostic, depends on the selected batch and is not proposed as deployment inference.",
+    "No ATE/RTE or held-out generalization evaluation; no solution accepted."
+  ]
+}
