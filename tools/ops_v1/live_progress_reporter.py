@@ -267,6 +267,26 @@ def render(value: dict) -> tuple[str, str]:
                 f"{within.get('groups')} 个 profile/dataset 组内去均值 r={coefficient(within)}。",
                 "排除尾部会改变样本和范围；组内去均值也不能消除所有混杂，以上均为描述性结果。",
             ]
+    capacity = cause.get('capacity_probe') or {}
+    if (capacity.get('complete') is True and capacity.get('training_only') is True
+            and capacity.get('dataset') == 'ridi' and capacity.get('recordings') == 1
+            and capacity.get('windows') == 16 and capacity.get('steps_per_arm') == 192
+            and len(capacity.get('seeds') or []) == 3):
+        medians = capacity.get('median_over_three_seeds') or {}
+
+        def capacity_ratio(arm, mode):
+            entry = (medians.get(arm) or {}).get(mode) or {}
+            ratio = entry.get('speed_ratio')
+            return f"{ratio:.4f}" if isinstance(ratio, (int, float)) else "unknown"
+
+        lines += [
+            '', 'CPU 固定训练窗对照（RIDI 单录制、16 窗、三 seed、每组 192 步）：',
+            f"关闭 Dropout：推理 BN 的速度幅值比中位数 {capacity_ratio('0.0', 'running_bn')}；"
+            f"同窗 batch BN 为 {capacity_ratio('0.0', 'batch_bn')}。"
+            f"默认 Dropout：推理 BN 为 {capacity_ratio('0.5', 'running_bn')}。",
+            '相同输入/权重的 BN 模式对照与有限预算 Dropout 对照仅用于机制排查；'
+            '无测试集拟合，不代表轨迹 PLR、全矩阵因果解释或定位精度提升。',
+        ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

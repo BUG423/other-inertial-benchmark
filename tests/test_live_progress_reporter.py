@@ -78,6 +78,24 @@ class ReporterPrivacyTests(unittest.TestCase):
         self.assertIn('r=unknown', body)
         self.assertIn('描述性结果', body)
 
+    def test_capacity_report_keeps_scope_and_omits_private_bindings(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/capacity_observation_20261108.json'
+        capacity = json.loads(evidence.read_text())
+        capacity.update(leaf='/private/capacity-sentinel', source_sha256='a' * 64)
+        body, _ = reporter.render({'cause': {'capacity_probe': capacity}})
+        self.assertIn('单录制、16 窗', body)
+        self.assertIn('0.9836', body)
+        self.assertIn('不代表轨迹 PLR', body)
+        self.assertNotIn('/private/capacity-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        capacity['steps_per_arm'] = 1
+        body, _ = reporter.render({'cause': {'capacity_probe': capacity}})
+        self.assertNotIn('CPU 固定训练窗对照', body)
+        capacity['steps_per_arm'] = 192
+        capacity['complete'] = False
+        body, _ = reporter.render({'cause': {'capacity_probe': capacity}})
+        self.assertNotIn('CPU 固定训练窗对照', body)
+
 
 if __name__ == '__main__':
     unittest.main()
