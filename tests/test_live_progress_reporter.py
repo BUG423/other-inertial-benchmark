@@ -96,6 +96,17 @@ class ReporterPrivacyTests(unittest.TestCase):
         body, _ = reporter.render({'cause': {'capacity_probe': capacity}})
         self.assertNotIn('CPU 固定训练窗对照', body)
 
+    def test_checkpoint_counterevidence_is_included_without_paths_or_hashes(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/checkpoint_bn_observation_20261108.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/checkpoint-sentinel', checkpoint_sha256='c' * 64)
+        body, _ = reporter.render({'cause': {'checkpoint_bn_probe': probe}})
+        self.assertIn('0.00103', body)
+        self.assertIn('3/3 seed', body)
+        self.assertIn('不接受 BN 校准为修复方案', body)
+        self.assertNotIn('/private/checkpoint-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+
 
 if __name__ == '__main__':
     unittest.main()

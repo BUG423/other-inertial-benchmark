@@ -287,6 +287,20 @@ def render(value: dict) -> tuple[str, str]:
             '相同输入/权重的 BN 模式对照与有限预算 Dropout 对照仅用于机制排查；'
             '无测试集拟合，不代表轨迹 PLR、全矩阵因果解释或定位精度提升。',
         ]
+    checkpoint_bn = cause.get('checkpoint_bn_probe') or {}
+    if (checkpoint_bn.get('complete') is True and checkpoint_bn.get('unique_windows') == 16
+            and checkpoint_bn.get('profile') == 'ronin_resnet18_3d'
+            and checkpoint_bn.get('dataset') == 'ridi'):
+        paired = (checkpoint_bn.get('paired_summary') or {}).get('128') or {}
+        delta = paired.get('median_variance_convention_speed_ratio_delta')
+        worse = paired.get('biased_calibration_relative_l2_worse_than_original')
+        if isinstance(delta, (int, float)) and type(worse) is int:
+            lines += [
+                f"已完成 checkpoint 的只读 BN 复核：同一组 16 窗重复到 128 条，"
+                f"方差约定的配对幅值比差中位数 {delta:.5f}；"
+                f"校准后 {worse}/3 seed 的向量相对 L2 误差更大。",
+                '重复 batch 没有增加观测，也不重现对应 batch 的训练；本次不接受 BN 校准为修复方案。',
+            ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",
