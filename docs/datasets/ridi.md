@@ -2,7 +2,7 @@
 
 > 转换器：[`converters/ridi.py`](../../src/inertial_benchmark/data/converters/ridi.py)，`ridi@1.1`；
 > 共享工具与物理自检：[`converters/_phone_utils.py`](../../src/inertial_benchmark/data/converters/_phone_utils.py)。
-> 统计基于本机 `/workspace/webCodex/datasets/imu_odometry/raw/_staging/RIDI/data_publish_v2`（94 条），2026-09-17。
+> 统计基于本机 `<RIDI_SOURCE>`（94 条），2026-09-17。
 
 ## 1. 概览
 
@@ -134,7 +134,7 @@ PYTHONPATH=src python -m pytest tests/converters/test_ridi.py tests/data/test_ra
 
 ## 11. 转换结果（IPB v1）
 
-输出：`/workspace/webCodex/datasets/ipb/ridi`｜转换器 `ridi@1.1`｜转换时间 2026-09-17｜
+输出：`<IPB_DATASETS>/ridi`｜转换器 `ridi@1.1`｜转换时间 2026-09-17｜
 指纹 `6e47893cb3b6dbf0…`
 
 接收 94 / 拒收 0，共 2.71 h、10.30 km、11 名受试者。官方无 val，流水线从 `train` 按受试者抽出 6 条
