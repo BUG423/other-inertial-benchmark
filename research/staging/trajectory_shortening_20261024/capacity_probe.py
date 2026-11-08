@@ -50,10 +50,57 @@ def evaluate(model, x, y):
     return result
 
 
+@torch.no_grad()
+def bn_variance_control(model, x, y):
+    """Fixed-weight BN counterfactual; neither a training fix nor test fitting."""
+    buffers = {k: v.clone() for k, v in model.named_buffers()}
+    stats = {}
+
+    def capture(module, inputs):
+        values = inputs[0]
+        variance, mean = torch.var_mean(values, dim=(0, 2), unbiased=False)
+        stats[module] = (mean, variance, values.numel() // values.shape[1])
+
+    hooks = [m.register_forward_pre_hook(capture) for m in model.modules()
+             if isinstance(m, nn.BatchNorm1d)]
+    try:
+        model.train()
+        for module in model.modules():
+            if isinstance(module, nn.Dropout):
+                module.eval()
+        batch_prediction = model(x)['vel']
+    finally:
+        for hook in hooks:
+            hook.remove()
+        for k, v in model.named_buffers():
+            v.copy_(buffers[k])
+        model.train()
+    result = {}
+    try:
+        model.eval()
+        for convention in ('unbiased', 'biased'):
+            for module, (mean, variance, count) in stats.items():
+                assert count > 1
+                module.running_mean.copy_(mean)
+                module.running_var.copy_(variance * (count / (count - 1) if convention == 'unbiased' else 1))
+            prediction = model(x)['vel']
+            result[convention] = metrics(prediction, y)
+            if convention == 'biased':
+                result['batch_reconstruction_max_abs_mps'] = float((prediction - batch_prediction).abs().max())
+        result['minimum_bn_sample_count'] = min(n for _, _, n in stats.values())
+        assert result['batch_reconstruction_max_abs_mps'] < 1e-4
+    finally:
+        for k, v in model.named_buffers():
+            v.copy_(buffers[k])
+        model.train()
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--steps', type=int, default=192)
     parser.add_argument('--wall-seconds', type=int, default=600)
+    parser.add_argument('--bn-variance-control', action='store_true')
     args = parser.parse_args()
     assert 1 <= args.steps <= 192 and 1 <= args.wall_seconds <= 600
     assert os.environ.get('CUDA_VISIBLE_DEVICES') == ''
@@ -121,6 +168,8 @@ def main():
                     save()
             if run['history'][-1]['step'] != run['steps']:
                 run['history'].append(dict(step=run['steps'], **evaluate(model, x, y)))
+            if args.bn_variance_control and run['steps'] == args.steps:
+                run['bn_variance_control'] = bn_variance_control(model, x, y)
             save()
             if run['steps'] < args.steps:
                 break
