@@ -79,6 +79,38 @@ def correlation(rows, left, right):
     return sum((a - mx) * (b - my) for a, b in pairs) / math.sqrt(xx * yy) if xx and yy else None
 
 
+def direction_sensitivity(rows):
+    """Describe tail sensitivity and seed variation within profile/dataset groups.
+
+    Centering removes group offsets, not confounding or dependent observations.
+    These correlations have no causal or population-inference interpretation.
+    """
+    left, right = "speed_ratio", "dir_err_mean"
+    pairs = [{**row, left: finite(row.get(left)), right: finite(row.get(right))}
+             for row in rows]
+    pairs = [row for row in pairs if row[left] is not None and row[right] is not None]
+    result = {}
+    for name, bound in (("all", None), ("direction_lt45", 45), ("direction_lt20", 20)):
+        selected = [row for row in pairs if bound is None or row[right] < bound]
+        result[name] = {"n": len(selected), "correlation": correlation(selected, left, right)}
+    groups = defaultdict(list)
+    for row in pairs:
+        if all(row.get(key) is not None for key in ("profile", "dataset", "seed")):
+            groups[(row["profile"], row["dataset"])].append(row)
+    centered, included = [], 0
+    for group in groups.values():
+        # Do not let repeated copies of a seed stand in for seed replication.
+        if len(group) < 3 or len({row["seed"] for row in group}) != len(group):
+            continue
+        mx, my = statistics.fmean(row[left] for row in group), statistics.fmean(row[right] for row in group)
+        centered.extend({left: row[left] - mx, right: row[right] - my} for row in group)
+        included += 1
+    result["within_profile_dataset"] = {
+        "groups": included, "n": len(centered), "correlation": correlation(centered, left, right),
+    }
+    return result
+
+
 def load_json(path, limit=8 * 1024 * 1024):
     if path.stat().st_size > limit:
         raise ValueError(f"metadata exceeds bound: {path}")
@@ -186,6 +218,7 @@ def audit(matrix, out):
             "model_plr_oracle": model, "speed_ratio": speed,
             "train_test_speed_gap": train_test,
             "direction_strata": same_direction,
+            "direction_sensitivity_descriptive": direction_sensitivity(canonical),
             "correlations": {
                 "speed_ratio_vs_direction_error": correlation(canonical, "speed_ratio", "dir_err_mean"),
                 "speed_ratio_vs_speed_bias": correlation(canonical, "speed_ratio", "speed_bias"),
