@@ -250,7 +250,23 @@ def render(value: dict) -> tuple[str, str]:
                    f"方向误差<20°组 speed_ratio 中位数 {(low_direction.get('speed_ratio') or {}).get('median', float('nan')):.4f}；"
                    f"方向误差≥45°组 {(high_direction.get('speed_ratio') or {}).get('median', float('nan')):.4f}；"
                    f"train/test speed_ratio 差中位数 {canonical.get('train_test_speed_gap', {}).get('median', float('nan')):.6f}。",
-                   "该分解支持模型幅值低估与方向不确定性放大是主要机制；目标/损失比较仍是描述性证据。"]
+                   "该分解描述模型幅值低估与方向误差的关联；目标/损失机制仍待受控干预验证。",
+                   "train/test 差异同时混合数据和模式效应，不能单独用来排除 Dropout。"]
+        sensitivity = canonical.get('direction_sensitivity_descriptive') or {}
+        if sensitivity:
+            def coefficient(entry):
+                value = entry.get('correlation')
+                return f"{value:.4f}" if isinstance(value, (int, float)) else "unknown"
+
+            pooled = sensitivity.get('all') or {}
+            trimmed = sensitivity.get('direction_lt45') or {}
+            within = sensitivity.get('within_profile_dataset') or {}
+            lines += [
+                f"速度/方向相关敏感性：全部 {pooled.get('n')} 单元 r={coefficient(pooled)}；"
+                f"方向误差<45° 的 {trimmed.get('n')} 单元 r={coefficient(trimmed)}；"
+                f"{within.get('groups')} 个 profile/dataset 组内去均值 r={coefficient(within)}。",
+                "排除尾部会改变样本和范围；组内去均值也不能消除所有混杂，以上均为描述性结果。",
+            ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

@@ -66,6 +66,18 @@ class ReporterPrivacyTests(unittest.TestCase):
             self.assertIn(research, strings)
             self.assertNotIn('__REMOTE_AGENT_MATRIX_ROOT__', script)
 
+    def test_undefined_sensitivity_does_not_break_a_status_report(self):
+        body, _ = reporter.render({'cause': {'canonical': {
+            'direction_sensitivity_descriptive': {
+                'all': {'n': 3, 'correlation': -0.925},
+                'direction_lt45': {'n': 2, 'correlation': None},
+                'within_profile_dataset': {'groups': 0, 'correlation': None},
+            },
+        }}})
+        self.assertIn('r=-0.9250', body)
+        self.assertIn('r=unknown', body)
+        self.assertIn('描述性结果', body)
+
 
 if __name__ == '__main__':
     unittest.main()
