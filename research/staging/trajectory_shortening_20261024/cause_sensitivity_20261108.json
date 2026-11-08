@@ -1,0 +1,35 @@
+{
+  "schema": "ib.trajectory-cause-sensitivity-observation.v1",
+  "observed_date": "2026-11-08",
+  "execution": "Agent; low-priority, standard-library metadata audit",
+  "human_xyz_trainable_cells": 715,
+  "canonical_cells": 336,
+  "rejected_cells": 0,
+  "canonical": {
+    "protocol_oracle_ratio_median": 0.9766277610,
+    "model_plr_oracle_median": 0.9131972610,
+    "speed_ratio_median": 0.9216009440,
+    "low_direction_lt20_cells": 291,
+    "low_direction_speed_ratio_median": 0.9297263036,
+    "high_direction_ge45_cells": 19,
+    "high_direction_speed_ratio_median": 0.0175810289
+  },
+  "speed_direction_correlations_descriptive": {
+    "all": {"n": 336, "correlation": -0.9245288822},
+    "direction_lt45": {"n": 317, "correlation": -0.3801708565},
+    "direction_lt20": {"n": 291, "correlation": -0.4476732058},
+    "within_profile_dataset": {"groups": 112, "n": 336, "correlation": -0.9629220255}
+  },
+  "validation": {
+    "agent_unit_checks_passed": 5,
+    "formal_coverage_unchanged": true,
+    "new_training_runs": 0
+  },
+  "limitations": [
+    "Exploratory cell-level associations; shared datasets and seeds are not independent subjects.",
+    "Tail exclusion changes the sample and range; correlation changes do not quantify a causal contribution.",
+    "Group centering removes profile/dataset offsets only; it does not remove all confounding.",
+    "Train/test prediction differences mix data and model-mode effects; they cannot isolate dropout.",
+    "The fixed-architecture target/loss intervention has not run; no accuracy improvement is established."
+  ]
+}
