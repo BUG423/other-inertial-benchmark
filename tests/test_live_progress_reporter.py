@@ -133,6 +133,23 @@ class ReporterPrivacyTests(unittest.TestCase):
         body, _ = reporter.render({'cause': {'radial_loss_probe': probe}})
         self.assertNotIn('径向损失诊断', body)
 
+    def test_dynamic_lag_report_keeps_scope_and_privacy(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/dynamic_lag_observation_20261108.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/dynamic-sentinel', source_sha256='a' * 64,
+                     checkpoint_path='/private/checkpoint.pt', label='/private/label')
+        body, _ = reporter.render({'cause': {'dynamic_lag_probe': probe}})
+        for expected in ('动态变化分层诊断', '45 条录制/720 窗', '0.8628',
+                         '动态滞后已被证实', '不是部署特征'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/dynamic-sentinel', body)
+        self.assertNotIn('/private/checkpoint.pt', body)
+        self.assertNotIn('/private/label', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        probe['test_accessed'] = True
+        body, _ = reporter.render({'cause': {'dynamic_lag_probe': probe}})
+        self.assertNotIn('动态变化分层诊断', body)
+
 
 if __name__ == '__main__':
     unittest.main()

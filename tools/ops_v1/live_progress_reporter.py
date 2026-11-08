@@ -341,6 +341,54 @@ def render(value: dict) -> tuple[str, str]:
                 '低方向误差窗仍有负的预测方向投影残差；统一放大不能解释或解决全部缩短。'
                 '增益差异还受窗口权重影响，不能单独归因于方向歧义；本轮无测试集或 ATE/RTE 结论。',
             ]
+    dynamic = cause.get('dynamic_lag_probe') or {}
+    dynamic_splits = dynamic.get('split_shapes') or {}
+    dynamic_seeds = dynamic.get('seeds') or []
+    dynamic_scope = (
+        dynamic.get('complete') is True and dynamic.get('dataset') == 'ridi'
+        and dynamic.get('profile') == 'ronin_resnet18_3d'
+        and dynamic.get('optimizer_updates') == 0 and dynamic.get('test_accessed') is False
+        and dynamic.get('input_files_unchanged') is True
+        and dynamic.get('weights_and_buffers_unchanged') is True
+        and dynamic.get('cuda_initialized') is False
+        and dynamic.get('group_overlap') == 0
+        and dynamic_splits.get('train') == dict(recordings=45, windows=720, groups=8)
+        and dynamic_splits.get('val') == dict(recordings=4, windows=64, groups=1)
+        and len(dynamic.get('train_quantile_edges_mps') or []) == 3
+        and all(type(edge) in (int, float) for edge in dynamic.get('train_quantile_edges_mps') or [])
+        and len(dynamic_seeds) == 3
+    )
+    if dynamic_scope:
+        def dynamic_row(row):
+            return (isinstance(row, dict)
+                    and all(_dynamic_split_ready(row.get(split)) for split in ('train', 'val')))
+
+        def _dynamic_split_ready(split):
+            return (isinstance(split, dict) and type(split.get('speed_ratio')) in (int, float)
+                    and type(split.get('delta_speed_correlation')) in (int, float)
+                    and type(split.get('roughness_speed_correlation')) in (int, float)
+                    and isinstance(split.get('bins'), list) and len(split['bins']) == 4
+                    and all(type(value) in (int, float) for value in split['bins']))
+
+        dynamic_scope = all(dynamic_row(row) for row in dynamic_seeds)
+    if dynamic_scope:
+        edges = dynamic['train_quantile_edges_mps']
+        lines += [
+            '', '动态变化分层诊断：RIDI 训练 45 条录制/720 窗，验证 4 条录制/64 窗；'
+            f"训练端点速度变化四分位边界 {', '.join(f'{edge:.5f}' for edge in edges)} m/s。",
+            '三个 seed 的训练/验证整体速度比：' + '; '.join(
+                f"seed {index} {row['train']['speed_ratio']:.4f}/{row['val']['speed_ratio']:.4f}"
+                for index, row in enumerate(dynamic_seeds, 1)) + '。',
+            '验证四个变化区间速度比：' + '; '.join(
+                f"seed {index} [{', '.join(f'{value:.4f}' for value in row['val']['bins'])}]"
+                for index, row in enumerate(dynamic_seeds, 1)) + '。',
+            '验证端点变化/速度误差相关：' + ', '.join(
+                f"{row['val']['delta_speed_correlation']:.3f}" for row in dynamic_seeds)
+            + '；IMU 粗糙度相关：' + ', '.join(
+                f"{row['val']['roughness_speed_correlation']:.3f}" for row in dynamic_seeds) + '。',
+            '动态分层在 seed 与 train/val 间没有稳定单调关系；当前不能称为动态滞后已被证实。'
+            '分层阈值只用于诊断，不是部署特征；本轮没有测试集、ATE/RTE 或因果干预结论。',
+        ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",
