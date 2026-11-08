@@ -1,0 +1,191 @@
+{
+  "schema": "ib.bn-variance-control.v1",
+  "observed_utc": "2026-11-08T03:49:03.029092+00:00",
+  "source": "research/staging/trajectory_shortening_20261024/capacity_probe.py",
+  "baseline_evidence": "capacity_observation_20261108.json",
+  "torch_version": "2.12.1+cu130",
+  "complete": true,
+  "training_only": true,
+  "dataset": "ridi",
+  "recordings": 1,
+  "windows": 16,
+  "seeds": [
+    1735231569,
+    843628571,
+    951150512
+  ],
+  "steps_per_arm": 192,
+  "identical_training_and_readout_history": true,
+  "inputs_unchanged": true,
+  "source_bindings_unchanged": true,
+  "cuda_initialized": false,
+  "comparison": "Same final weights and captured train-batch means; only the variance denominator changes.",
+  "variance_definitions": {
+    "biased": "sum((x-mean)^2)/n",
+    "unbiased": "sum((x-mean)^2)/(n-1)"
+  },
+  "minimum_bn_sample_count": 112,
+  "max_batch_reconstruction_error_mps": 2.384185791015625e-07,
+  "runs": [
+    {
+      "seed": 1735231569,
+      "dropout": 0.0,
+      "unbiased": {
+        "mse": 0.0001517311466159299,
+        "relative_l2": 0.016968244686722755,
+        "speed_ratio": 0.9836256504058838,
+        "speed_bias_mps": -0.020157979801297188,
+        "direction_deg": 0.0691114068031311,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 8.652697308653146e-11,
+        "relative_l2": 1.2813722605642397e-05,
+        "speed_ratio": 0.999991774559021,
+        "speed_bias_mps": -1.0164454579353333e-05,
+        "direction_deg": 0.004945585038512945,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "minimum_bn_sample_count": 112
+    },
+    {
+      "seed": 1735231569,
+      "dropout": 0.5,
+      "unbiased": {
+        "mse": 0.008298910222947598,
+        "relative_l2": 0.12549027800559998,
+        "speed_ratio": 0.939764678478241,
+        "speed_bias_mps": -0.07415366172790527,
+        "direction_deg": 1.7307538986206055,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 0.007888544350862503,
+        "relative_l2": 0.12234831601381302,
+        "speed_ratio": 0.9521656632423401,
+        "speed_bias_mps": -0.05888737738132477,
+        "direction_deg": 1.740856647491455,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 1.1920928955078125e-07,
+      "minimum_bn_sample_count": 112
+    },
+    {
+      "seed": 843628571,
+      "dropout": 0.0,
+      "unbiased": {
+        "mse": 0.00010631199256749824,
+        "relative_l2": 0.014203347265720367,
+        "speed_ratio": 0.9871649146080017,
+        "speed_bias_mps": -0.015800833702087402,
+        "direction_deg": 0.034313153475522995,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 2.8169712095404975e-05,
+        "relative_l2": 0.007311235181987286,
+        "speed_ratio": 1.0037529468536377,
+        "speed_bias_mps": 0.004620101302862167,
+        "direction_deg": 0.038754090666770935,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "minimum_bn_sample_count": 112
+    },
+    {
+      "seed": 843628571,
+      "dropout": 0.5,
+      "unbiased": {
+        "mse": 0.018495069816708565,
+        "relative_l2": 0.187338724732399,
+        "speed_ratio": 0.8564468622207642,
+        "speed_bias_mps": -0.17672374844551086,
+        "direction_deg": 2.947134256362915,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 0.017378516495227814,
+        "relative_l2": 0.1815958470106125,
+        "speed_ratio": 0.8661912679672241,
+        "speed_bias_mps": -0.16472771763801575,
+        "direction_deg": 2.943002223968506,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "minimum_bn_sample_count": 112
+    },
+    {
+      "seed": 951150512,
+      "dropout": 0.0,
+      "unbiased": {
+        "mse": 0.0001592891785549,
+        "relative_l2": 0.01738572120666504,
+        "speed_ratio": 0.982871413230896,
+        "speed_bias_mps": -0.021086247637867928,
+        "direction_deg": 0.04838245362043381,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 5.4793978243594665e-09,
+        "relative_l2": 0.000101968485978432,
+        "speed_ratio": 0.9999974966049194,
+        "speed_bias_mps": -3.112480044364929e-06,
+        "direction_deg": 0.005969849415123463,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "minimum_bn_sample_count": 112
+    },
+    {
+      "seed": 951150512,
+      "dropout": 0.5,
+      "unbiased": {
+        "mse": 0.00787992775440216,
+        "relative_l2": 0.12228147685527802,
+        "speed_ratio": 0.9297223091125488,
+        "speed_bias_mps": -0.08651662617921829,
+        "direction_deg": 2.3977811336517334,
+        "direction_windows": 16
+      },
+      "biased": {
+        "mse": 0.006866492331027985,
+        "relative_l2": 0.11414766311645508,
+        "speed_ratio": 0.939927339553833,
+        "speed_bias_mps": -0.07395347952842712,
+        "direction_deg": 2.330624580383301,
+        "direction_windows": 16
+      },
+      "batch_reconstruction_max_abs_mps": 1.7881393432617188e-07,
+      "minimum_bn_sample_count": 112
+    }
+  ],
+  "median_over_three_seeds": {
+    "0.0": {
+      "unbiased": {
+        "speed_ratio": 0.9836256504058838,
+        "relative_l2": 0.016968244686722755
+      },
+      "biased": {
+        "speed_ratio": 0.9999974966049194,
+        "relative_l2": 0.000101968485978432
+      }
+    },
+    "0.5": {
+      "unbiased": {
+        "speed_ratio": 0.9297223091125488,
+        "relative_l2": 0.12549027800559998
+      },
+      "biased": {
+        "speed_ratio": 0.939927339553833,
+        "relative_l2": 0.12234831601381302
+      }
+    }
+  },
+  "limitations": [
+    "Fixed training batch of sixteen windows from one recording; not held-out accuracy.",
+    "BN normalization sample count is batch size times temporal length, not independent observations.",
+    "Variance-convention effect at this batch size does not quantify its share in formal-matrix shortening.",
+    "Calibration uses only train data and restores all original buffers; no deployed inference change."
+  ]
+}
