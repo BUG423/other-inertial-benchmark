@@ -1,0 +1,201 @@
+{
+  "schema": "ib.completed-checkpoint-bn-control.v1",
+  "observed_utc": "2026-11-08T03:51:36.846248+00:00",
+  "torch_version": "2.12.1+cu130",
+  "training_only": true,
+  "profile": "ronin_resnet18_3d",
+  "dataset": "ridi",
+  "recordings": 1,
+  "unique_windows": 16,
+  "optimizer_updates": 0,
+  "complete": true,
+  "checkpoint_and_data_files_unchanged": true,
+  "original_parameters_and_buffers_restored": true,
+  "cuda_initialized": false,
+  "elapsed_s": 2.13225377490744,
+  "source_and_checkpoint_bindings_unchanged": true,
+  "source": "research/staging/trajectory_shortening_20261024/checkpoint_bn_probe.py",
+  "window_selection": "Same first train recording and sixteen uniformly spaced valid moving windows as capacity_observation_20261108.json.",
+  "batch_control": "Repeat the same sixteen windows eight times; there are no additional observations.",
+  "runs": [
+    {
+      "seed": 1735231569,
+      "inference_batch_size": 16,
+      "repeat": 1,
+      "minimum_bn_sample_count": 112,
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "running_bn": {
+        "speed_ratio": 0.8403229117393494,
+        "relative_l2": 0.25403663516044617,
+        "direction_deg": 11.339377403259277
+      },
+      "batch_bn": {
+        "speed_ratio": 0.7770415544509888,
+        "relative_l2": 0.2860548496246338,
+        "direction_deg": 9.925426483154297
+      },
+      "unbiased": {
+        "speed_ratio": 0.7688478827476501,
+        "relative_l2": 0.29081806540489197,
+        "direction_deg": 9.869114875793457
+      },
+      "biased": {
+        "speed_ratio": 0.7770416140556335,
+        "relative_l2": 0.2860548794269562,
+        "direction_deg": 9.925422668457031
+      }
+    },
+    {
+      "seed": 1735231569,
+      "inference_batch_size": 128,
+      "repeat": 8,
+      "minimum_bn_sample_count": 896,
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "running_bn": {
+        "speed_ratio": 0.8403229117393494,
+        "relative_l2": 0.25403663516044617,
+        "direction_deg": 11.33936882019043
+      },
+      "batch_bn": {
+        "speed_ratio": 0.7770416140556335,
+        "relative_l2": 0.2860548496246338,
+        "direction_deg": 9.925419807434082
+      },
+      "unbiased": {
+        "speed_ratio": 0.7760103940963745,
+        "relative_l2": 0.2866453528404236,
+        "direction_deg": 9.918429374694824
+      },
+      "biased": {
+        "speed_ratio": 0.7770416140556335,
+        "relative_l2": 0.2860548794269562,
+        "direction_deg": 9.925422668457031
+      }
+    },
+    {
+      "seed": 843628571,
+      "inference_batch_size": 16,
+      "repeat": 1,
+      "minimum_bn_sample_count": 112,
+      "batch_reconstruction_max_abs_mps": 2.682209014892578e-07,
+      "running_bn": {
+        "speed_ratio": 0.9543759822845459,
+        "relative_l2": 0.15636681020259857,
+        "direction_deg": 9.287607192993164
+      },
+      "batch_bn": {
+        "speed_ratio": 1.0136363506317139,
+        "relative_l2": 0.17170727252960205,
+        "direction_deg": 9.594929695129395
+      },
+      "unbiased": {
+        "speed_ratio": 1.0073281526565552,
+        "relative_l2": 0.17063076794147491,
+        "direction_deg": 9.650039672851562
+      },
+      "biased": {
+        "speed_ratio": 1.0136363506317139,
+        "relative_l2": 0.17170724272727966,
+        "direction_deg": 9.594926834106445
+      }
+    },
+    {
+      "seed": 843628571,
+      "inference_batch_size": 128,
+      "repeat": 8,
+      "minimum_bn_sample_count": 896,
+      "batch_reconstruction_max_abs_mps": 2.980232238769531e-07,
+      "running_bn": {
+        "speed_ratio": 0.9543759822845459,
+        "relative_l2": 0.15636678040027618,
+        "direction_deg": 9.287607192993164
+      },
+      "batch_bn": {
+        "speed_ratio": 1.0136363506317139,
+        "relative_l2": 0.17170725762844086,
+        "direction_deg": 9.594940185546875
+      },
+      "unbiased": {
+        "speed_ratio": 1.012860655784607,
+        "relative_l2": 0.17155422270298004,
+        "direction_deg": 9.601606369018555
+      },
+      "biased": {
+        "speed_ratio": 1.0136363506317139,
+        "relative_l2": 0.17170725762844086,
+        "direction_deg": 9.594924926757812
+      }
+    },
+    {
+      "seed": 951150512,
+      "inference_batch_size": 16,
+      "repeat": 1,
+      "minimum_bn_sample_count": 112,
+      "batch_reconstruction_max_abs_mps": 2.384185791015625e-07,
+      "running_bn": {
+        "speed_ratio": 0.8685033917427063,
+        "relative_l2": 0.25100022554397583,
+        "direction_deg": 11.05168628692627
+      },
+      "batch_bn": {
+        "speed_ratio": 0.781067967414856,
+        "relative_l2": 0.30914250016212463,
+        "direction_deg": 12.605015754699707
+      },
+      "unbiased": {
+        "speed_ratio": 0.7724086046218872,
+        "relative_l2": 0.31393617391586304,
+        "direction_deg": 12.543411254882812
+      },
+      "biased": {
+        "speed_ratio": 0.7810680270195007,
+        "relative_l2": 0.30914247035980225,
+        "direction_deg": 12.605010986328125
+      }
+    },
+    {
+      "seed": 951150512,
+      "inference_batch_size": 128,
+      "repeat": 8,
+      "minimum_bn_sample_count": 896,
+      "batch_reconstruction_max_abs_mps": 2.2351741790771484e-07,
+      "running_bn": {
+        "speed_ratio": 0.8685033917427063,
+        "relative_l2": 0.2510002553462982,
+        "direction_deg": 11.051697731018066
+      },
+      "batch_bn": {
+        "speed_ratio": 0.7810680866241455,
+        "relative_l2": 0.30914250016212463,
+        "direction_deg": 12.605026245117188
+      },
+      "unbiased": {
+        "speed_ratio": 0.779987096786499,
+        "relative_l2": 0.3097297251224518,
+        "direction_deg": 12.597368240356445
+      },
+      "biased": {
+        "speed_ratio": 0.781067967414856,
+        "relative_l2": 0.30914247035980225,
+        "direction_deg": 12.605010032653809
+      }
+    }
+  ],
+  "paired_summary": {
+    "16": {
+      "median_variance_convention_speed_ratio_delta": 0.008193731307983398,
+      "biased_calibration_relative_l2_worse_than_original": 3
+    },
+    "128": {
+      "median_variance_convention_speed_ratio_delta": 0.0010312199592590332,
+      "biased_calibration_relative_l2_worse_than_original": 3
+    }
+  },
+  "limitations": [
+    "Three seeds share one training recording and sixteen unique windows; not independent subjects or held-out accuracy.",
+    "Recalibrated BN uses this training batch, not the original full training distribution.",
+    "A larger repeated inference batch changes only the BN sample count; it does not recreate training with that batch size.",
+    "No evidence that recalibrating BN improves localization; all three checkpoints have higher relative L2 error here.",
+    "Variance conventions contribute a small effect in this control; this is not a whole-matrix causal attribution."
+  ]
+}
