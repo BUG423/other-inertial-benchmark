@@ -107,6 +107,19 @@ class ReporterPrivacyTests(unittest.TestCase):
         self.assertNotIn('/private/checkpoint-sentinel', body)
         self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
 
+    def test_velocity_state_scope_and_counterevidence_are_preserved(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/velocity_state_observation_20261108.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/state-sentinel', checkpoint_sha256='d' * 64)
+        body, _ = reporter.render({'cause': {'velocity_state_probe': probe}})
+        for expected in ('720 窗', '0.1332', '1.7154', '0.1322', '构造的可辨识性检查', '特权信息'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/state-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        probe['recordings'] = 1
+        body, _ = reporter.render({'cause': {'velocity_state_probe': probe}})
+        self.assertNotIn('初速度边界诊断', body)
+
 
 if __name__ == '__main__':
     unittest.main()

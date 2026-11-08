@@ -301,6 +301,28 @@ def render(value: dict) -> tuple[str, str]:
                 f"校准后 {worse}/3 seed 的向量相对 L2 误差更大。",
                 '重复 batch 没有增加观测，也不重现对应 batch 的训练；本次不接受 BN 校准为修复方案。',
             ]
+    velocity_state = cause.get('velocity_state_probe') or {}
+    if (velocity_state.get('complete') is True and velocity_state.get('dataset') == 'ridi'
+            and velocity_state.get('split') == 'train' and velocity_state.get('recordings') == 45
+            and velocity_state.get('total_windows') == 720 and velocity_state.get('optimizer_updates') == 0):
+        summary = velocity_state.get('recording_summary') or {}
+
+        def state_median(method, metric='relative_l2'):
+            entry = (summary.get(method) or {}).get(metric) or {}
+            number = entry.get('median')
+            return f"{number:.4f}" if type(number) in (int, float) else 'unknown'
+
+        lines += [
+            '', f"初速度边界诊断：{velocity_state.get('observed_utc')}；45 条训练录制、720 窗，零优化更新。",
+            f"录制级向量相对 L2 中位数：零初速 {state_median('zero_state')}；"
+            f"参考初速+积分 {state_median('oracle_state')}；打乱初速 {state_median('shuffled_state')}；"
+            f"只保留参考初速 {state_median('oracle_persistence')}。",
+            f"打乱初速的幅值比仍为 {state_median('shuffled_state', 'speed_ratio')}，幅值接近 1 不等于运动预测正确。"
+            f"三个原 checkpoint 的误差分别为 {state_median('checkpoint_1735231569')}、"
+            f"{state_median('checkpoint_843628571')}、{state_median('checkpoint_951150512')}。",
+            '恒定速度扰动是构造的可辨识性检查；参考初速是特权信息。'
+            '这不证明真实数据的歧义比例、全矩阵缩短主因或 ATE/RTE 改善。',
+        ]
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",
