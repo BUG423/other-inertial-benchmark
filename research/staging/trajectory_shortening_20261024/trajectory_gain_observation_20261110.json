@@ -1,0 +1,239 @@
+{
+  "schema": "ib.trajectory-gain-diagnostic.v1",
+  "observed_utc": "2026-11-10T02:42:24.674254+00:00",
+  "dataset": "ridi",
+  "profile": "ronin_resnet18_3d",
+  "split": "val",
+  "recordings": 4,
+  "groups": 1,
+  "gain_fit_split": "train",
+  "gains_refitted": false,
+  "eval_stride": 200,
+  "optimizer_updates": 0,
+  "test_accessed": false,
+  "complete": true,
+  "input_files_unchanged": true,
+  "weights_and_buffers_unchanged": true,
+  "cuda_initialized": false,
+  "source": "research/staging/trajectory_shortening_20261024/trajectory_gain_probe.py",
+  "framework_matches_current_checkout": true,
+  "framework_files_unchanged": true,
+  "network_isolated": true,
+  "inputs_read_only": true,
+  "cpu_threads": 2,
+  "analytical_tests_passed": 4,
+  "evidence_projection": "Recording medians and paired worsening counts only; raw per-recording metrics and private bindings retained on Agent.",
+  "selection": "All windows of the four validation recordings, including stationary periods; no speed selection or validation gain fit.",
+  "metrics": "XYZ; native reconstruction at 200 Hz from stride-200 windows, reference initial-position anchor; ATE without alignment, aligned ATE with rigid yaw/translation only; native 10-second RTE with no duration scaling.",
+  "limitations": [
+    "Validation has four recordings from one group, used for checkpoint selection.",
+    "Gains were frozen in an earlier train-window diagnostic; no validation refit.",
+    "Full trajectories include stationary windows; no speed-based selection.",
+    "ATE is unaligned; aligned ATE is separate and never fits scale.",
+    "P95 and ten-second errors are within-recording summaries, not independent subjects.",
+    "No test accuracy, new method, loss intervention or causal explanation established."
+  ],
+  "seeds": [
+    {
+      "seed": 1735231569,
+      "frozen_gains": {
+        "vector_mse": 1.0835580372780411,
+        "norm_sum": 1.1155778600170114
+      },
+      "summary": {
+        "identity": {
+          "recording_medians": {
+            "ate_m": 4.976564092567017,
+            "ate_aligned_m": 2.507526654061179,
+            "rte_10s_m": 2.157323309240873,
+            "position_error_p95_m": 7.843987738741355,
+            "rte_10s_p95_m": 3.3932023464773957,
+            "plr": 0.8836108910965033
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 0,
+            "ate_aligned_m": 0,
+            "rte_10s_m": 0,
+            "position_error_p95_m": 0,
+            "rte_10s_p95_m": 0
+          }
+        },
+        "vector_mse": {
+          "recording_medians": {
+            "ate_m": 4.509128796647445,
+            "ate_aligned_m": 2.3448442336307993,
+            "rte_10s_m": 1.8825616353212817,
+            "position_error_p95_m": 6.963128486439846,
+            "rte_10s_p95_m": 3.0369144232128855,
+            "plr": 0.957443682874028
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 1,
+            "ate_aligned_m": 1,
+            "rte_10s_m": 0,
+            "position_error_p95_m": 1,
+            "rte_10s_p95_m": 0
+          }
+        },
+        "norm_sum": {
+          "recording_medians": {
+            "ate_m": 4.492259366362786,
+            "ate_aligned_m": 2.3324718940392466,
+            "rte_10s_m": 1.812161581160081,
+            "position_error_p95_m": 7.0287695423220615,
+            "rte_10s_p95_m": 2.9991723808711503,
+            "plr": 0.9857367469771616
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 1,
+            "ate_aligned_m": 2,
+            "rte_10s_m": 0,
+            "position_error_p95_m": 1,
+            "rte_10s_p95_m": 0
+          }
+        }
+      },
+      "inference_windows": 494
+    },
+    {
+      "seed": 843628571,
+      "frozen_gains": {
+        "vector_mse": 1.0151294596021978,
+        "norm_sum": 1.0274386938498667
+      },
+      "summary": {
+        "identity": {
+          "recording_medians": {
+            "ate_m": 1.9769335567284285,
+            "ate_aligned_m": 1.2498835927706708,
+            "rte_10s_m": 1.07065053324169,
+            "position_error_p95_m": 3.226115364115734,
+            "rte_10s_p95_m": 1.8879242933184577,
+            "plr": 0.9690582572621292
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 0,
+            "ate_aligned_m": 0,
+            "rte_10s_m": 0,
+            "position_error_p95_m": 0,
+            "rte_10s_p95_m": 0
+          }
+        },
+        "vector_mse": {
+          "recording_medians": {
+            "ate_m": 1.9824619666533816,
+            "ate_aligned_m": 1.1816914831702738,
+            "rte_10s_m": 1.0138135313918695,
+            "position_error_p95_m": 3.2794885418815056,
+            "rte_10s_p95_m": 1.8701986000388837,
+            "plr": 0.9837195850175529
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 1,
+            "ate_aligned_m": 1,
+            "rte_10s_m": 1,
+            "position_error_p95_m": 1,
+            "rte_10s_p95_m": 1
+          }
+        },
+        "norm_sum": {
+          "recording_medians": {
+            "ate_m": 2.005805027169938,
+            "ate_aligned_m": 1.185010528510681,
+            "rte_10s_m": 0.9841899784485865,
+            "position_error_p95_m": 3.350375667855494,
+            "rte_10s_p95_m": 1.868376541471136,
+            "plr": 0.9956479501058303
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 1,
+            "ate_aligned_m": 1,
+            "rte_10s_m": 2,
+            "position_error_p95_m": 1,
+            "rte_10s_p95_m": 1
+          }
+        }
+      },
+      "inference_windows": 494
+    },
+    {
+      "seed": 951150512,
+      "frozen_gains": {
+        "vector_mse": 1.0201530456043528,
+        "norm_sum": 1.067901956162976
+      },
+      "summary": {
+        "identity": {
+          "recording_medians": {
+            "ate_m": 4.7188523172204455,
+            "ate_aligned_m": 3.0918827887321165,
+            "rte_10s_m": 1.9009489871304013,
+            "position_error_p95_m": 7.946047001507799,
+            "rte_10s_p95_m": 3.0314192242848472,
+            "plr": 0.9234570610616306
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 0,
+            "ate_aligned_m": 0,
+            "rte_10s_m": 0,
+            "position_error_p95_m": 0,
+            "rte_10s_p95_m": 0
+          }
+        },
+        "vector_mse": {
+          "recording_medians": {
+            "ate_m": 4.745271018265865,
+            "ate_aligned_m": 3.056419089522783,
+            "rte_10s_m": 1.8178150187283328,
+            "position_error_p95_m": 7.989049208863569,
+            "rte_10s_p95_m": 2.81952544512011,
+            "plr": 0.9420675333268673
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 2,
+            "ate_aligned_m": 2,
+            "rte_10s_m": 1,
+            "position_error_p95_m": 3,
+            "rte_10s_p95_m": 1
+          }
+        },
+        "norm_sum": {
+          "recording_medians": {
+            "ate_m": 4.879507803646596,
+            "ate_aligned_m": 3.027442993333108,
+            "rte_10s_m": 1.7379768707066954,
+            "position_error_p95_m": 8.104113692883558,
+            "rte_10s_p95_m": 2.6586112711773806,
+            "plr": 0.986161601940228
+          },
+          "recordings_worse_than_identity": {
+            "ate_m": 3,
+            "ate_aligned_m": 2,
+            "rte_10s_m": 2,
+            "position_error_p95_m": 3,
+            "rte_10s_p95_m": 1
+          }
+        }
+      },
+      "inference_windows": 494
+    }
+  ],
+  "paired_summary": {
+    "vector_mse": {
+      "ate_seed_medians_worse": 2,
+      "ate_recording_seed_pairs_worse": 4,
+      "rte_10s_seed_medians_worse": 0,
+      "rte_10s_recording_seed_pairs_worse": 2,
+      "position_p95_seed_medians_worse": 2,
+      "position_p95_recording_seed_pairs_worse": 5
+    },
+    "norm_sum": {
+      "ate_seed_medians_worse": 2,
+      "ate_recording_seed_pairs_worse": 5,
+      "rte_10s_seed_medians_worse": 0,
+      "rte_10s_recording_seed_pairs_worse": 4,
+      "position_p95_seed_medians_worse": 2,
+      "position_p95_recording_seed_pairs_worse": 5
+    }
+  }
+}
