@@ -339,7 +339,7 @@ def render(value: dict) -> tuple[str, str]:
                 f"按向量 MSE 拟合的增益使 {improved}/3 seed 的验证窗口误差降低；"
                 f"按训练模长和校准的增益使 {worse}/3 seed 的误差变大。",
                 '低方向误差窗仍有负的预测方向投影残差；统一放大不能解释或解决全部缩短。'
-                '增益差异还受窗口权重影响，不能单独归因于方向歧义；本轮无测试集或 ATE/RTE 结论。',
+                '增益差异还受窗口权重影响，不能单独归因于方向歧义；该窗口诊断无测试集或 ATE/RTE 结论。',
             ]
     dynamic = cause.get('dynamic_lag_probe') or {}
     dynamic_splits = dynamic.get('split_shapes') or {}
@@ -387,8 +387,37 @@ def render(value: dict) -> tuple[str, str]:
             + '；IMU 粗糙度相关：' + ', '.join(
                 f"{row['val']['roughness_speed_correlation']:.3f}" for row in dynamic_seeds) + '。',
             '动态分层在 seed 与 train/val 间没有稳定单调关系；当前不能称为动态滞后已被证实。'
-            '分层阈值只用于诊断，不是部署特征；本轮没有测试集、ATE/RTE 或因果干预结论。',
+            '分层阈值只用于诊断，不是部署特征；该分层诊断没有测试集、ATE/RTE 或因果干预结论。',
         ]
+    trajectory = cause.get('trajectory_gain_probe') or {}
+    gain_counts = trajectory.get('paired_summary') or {}
+    count_bounds = dict(ate_seed_medians_worse=3, rte_10s_seed_medians_worse=3,
+                        position_p95_seed_medians_worse=3, ate_recording_seed_pairs_worse=12)
+    trajectory_scope = (
+        trajectory.get('schema') == 'ib.trajectory-gain-diagnostic.v1'
+        and trajectory.get('complete') is True and trajectory.get('dataset') == 'ridi'
+        and trajectory.get('profile') == 'ronin_resnet18_3d' and trajectory.get('split') == 'val'
+        and trajectory.get('recordings') == 4 and trajectory.get('groups') == 1
+        and trajectory.get('gain_fit_split') == 'train' and trajectory.get('gains_refitted') is False
+        and trajectory.get('eval_stride') == 200 and trajectory.get('optimizer_updates') == 0
+        and trajectory.get('test_accessed') is False and trajectory.get('cuda_initialized') is False
+        and all(trajectory.get(k) is True for k in ('input_files_unchanged',
+                'weights_and_buffers_unchanged', 'framework_files_unchanged', 'inputs_read_only'))
+        and len(trajectory.get('seeds') or []) == 3
+        and all(isinstance(gain_counts.get(arm), dict) and all(
+            type(gain_counts[arm].get(k)) is int and 0 <= gain_counts[arm][k] <= bound
+            for k, bound in count_bounds.items()) for arm in ('vector_mse', 'norm_sum'))
+    )
+    if trajectory_scope:
+        lines += ['', '完整验证轨迹增益控制：RIDI 4 条录制/1 个 group；训练增益已冻结，验证不重拟合。']
+        for arm, label in (('vector_mse', '向量 MSE 增益'), ('norm_sum', '模长和增益')):
+            counts = gain_counts[arm]
+            lines += [f"{label}：{counts['ate_seed_medians_worse']}/3 seed 的未对齐 ATE 中位数恶化；"
+                      f"{counts['rte_10s_seed_medians_worse']}/3 的 10s RTE 中位数恶化；"
+                      f"{counts['position_p95_seed_medians_worse']}/3 的位置 P95 中位数恶化；"
+                      f"{counts['ate_recording_seed_pairs_worse']}/12 录制/seed 配对的 ATE 恶化。"]
+        lines += ['窗口或短时误差改善不能代替完整轨迹与尾部验收；刚体对齐指标另列，不拟合尺度。'
+                  '验证已用于 checkpoint 选择，12 个配对不是独立受试者；无测试精度或因果结论。']
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

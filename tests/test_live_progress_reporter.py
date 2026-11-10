@@ -133,6 +133,26 @@ class ReporterPrivacyTests(unittest.TestCase):
         body, _ = reporter.render({'cause': {'radial_loss_probe': probe}})
         self.assertNotIn('径向损失诊断', body)
 
+    def test_full_trajectory_counterexamples_keep_scope_and_privacy(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/trajectory_gain_observation_20261110.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/trajectory-sentinel', checkpoint_sha256='b' * 64)
+        body, _ = reporter.render({'cause': {'trajectory_gain_probe': probe}})
+        for expected in ('完整验证轨迹增益控制', '2/3 seed 的未对齐 ATE', '4/12', '5/12',
+                         '验证不重拟合', '不是独立受试者', '无测试精度或因果结论'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/trajectory-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        for key, invalid in (('test_accessed', True), ('gains_refitted', True),
+                             ('input_files_unchanged', False), ('groups', 2), ('split', 'test')):
+            changed = {**probe, key: invalid}
+            body, _ = reporter.render({'cause': {'trajectory_gain_probe': changed}})
+            self.assertNotIn('完整验证轨迹增益控制', body)
+        probe['paired_summary']['vector_mse']['ate_seed_medians_worse'] = '/private/count-sentinel'
+        body, _ = reporter.render({'cause': {'trajectory_gain_probe': probe}})
+        self.assertNotIn('完整验证轨迹增益控制', body)
+        self.assertNotIn('/private/count-sentinel', body)
+
     def test_dynamic_lag_report_keeps_scope_and_privacy(self):
         evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/dynamic_lag_observation_20261108.json'
         probe = json.loads(evidence.read_text())
