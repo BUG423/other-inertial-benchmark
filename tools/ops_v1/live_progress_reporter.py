@@ -418,6 +418,46 @@ def render(value: dict) -> tuple[str, str]:
                       f"{counts['ate_recording_seed_pairs_worse']}/12 录制/seed 配对的 ATE 恶化。"]
         lines += ['窗口或短时误差改善不能代替完整轨迹与尾部验收；刚体对齐指标另列，不拟合尺度。'
                   '验证已用于 checkpoint 选择，12 个配对不是独立受试者；无测试精度或因果结论。']
+    head = cause.get('head_intervention_probe') or {}
+    head_summary = head.get('paired_summary') or {}
+    required_counts = {
+        'vector_mse_vs_identity': ('ate_seed_medians_improved', 'rte_10s_seed_medians_improved',
+                                   'position_p95_seed_medians_improved'),
+        'magnitude_aux_vs_vector_mse': ('ate_seed_medians_worse',),
+        'least_squares_vs_identity': ('ate_seed_medians_worse', 'rte_10s_seed_medians_worse'),
+    }
+    head_scope = (
+        head.get('schema') == 'ib.frozen-head-intervention.v1' and head.get('complete') is True
+        and head.get('dataset') == 'ridi' and head.get('profile') == 'ronin_resnet18_3d'
+        and head.get('fit_split') == 'train' and head.get('test_accessed') is False
+        and head.get('head_only') is True and head.get('steps_per_optimization_arm') == 256
+        and head.get('train_windows') == 720 and head.get('train_recordings') == 45
+        and head.get('train_groups') == 8 and head.get('validation_recordings') == 4
+        and head.get('validation_groups') == 1 and head.get('group_overlap') == 0
+        and head.get('cuda_initialized') is False and head.get('saves_weights') is False
+        and head.get('formal_matrix_changed') is False and len(head.get('seeds') or []) == 3
+        and all(head.get(k) is True for k in ('final_step_preselected', 'original_model_restored',
+                'frozen_features_and_buffers_unchanged', 'source_checkpoint_and_data_files_unchanged',
+                'framework_and_probe_unchanged', 'framework_matches_current_checkout'))
+        and all(isinstance(head_summary.get(arm), dict) and all(
+            type(head_summary[arm].get(k)) is int and 0 <= head_summary[arm][k] <= 3
+            for k in keys) for arm, keys in required_counts.items())
+    )
+    pair_count = (head_summary.get('vector_mse_vs_identity') or {}).get('ate_recording_seed_pairs_worse')
+    if head_scope and type(pair_count) is int and 0 <= pair_count <= 12:
+        mse = head_summary['vector_mse_vs_identity']
+        auxiliary = head_summary['magnitude_aux_vs_vector_mse']
+        ls = head_summary['least_squares_vs_identity']
+        lines += ['', '冻结回归层干预：RIDI 720 训练窗、4 条完整验证录制/1 个 group；两组相同初始回归层、256 步。',
+                  f"保持原向量 MSE：{mse['ate_seed_medians_improved']}/3 seed 的 ATE、"
+                  f"{mse['rte_10s_seed_medians_improved']}/3 的 10s RTE、"
+                  f"{mse['position_p95_seed_medians_improved']}/3 的位置 P95 中位数改善；"
+                  f"仍有 {pair_count}/12 录制/seed 配对的 ATE 恶化。",
+                  f"幅值辅助项相对同预算原 MSE 使 {auxiliary['ate_seed_medians_worse']}/3 seed 的 ATE 中位数恶化；"
+                  f"截断最小二乘相对原 checkpoint 有 {ls['ate_seed_medians_worse']}/3 的 ATE、"
+                  f"{ls['rte_10s_seed_medians_worse']}/3 的 10s RTE 中位数恶化。",
+                  '存在可通过回归层重新拟合改善的偏差；本轮同时改变了原训练的采样权重、Dropout 和优化约束，'
+                  '尚不能单独归因于优化未收敛或正则化。验证已用于 checkpoint 选择，无独立测试精度或通用修复结论。']
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

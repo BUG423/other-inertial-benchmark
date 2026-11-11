@@ -153,6 +153,26 @@ class ReporterPrivacyTests(unittest.TestCase):
         self.assertNotIn('完整验证轨迹增益控制', body)
         self.assertNotIn('/private/count-sentinel', body)
 
+    def test_head_intervention_keeps_comparators_scope_and_private_fields(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/head_intervention_observation_20261111.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/head-sentinel', checkpoint_sha256='f' * 64)
+        body, _ = reporter.render({'cause': {'head_intervention_probe': probe}})
+        for expected in ('冻结回归层干预', '3/3 seed 的 ATE', '3/12', '2/3 seed 的 ATE 中位数恶化',
+                         '截断最小二乘', '采样权重、Dropout', '无独立测试精度或通用修复结论'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/head-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        for key, bad in (('test_accessed', True), ('head_only', False), ('fit_split', 'val'),
+                         ('steps_per_optimization_arm', 32), ('validation_groups', 2),
+                         ('final_step_preselected', False), ('formal_matrix_changed', True)):
+            body, _ = reporter.render({'cause': {'head_intervention_probe': {**probe, key: bad}}})
+            self.assertNotIn('冻结回归层干预', body)
+        probe['paired_summary']['vector_mse_vs_identity']['ate_recording_seed_pairs_worse'] = '/private/count-sentinel'
+        body, _ = reporter.render({'cause': {'head_intervention_probe': probe}})
+        self.assertNotIn('冻结回归层干预', body)
+        self.assertNotIn('/private/count-sentinel', body)
+
     def test_dynamic_lag_report_keeps_scope_and_privacy(self):
         evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/dynamic_lag_observation_20261108.json'
         probe = json.loads(evidence.read_text())
