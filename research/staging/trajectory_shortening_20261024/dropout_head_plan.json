@@ -1,0 +1,32 @@
+{
+  "schema": "ib.expected-head-dropout-plan.v1",
+  "status": "frozen_before_execution",
+  "purpose": "Isolate expected final-feature Dropout regularization with frozen features, fixed training windows and the same numerical solver.",
+  "seeds": [1735231569, 843628571, 951150512],
+  "arms": {
+    "identity": "Original pretrained head.",
+    "no_dropout": "Original vector MSE, Dropout probability zero.",
+    "dropout_half": "Expected inverted feature Dropout MSE with probability 0.5."
+  },
+  "optimizer_steps": 0,
+  "fixed": [
+    "Same three pretrained RoNIN XYZ checkpoints, fixed eval-mode features and frozen BN buffers.",
+    "Same 720 moving train windows, 45 recordings and 8 groups; no sampling-weight changes between arms.",
+    "Original vector MSE in both fitted arms; no auxiliary magnitude term.",
+    "Float64 augmented least squares, relative singular cutoff rcond=1e-6 in both arms; bias is unpenalized.",
+    "All four validation recordings from one disjoint group, native full trajectories, no validation tuning or test access."
+  ],
+  "expected_objective": "mean((X W^T + b - Y)^2) + p/(1-p) * sum_j mean(X_j^2) * sum_d W_dj^2 / 3",
+  "interpretation": [
+    "Analytical expectation is over independent inverted masks applied only to the frozen final features.",
+    "First FC Dropout, full-network feature adaptation, optimizer noise and original data weighting remain outside this intervention.",
+    "Rank truncation is reported; do not claim an untruncated global optimum.",
+    "A change conditional on this head model does not prove the cause of the entire formal matrix."
+  ],
+  "cpu_threads": 2,
+  "wall_seconds": 180,
+  "saves_weights": false,
+  "formal_matrix_changed": false,
+  "test_accessed": false,
+  "gpu_intervention_plan_enabled": false
+}
