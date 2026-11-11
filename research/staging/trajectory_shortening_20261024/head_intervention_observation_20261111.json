@@ -1,0 +1,218 @@
+{
+  "schema": "ib.frozen-head-intervention.v1",
+  "observed_utc": "2026-11-11T01:41:08.607659+00:00",
+  "dataset": "ridi",
+  "profile": "ronin_resnet18_3d",
+  "train_windows": 720,
+  "train_recordings": 45,
+  "train_groups": 8,
+  "validation_recordings": 4,
+  "validation_groups": 1,
+  "group_overlap": 0,
+  "fit_split": "train",
+  "test_accessed": false,
+  "head_only": true,
+  "steps_per_optimization_arm": 256,
+  "final_step_preselected": true,
+  "complete": true,
+  "original_model_restored": true,
+  "frozen_features_and_buffers_unchanged": true,
+  "source_checkpoint_and_data_files_unchanged": true,
+  "cuda_initialized": false,
+  "saves_weights": false,
+  "formal_matrix_changed": false,
+  "source": "research/staging/trajectory_shortening_20261024/head_intervention_probe.py",
+  "plan": "research/staging/trajectory_shortening_20261024/head_intervention_plan.json",
+  "analytical_tests_passed": 4,
+  "framework_and_probe_unchanged": true,
+  "framework_matches_current_checkout": true,
+  "network_isolated": true,
+  "inputs_read_only": true,
+  "cpu_threads": 2,
+  "train_metric_columns": ["relative_l2", "speed_ratio", "mse"],
+  "validation_median_columns": ["ate_m", "rte_10s_m", "position_error_p95_m", "rte_10s_p95_m", "plr"],
+  "validation_worsening_columns": ["ate_m", "rte_10s_m", "position_error_p95_m", "rte_10s_p95_m"],
+  "evidence_projection": "Compact aggregate metadata only; per-recording metrics, selections and private bindings retained on Agent.",
+  "limitations": [
+    "One validation group, four recordings, already used for original checkpoint selection; not independent test accuracy.",
+    "Fits use 16 moving windows per training recording, equally weighted recordings; full validation includes stationary windows.",
+    "Frozen dropout-free features, changed training weights and head-only optimization differ from original full training; this does not isolate original optimizer, regularization or sampling as the cause.",
+    "Least squares truncates small singular values at fixed rcond=1e-6 and is not an untruncated exact global optimum claim.",
+    "Magnitude loss has one fixed coefficient; neither this coefficient nor the 256-step final iterate was selected on validation.",
+    "Three seeds and twelve recording/seed pairs are dependent; recording-level counterexamples prevent a universal no-harm claim.",
+    "No boundary-state intervention, full-network retraining, GPU pilot or deployment was performed."
+  ],
+  "seeds": [
+    {
+      "seed": 1735231569,
+      "trainable_parameters": 1539,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.23266413807868958, 0.8963963985443115, 0.022851619869470596],
+          "validation_medians": [4.976564092567017, 2.157323309240873, 7.843987738741355, 3.3932023464773957, 0.8836108910965033],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "vector_mse": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.17782120406627655, 0.9819756746292114, 0.013348276726901531],
+          "validation_medians": [4.838776482872632, 1.5492455886936023, 6.7674338308534825, 2.1748572831652404, 0.969297589352327],
+          "validation_recordings_worse": [1, 0, 1, 0]
+        },
+        "magnitude_aux": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.1818336546421051, 0.9883765578269958, 0.013957466930150986],
+          "validation_medians": [4.753480695588425, 1.5464212058856814, 6.674683291643424, 2.2244031640531783, 0.9760762861242178],
+          "validation_recordings_worse": [1, 0, 1, 0]
+        },
+        "least_squares": {
+          "fit": {
+            "updates": 0,
+            "retained_rank": 347,
+            "design_columns": 513,
+            "largest_singular": 206.1843065805539,
+            "rcond": 1e-06
+          },
+          "train": [0.12510685622692108, 0.9910720586776733, 0.00660724425688386],
+          "validation_medians": [4.809728708974323, 1.705437805181988, 6.781857085647303, 2.741652576675555, 0.9754334269986773],
+          "validation_recordings_worse": [1, 1, 1, 1]
+        }
+      }
+    },
+    {
+      "seed": 843628571,
+      "trainable_parameters": 1539,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.15182815492153168, 0.9732940793037415, 0.009731115773320198],
+          "validation_medians": [1.9769335567284285, 1.07065053324169, 3.226115364115734, 1.8879242933184577, 0.9690582572621292],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "vector_mse": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.13897407054901123, 0.9895965456962585, 0.008153153583407402],
+          "validation_medians": [1.7296325036491966, 0.9861391490539867, 3.1200165924679446, 1.7856724451978292, 0.9865979963255409],
+          "validation_recordings_worse": [1, 2, 1, 1]
+        },
+        "magnitude_aux": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.14055192470550537, 0.9931091070175171, 0.008339340798556805],
+          "validation_medians": [1.7392474454126945, 0.9505875204540704, 3.1264356804081013, 1.7652731472061873, 0.9914318536780827],
+          "validation_recordings_worse": [1, 1, 2, 1]
+        },
+        "least_squares": {
+          "fit": {
+            "updates": 0,
+            "retained_rank": 359,
+            "design_columns": 513,
+            "largest_singular": 226.6571932794502,
+            "rcond": 1e-06
+          },
+          "train": [0.09953561425209045, 0.9941096305847168, 0.004182299133390188],
+          "validation_medians": [3.0431677733189124, 1.425914160794969, 5.437058394897037, 2.8856024728282996, 0.9933065463397817],
+          "validation_recordings_worse": [2, 3, 3, 3]
+        }
+      }
+    },
+    {
+      "seed": 951150512,
+      "trainable_parameters": 1539,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.25047504901885986, 0.9364155530929565, 0.026484206318855286],
+          "validation_medians": [4.7188523172204455, 1.9009489871304013, 7.946047001507799, 3.0314192242848472, 0.9234570610616306],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "vector_mse": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.20193228125572205, 0.9734865427017212, 0.01721351593732834],
+          "validation_medians": [4.034794205691799, 1.517878737569782, 6.156001814075739, 2.382010151007917, 0.9531444972115957],
+          "validation_recordings_worse": [1, 0, 1, 1]
+        },
+        "magnitude_aux": {
+          "fit": {
+            "updates": 256,
+            "lr": 0.001,
+            "weight_decay": 0,
+            "identical_initial_head": true
+          },
+          "train": [0.20490409433841705, 0.982734739780426, 0.017723901197314262],
+          "validation_medians": [4.2036179817003525, 1.4512429943816427, 6.058229037175634, 2.362318241468859, 0.9644800672475476],
+          "validation_recordings_worse": [1, 0, 1, 1]
+        },
+        "least_squares": {
+          "fit": {
+            "updates": 0,
+            "retained_rank": 334,
+            "design_columns": 513,
+            "largest_singular": 209.8414387526918,
+            "rcond": 1e-06
+          },
+          "train": [0.14603549242019653, 0.9888656139373779, 0.009002745151519775],
+          "validation_medians": [3.5187400371616095, 1.9096424074168603, 6.083359552858315, 3.324391937792489, 0.94604209092887],
+          "validation_recordings_worse": [1, 2, 1, 2]
+        }
+      }
+    }
+  ],
+  "paired_summary": {
+    "vector_mse_vs_identity": {
+      "ate_seed_medians_improved": 3,
+      "ate_seed_medians_worse": 0,
+      "rte_10s_seed_medians_improved": 3,
+      "rte_10s_seed_medians_worse": 0,
+      "position_p95_seed_medians_improved": 3,
+      "position_p95_seed_medians_worse": 0,
+      "ate_recording_seed_pairs_worse": 3
+    },
+    "magnitude_aux_vs_vector_mse": {
+      "ate_seed_medians_improved": 1,
+      "ate_seed_medians_worse": 2,
+      "rte_10s_seed_medians_improved": 3,
+      "rte_10s_seed_medians_worse": 0,
+      "position_p95_seed_medians_improved": 2,
+      "position_p95_seed_medians_worse": 1
+    },
+    "least_squares_vs_identity": {
+      "ate_seed_medians_improved": 2,
+      "ate_seed_medians_worse": 1,
+      "rte_10s_seed_medians_improved": 1,
+      "rte_10s_seed_medians_worse": 2,
+      "position_p95_seed_medians_improved": 2,
+      "position_p95_seed_medians_worse": 1
+    }
+  }
+}
