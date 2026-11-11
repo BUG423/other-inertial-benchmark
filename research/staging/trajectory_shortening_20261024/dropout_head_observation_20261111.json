@@ -1,0 +1,175 @@
+{
+  "schema": "ib.expected-head-dropout.v1",
+  "observed_utc": "2026-11-11T01:53:04.447207+00:00",
+  "dataset": "ridi",
+  "profile": "ronin_resnet18_3d",
+  "train_windows": 720,
+  "train_recordings": 45,
+  "train_groups": 8,
+  "validation_recordings": 4,
+  "validation_groups": 1,
+  "group_overlap": 0,
+  "fit_split": "train",
+  "test_accessed": false,
+  "head_only": true,
+  "steps_per_optimization_arm": 0,
+  "complete": true,
+  "original_model_restored": true,
+  "frozen_features_and_buffers_unchanged": true,
+  "source_checkpoint_and_data_files_unchanged": true,
+  "cuda_initialized": false,
+  "saves_weights": false,
+  "formal_matrix_changed": false,
+  "source": "research/staging/trajectory_shortening_20261024/dropout_head_probe.py",
+  "plan": "research/staging/trajectory_shortening_20261024/dropout_head_plan.json",
+  "analytical_tests_passed": 9,
+  "framework_and_probe_unchanged": true,
+  "framework_matches_current_checkout": true,
+  "network_isolated": true,
+  "inputs_read_only": true,
+  "cpu_threads": 2,
+  "train_metric_columns": ["relative_l2", "speed_ratio", "mse"],
+  "validation_median_columns": ["ate_m", "rte_10s_m", "position_error_p95_m", "rte_10s_p95_m", "plr"],
+  "validation_worsening_columns": ["ate_m", "rte_10s_m", "position_error_p95_m", "rte_10s_p95_m"],
+  "expected_objective": "mean((X W^T + b - Y)^2) + p/(1-p) * sum_j mean(X_j^2) * sum_d W_dj^2 / 3",
+  "evidence_projection": "Aggregate metadata; private selections and per-recording metrics retained on Agent.",
+  "limitations": [
+    "Expectation applies only to independent inverted masks on fixed final features; earlier Dropout and feature adaptation are outside this intervention.",
+    "Same uniformly sampled train windows, target, solver and relative singular cutoff in both arms; this does not reproduce the entire original training recipe.",
+    "Validation has one group and four recordings already used for checkpoint selection; this is not independent test accuracy.",
+    "Three seeds and recording/seed pairs are dependent, and lower amplitude bias does not guarantee better trajectories.",
+    "No optimizer updates, saved weights, full-network training, test access, GPU intervention or deployment."
+  ],
+  "seeds": [
+    {
+      "seed": 1735231569,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.23266413807868958, 0.8963963985443115, 0.022851619869470596],
+          "validation_medians": [4.976564092567017, 2.157323309240873, 7.843987738741355, 3.3932023464773957, 0.8836108910965033],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "no_dropout": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.0,
+            "rcond": 1e-06,
+            "retained_rank": 347,
+            "design_columns": 513,
+            "expected_objective": 0.00660724425688386,
+            "relative_normal_residual": 2.5401884242992137e-15
+          },
+          "train": [0.12510685622692108, 0.9910720586776733, 0.00660724425688386],
+          "validation_medians": [4.809728708974323, 1.705437805181988, 6.781857085647303, 2.741652576675555, 0.9754334269986773],
+          "validation_recordings_worse": [1, 1, 1, 1]
+        },
+        "dropout_half": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.5,
+            "rcond": 1e-06,
+            "retained_rank": 347,
+            "design_columns": 513,
+            "expected_objective": 0.02141823247075081,
+            "relative_normal_residual": 1.0776310444935995e-15
+          },
+          "train": [0.19394169747829437, 0.9662387371063232, 0.01587817072868347],
+          "validation_medians": [4.4549462727163265, 1.6425650709030084, 6.5257055011541905, 2.505161671159609, 0.9553259747787533],
+          "validation_recordings_worse": [1, 0, 1, 0]
+        }
+      }
+    },
+    {
+      "seed": 843628571,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.15182815492153168, 0.9732940793037415, 0.009731115773320198],
+          "validation_medians": [1.9769335567284285, 1.07065053324169, 3.226115364115734, 1.8879242933184577, 0.9690582572621292],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "no_dropout": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.0,
+            "rcond": 1e-06,
+            "retained_rank": 359,
+            "design_columns": 513,
+            "expected_objective": 0.004182299133390188,
+            "relative_normal_residual": 2.9682675154708802e-15
+          },
+          "train": [0.09953561425209045, 0.9941096305847168, 0.004182299133390188],
+          "validation_medians": [3.0431677733189124, 1.425914160794969, 5.437058394897037, 2.8856024728282996, 0.9933065463397817],
+          "validation_recordings_worse": [2, 3, 3, 3]
+        },
+        "dropout_half": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.5,
+            "rcond": 1e-06,
+            "retained_rank": 359,
+            "design_columns": 513,
+            "expected_objective": 0.014038901776075363,
+            "relative_normal_residual": 5.656822268196444e-16
+          },
+          "train": [0.14763401448726654, 0.9775448441505432, 0.009200912900269032],
+          "validation_medians": [1.630602853678182, 1.0210433004585693, 2.725542313306838, 1.8814872397280902, 0.9733569443728431],
+          "validation_recordings_worse": [0, 1, 0, 2]
+        }
+      }
+    },
+    {
+      "seed": 951150512,
+      "arms": {
+        "identity": {
+          "fit": {
+            "updates": 0
+          },
+          "train": [0.25047504901885986, 0.9364155530929565, 0.026484206318855286],
+          "validation_medians": [4.7188523172204455, 1.9009489871304013, 7.946047001507799, 3.0314192242848472, 0.9234570610616306],
+          "validation_recordings_worse": [0, 0, 0, 0]
+        },
+        "no_dropout": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.0,
+            "rcond": 1e-06,
+            "retained_rank": 334,
+            "design_columns": 513,
+            "expected_objective": 0.009002745151519775,
+            "relative_normal_residual": 8.430032771708078e-15
+          },
+          "train": [0.14603549242019653, 0.9888656139373779, 0.009002745151519775],
+          "validation_medians": [3.5187400371616095, 1.9096424074168603, 6.083359552858315, 3.324391937792489, 0.94604209092887],
+          "validation_recordings_worse": [1, 2, 1, 2]
+        },
+        "dropout_half": {
+          "fit": {
+            "updates": 0,
+            "dropout_probability": 0.5,
+            "rcond": 1e-06,
+            "retained_rank": 334,
+            "design_columns": 513,
+            "expected_objective": 0.02637866698205471,
+            "relative_normal_residual": 1.039923584864385e-15
+          },
+          "train": [0.2178305834531784, 0.9535394906997681, 0.020030686631798744],
+          "validation_medians": [5.173058675030536, 1.661551969606644, 7.044455197643682, 2.4418731834461385, 0.9343401701445009],
+          "validation_recordings_worse": [2, 0, 2, 0]
+        }
+      }
+    }
+  ],
+  "paired_summary": {
+    "train_speed_ratio_reduction": [0.024833321571350098, 0.016564786434173584, 0.03532612323760986],
+    "validation_plr_reduction": [0.02010745221992405, 0.019949601966938513, 0.011701920784369158],
+    "dropout_half_vs_none_ate_seed_medians_improved": 2,
+    "dropout_half_vs_none_ate_seed_medians_worse": 1,
+    "dropout_half_vs_none_rte_seed_medians_improved": 3
+  }
+}
