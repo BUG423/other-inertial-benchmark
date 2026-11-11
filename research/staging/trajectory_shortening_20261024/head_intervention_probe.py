@@ -56,7 +56,8 @@ def extract_features(model, inputs):
                       for i in range(0, len(inputs), 16)])
 
 
-def main():
+def main(plan_name='head_intervention_plan.json', receipt_name='head-intervention-receipt.json',
+         schema='ib.frozen-head-intervention.v1', fitter=fit_head):
     from inertial_benchmark.data.format import load_sequence
     from inertial_benchmark.data.views import SequenceView, ViewConfig
     from inertial_benchmark.engine.predictor import Predictor
@@ -70,7 +71,7 @@ def main():
     torch.use_deterministic_algorithms(True)
     started = time.monotonic()
     root, cfg = Path(os.environ['IPB_V1_RIDI_ROOT']), ViewConfig(dims=3)
-    plan = json.loads(Path('head_intervention_plan.json').read_text())
+    plan = json.loads(Path(plan_name).read_text())
     inputs = json.loads(Path('checkpoint-inputs-private.json').read_text())
     assert len(inputs) == 3 and {r['seed'] for r in inputs} == set(plan['seeds'])
     splits = {s: (root/'splits'/f'{s}.txt').read_text().split() for s in ('train', 'val')}
@@ -79,7 +80,7 @@ def main():
     files = [root/'splits'/f'{s}.txt' for s in splits]
     files += [root/'sequences'/f'{sid}.h5' for ids in splits.values() for sid in ids]
     files += [Path(row['checkpoint']) for row in inputs]
-    files += [Path('head_intervention_plan.json'), Path('checkpoint-inputs-private.json')]
+    files += [Path(plan_name), Path('checkpoint-inputs-private.json')]
     digest = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
     before = {str(p): digest(p) for p in files}
     xs, ys, train_groups, selections = [], [], set(), []
@@ -99,11 +100,11 @@ def main():
     validation = [load_sequence(root/'sequences'/f'{sid}.h5') for sid in splits['val']]
     val_groups = {seq.group_id for seq in validation}
     assert len(train_groups) == 8 and len(val_groups) == 1 and not train_groups & val_groups
-    report = dict(schema='ib.frozen-head-intervention.v1', observed_utc=datetime.now(timezone.utc).isoformat(),
+    report = dict(schema=schema, observed_utc=datetime.now(timezone.utc).isoformat(),
                   dataset='ridi', profile='ronin_resnet18_3d', train_windows=len(x),
                   train_recordings=45, train_groups=8, validation_recordings=4, validation_groups=1,
                   group_overlap=0, fit_split='train', test_accessed=False, head_only=True,
-                  steps_per_optimization_arm=256, final_step_preselected=True, seeds=[])
+                  steps_per_optimization_arm=plan.get('optimizer_steps', 256), final_step_preselected=True, seeds=[])
     measures = ('ate_m', 'rte_10s_m', 'position_error_p95_m', 'rte_10s_p95_m', 'plr')
     for item in inputs:
         assert time.monotonic()-started < 180
@@ -123,7 +124,7 @@ def main():
         for arm in plan['arms']:
             assert time.monotonic()-started < 180
             head, detail = ((initial_head, dict(updates=0)) if arm == 'identity'
-                            else fit_head(initial_head, features, y, arm))
+                            else fitter(initial_head, features, y, arm))
             with torch.no_grad():
                 training = metrics(head(features), y)
             model.head.linear = head
@@ -152,7 +153,7 @@ def main():
                   elapsed_s=time.monotonic()-started, saves_weights=False, formal_matrix_changed=False)
     assert not report['cuda_initialized']
     Path('input-bindings-private.json').write_text(json.dumps(dict(hashes=before, selection=selections)))
-    Path('head-intervention-receipt.json').write_text(json.dumps(report, indent=2, allow_nan=False))
+    Path(receipt_name).write_text(json.dumps(report, indent=2, allow_nan=False))
     print(json.dumps(report, allow_nan=False))
 
 
