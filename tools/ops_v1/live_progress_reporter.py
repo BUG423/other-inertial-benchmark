@@ -458,6 +458,41 @@ def render(value: dict) -> tuple[str, str]:
                   f"{ls['rte_10s_seed_medians_worse']}/3 的 10s RTE 中位数恶化。",
                   '存在可通过回归层重新拟合改善的偏差；本轮同时改变了原训练的采样权重、Dropout 和优化约束，'
                   '尚不能单独归因于优化未收敛或正则化。验证已用于 checkpoint 选择，无独立测试精度或通用修复结论。']
+    dropout = cause.get('expected_dropout_probe') or {}
+    dropout_summary = dropout.get('paired_summary') or {}
+    reductions = dropout_summary.get('train_speed_ratio_reduction') or []
+    plr_reductions = dropout_summary.get('validation_plr_reduction') or []
+    count_keys = ('dropout_half_vs_none_ate_seed_medians_improved',
+                  'dropout_half_vs_none_ate_seed_medians_worse',
+                  'dropout_half_vs_none_rte_seed_medians_improved')
+    dropout_scope = (
+        dropout.get('schema') == 'ib.expected-head-dropout.v1' and dropout.get('complete') is True
+        and dropout.get('dataset') == 'ridi' and dropout.get('profile') == 'ronin_resnet18_3d'
+        and dropout.get('fit_split') == 'train' and dropout.get('head_only') is True
+        and dropout.get('test_accessed') is False and dropout.get('steps_per_optimization_arm') == 0
+        and dropout.get('train_windows') == 720 and dropout.get('train_recordings') == 45
+        and dropout.get('train_groups') == 8 and dropout.get('validation_recordings') == 4
+        and dropout.get('validation_groups') == 1 and dropout.get('group_overlap') == 0
+        and dropout.get('cuda_initialized') is False and dropout.get('saves_weights') is False
+        and dropout.get('formal_matrix_changed') is False and len(dropout.get('seeds') or []) == 3
+        and all(dropout.get(k) is True for k in ('original_model_restored',
+                'frozen_features_and_buffers_unchanged', 'source_checkpoint_and_data_files_unchanged',
+                'framework_and_probe_unchanged', 'framework_matches_current_checkout'))
+        and all(len(values) == 3 and all(type(v) in (int, float) and 0 <= v <= 1 for v in values)
+                for values in (reductions, plr_reductions))
+        and all(type(dropout_summary.get(k)) is int and 0 <= dropout_summary[k] <= 3 for k in count_keys)
+    )
+    if dropout_scope:
+        lines += ['', '最后特征层 Dropout 期望损失对照：固定特征、采样权重及求解器，仅比较 p=0 与 p=0.5。',
+                  'p=0.5 的训练速度幅值比分别降低 ' + '、'.join(f'{100*v:.2f}' for v in reductions)
+                  + ' 个百分点；验证 PLR 中位数分别降低 '
+                  + '、'.join(f'{100*v:.2f}' for v in plr_reductions) + ' 个百分点。',
+                  f"保留期望正则项时 {dropout_summary[count_keys[0]]}/3 seed 的验证 ATE 中位数改善、"
+                  f"{dropout_summary[count_keys[1]]}/3 恶化；"
+                  f"{dropout_summary[count_keys[2]]}/3 的 10s RTE 中位数改善。",
+                  '局部回归层存在正则收缩效应，但关闭 Dropout 不是通用修复；'
+                  '此前层的 Dropout 与特征自适应未干预，不能外推为完整网络或全矩阵根因。'
+                  '验证仅一个 group，未访问独立测试集。']
     lines += [
         "",
         "本 reporter 只读 Agent 上的 coverage/run-states 和进程列表并发布 Issue；不启动、停止、重试、下载或修改训练。",

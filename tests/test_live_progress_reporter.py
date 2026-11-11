@@ -173,6 +173,26 @@ class ReporterPrivacyTests(unittest.TestCase):
         self.assertNotIn('冻结回归层干预', body)
         self.assertNotIn('/private/count-sentinel', body)
 
+    def test_expected_dropout_mechanism_keeps_tradeoffs_scope_and_privacy(self):
+        evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/dropout_head_observation_20261111.json'
+        probe = json.loads(evidence.read_text())
+        probe.update(leaf='/private/dropout-sentinel', source_sha256='d' * 64)
+        body, _ = reporter.render({'cause': {'expected_dropout_probe': probe}})
+        for expected in ('最后特征层 Dropout 期望损失对照', '2.48、1.66、3.53',
+                         '2/3 seed 的验证 ATE 中位数改善、1/3 恶化', '关闭 Dropout 不是通用修复',
+                         '不能外推为完整网络或全矩阵根因'):
+            self.assertIn(expected, body)
+        self.assertNotIn('/private/dropout-sentinel', body)
+        self.assertNotRegex(body, r'[0-9a-fA-F]{64}')
+        for key, bad in (('test_accessed', True), ('steps_per_optimization_arm', 256),
+                         ('fit_split', 'val'), ('group_overlap', 1), ('original_model_restored', False)):
+            body, _ = reporter.render({'cause': {'expected_dropout_probe': {**probe, key: bad}}})
+            self.assertNotIn('最后特征层 Dropout 期望损失对照', body)
+        probe['paired_summary']['train_speed_ratio_reduction'] = ['/private/count-sentinel'] * 3
+        body, _ = reporter.render({'cause': {'expected_dropout_probe': probe}})
+        self.assertNotIn('最后特征层 Dropout 期望损失对照', body)
+        self.assertNotIn('/private/count-sentinel', body)
+
     def test_dynamic_lag_report_keeps_scope_and_privacy(self):
         evidence = SOURCE.parents[2] / 'research/staging/trajectory_shortening_20261024/dynamic_lag_observation_20261108.json'
         probe = json.loads(evidence.read_text())
