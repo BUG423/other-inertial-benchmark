@@ -1,0 +1,34 @@
+{
+  "schema": "ib.frozen-head-intervention-plan.v1",
+  "status": "frozen_before_execution",
+  "purpose": "Distinguish recoverable readout fit from changing the magnitude objective, conditional on frozen pretrained features.",
+  "dataset": "ridi",
+  "profile": "ronin_resnet18_3d",
+  "seeds": [1735231569, 843628571, 951150512],
+  "train": "Same sixteen uniformly spaced valid moving windows per recording; 45 recordings, 720 windows, 8 existing groups.",
+  "validation": "All windows of all four validation recordings; one existing group, disjoint from train.",
+  "fixed": {
+    "backbone": "Pretrained parameters and BN buffers frozen; dropout disabled for feature extraction and evaluation.",
+    "head": "Original 512-to-3 linear velocity head; identical initial head for both AdamW arms.",
+    "optimizer": "Full-batch AdamW, lr=0.001, weight_decay=0, 256 updates per optimization arm.",
+    "selection": "Final step 256 fixed in advance; no validation selection or tuning.",
+    "trajectory": "Native stride-200 reconstruction, initial-position anchor, unaligned XYZ ATE, 10s RTE and P95."
+  },
+  "arms": {
+    "identity": "Original checkpoint head, zero updates.",
+    "vector_mse": "mean((prediction-target)^2), averaged over windows and three components.",
+    "magnitude_aux": "vector_mse + mean((norm(prediction)-norm(target))^2)/3; coefficient fixed at one.",
+    "least_squares": "Minimum-change head residual solve in float64 with rcond=1e-6; original vector MSE, no magnitude term."
+  },
+  "budgets": {"cpu_threads": 2, "wall_seconds": 180, "cuda_visible": false},
+  "test_accessed": false,
+  "saves_weights": false,
+  "formal_matrix_changed": false,
+  "gpu_intervention_plan_enabled": false,
+  "acceptance": [
+    "Train fit alone is insufficient; preserve paired full-validation ATE, 10s RTE and tail counterexamples.",
+    "A finite-budget optimizer comparison is not a proof that original training converged or that information is sufficient.",
+    "Least squares is a numerical readout control; rank truncation and overfitting remain limitations.",
+    "One validation group already used for checkpoint selection is not independent test accuracy or a general causal explanation."
+  ]
+}
